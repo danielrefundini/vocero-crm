@@ -18,14 +18,16 @@ import {
   type InstagramCredentials,
 } from "@/server/instagram/credentials";
 import { sendInstagramText } from "@/server/instagram/send";
-import { FB_PREFIX } from "@/server/inbox/identity";
+import { FB_PREFIX, TT_PREFIX } from "@/server/inbox/identity";
 import {
   getMessengerCredentialsByOrg,
   markMessengerReconnectRequired,
   type MessengerCredentials,
 } from "@/server/messenger/credentials";
 import { sendMessengerText } from "@/server/messenger/send";
-import { TT_PREFIX } from "@/server/inbox/identity";
+import { sendTwilioSms, TwilioError } from "@/server/sms/send";
+import { sendResendEmail, ResendError } from "@/server/email/send";
+import { EMAIL_PREFIX, SMS_PREFIX, toE164 } from "@/lib/exteriors";
 import {
   getTiktokCredentialsByOrg,
   markTiktokReconnectRequired,
@@ -97,6 +99,10 @@ type SendTarget = {
   messenger?: MessengerCredentials;
   /** 022: presente solo en conversaciones de TikTok. */
   tiktok?: TiktokCredentials;
+  /** SMS (Twilio). El destinatario va en `recipient` (E.164 sin el prefijo sms:). */
+  sms?: true;
+  /** Correo (Resend). El destinatario va en `recipient`. */
+  email?: true;
   /**
    * 024: el envío sale con la etiqueta de agente humano. Lo decide el
    * pre-vuelo (`assertReplyWindow`), no cada canal por su cuenta.
@@ -291,6 +297,40 @@ async function prepareSend(
       destinatario: { to: ttRecipient },
       recipient: ttRecipient,
       tiktok: ttCreds,
+    };
+  }
+
+  if (row.conversation.channel === "sms") {
+    const phone = row.contact.phone
+      ?? (row.contact.waIdentity.startsWith(SMS_PREFIX)
+        ? row.contact.waIdentity.slice(SMS_PREFIX.length)
+        : row.contact.waIdentity);
+    if (!phone) {
+      throw new SendError("not_connected", "This contact has no phone number for SMS");
+    }
+    return {
+      conversation: row.conversation,
+      credentials: null,
+      destinatario: { to: phone },
+      recipient: phone.replace(/^\+/, ""),
+      sms: true,
+    };
+  }
+
+  if (row.conversation.channel === "email") {
+    const email = row.contact.email
+      ?? (row.contact.waIdentity.startsWith(EMAIL_PREFIX)
+        ? row.contact.waIdentity.slice(EMAIL_PREFIX.length)
+        : null);
+    if (!email) {
+      throw new SendError("not_connected", "This contact has no email address");
+    }
+    return {
+      conversation: row.conversation,
+      credentials: null,
+      destinatario: { to: email },
+      recipient: email,
+      email: true,
     };
   }
 
@@ -490,24 +530,28 @@ export async function sendText(input: {
 
   const cita = await resolverMensajeCitado(target, input.replyToMessageId);
 
-  const waMessageId = target.instagram
-    ? await callInstagramSend(target, text)
-    : target.messenger
-      ? await callMessengerSend(target, text)
-      : target.tiktok
-        ? await callTiktokSend(target, text)
-        : await callGraphSend(
-          credentials!,
-          conCita(
-            {
-              messaging_product: "whatsapp",
-              ...target.destinatario,
-              type: "text",
-              text: { body: text },
-            },
-            cita?.message.waMessageId
-          )
-        );
+  const waMessageId = target.sms
+    ? await callSmsSend(target.recipient, text)
+    : target.email
+      ? await callEmailSend(target.recipient, text)
+      : target.instagram
+        ? await callInstagramSend(target, text)
+        : target.messenger
+          ? await callMessengerSend(target, text)
+          : target.tiktok
+            ? await callTiktokSend(target, text)
+            : await callGraphSend(
+                credentials!,
+                conCita(
+                  {
+                    messaging_product: "whatsapp",
+                    ...target.destinatario,
+                    type: "text",
+                    text: { body: text },
+                  },
+                  cita?.message.waMessageId
+                )
+              );
 
   const messageId = await persistOutbound({
     organizationId: input.organizationId,
@@ -527,6 +571,44 @@ export async function sendText(input: {
   });
 
   return { messageId };
+}
+
+async function callSmsSend(phone: string, text: string): Promise<string> {
+  try {
+    return await sendTwilioSms(toE164(phone.replace(/\D/g, "") || phone), text);
+  } catch (err) {
+    if (err instanceof TwilioError) {
+      throw new SendError(
+        err.message === "SMS is not configured" ? "not_connected" : "meta_error",
+        err.message === "SMS is not configured"
+          ? "SMS is off. Set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, and TWILIO_FROM_NUMBER."
+          : err.message
+      );
+    }
+    throw new SendError("meta_unavailable", "Twilio did not respond");
+  }
+}
+
+async function callEmailSend(email: string, text: string): Promise<string> {
+  try {
+    return await sendResendEmail({ to: email, subject: emailSubject(text), text });
+  } catch (err) {
+    if (err instanceof ResendError) {
+      throw new SendError(
+        err.message === "Email is not configured" ? "not_connected" : "meta_error",
+        err.message === "Email is not configured"
+          ? "Email is off. Set RESEND_API_KEY and RESEND_FROM_EMAIL."
+          : err.message
+      );
+    }
+    throw new SendError("meta_unavailable", "Resend did not respond");
+  }
+}
+
+function emailSubject(text: string): string {
+  const first = text.split("\n").find((line) => line.trim())?.trim() ?? "";
+  if (!first) return "Following up";
+  return first.length > 78 ? `${first.slice(0, 75)}…` : first;
 }
 
 /**
@@ -559,7 +641,7 @@ export async function sendMediaMessage(input: {
   if (!sendCaps.outboundMedia) {
     throw new SendError(
       "meta_error",
-      `Todavía no se pueden enviar adjuntos por ${sendCaps.label}; manda el texto`
+      `${sendCaps.label} does not accept attachments yet. Send text instead.`
     );
   }
   const cita = await resolverMensajeCitado(target, input.replyToMessageId);
@@ -692,7 +774,7 @@ export async function sendStructured(
   if (!target.credentials) {
     throw new SendError(
       "meta_error",
-      "Este canal no admite ubicaciones ni contactos; manda el texto"
+      "This channel does not support locations or contacts. Send text instead."
     );
   }
   const cita = await resolverMensajeCitado(target, input.replyToMessageId);

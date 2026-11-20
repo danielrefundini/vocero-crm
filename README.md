@@ -911,6 +911,10 @@ disponibilidad. El motor calcula con lo suyo y los compromisos de fuera se
 reflejan con bloqueos manuales; meter al proveedor en ese camino acoplaría su
 latencia y sus caídas a la pantalla que más se usa.
 
+## Daniel Exteriors fork
+
+Website form intake, in-home visits, SMS (Twilio), and email (Resend) are documented in [docs/exteriors.md](docs/exteriors.md). Turning on Nea against the Claude model already saved in Settings → AI is in [docs/agent-setup.md](docs/agent-setup.md). New environment variable names are in `.env.example`. Do not commit secrets. Migrations ship as SQL files; they are not applied to production from this repository.
+
 ## Stack
 
 Next.js 15 (App Router) + React 19 · TypeScript estricto · PostgreSQL +

@@ -18,12 +18,12 @@ export const SOURCE_VALUES: readonly SourceValue[] = [
 ];
 
 export const SOURCE_LABELS: Record<SourceValue | "desconocida", string> = {
-  anuncio: "Anuncio",
-  organico: "Contenido orgánico",
-  referido: "Referido",
-  conocido: "Conocido",
-  otro: "Otro",
-  desconocida: "Sin identificar",
+  anuncio: "Ad",
+  organico: "Organic / website",
+  referido: "Referral",
+  conocido: "Someone I know",
+  otro: "Other",
+  desconocida: "Unknown",
 };
 
 export function isSourceValue(v: unknown): v is SourceValue {

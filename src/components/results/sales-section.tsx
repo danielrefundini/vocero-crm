@@ -42,17 +42,17 @@ export function SalesSection({
               compare={data.kpis.newLeads}
             />
             <StatCard
-              label="Tratos ganados"
+              label="Deals won"
               value={String(data.kpis.won.current)}
               compare={data.kpis.won}
             />
             <StatCard
-              label="Dinero ganado"
+              label="Revenue won"
               value={money(data.kpis.wonCents.current)}
               compare={data.kpis.wonCents}
             />
             <StatCard
-              label="Tratos perdidos"
+              label="Deals lost"
               value={String(data.kpis.lost.current)}
               compare={data.kpis.lost}
               inverted
@@ -67,7 +67,7 @@ export function SalesSection({
               value={money(data.kpis.avgTicketCents)}
               hint={
                 data.kpis.avgTicketCents === null
-                  ? "ningún trato ganado con monto"
+                  ? "no won deal has an amount"
                   : undefined
               }
             />
@@ -81,15 +81,15 @@ export function SalesSection({
               format={(v) => String(v)}
             />
             <TimeBars
-              title="Tratos ganados"
-              unit="tratos ganados"
+              title="Deals won"
+              unit="deals won"
               points={data.series.map((s) => ({
                 bucket: s.bucket,
                 value: s.won,
                 detail: s.wonCents > 0 ? money(s.wonCents) : undefined,
               }))}
               format={(v) => String(v)}
-              emptyText="Ningún trato ganado en el periodo."
+              emptyText="No deals won in this period."
             />
           </div>
 
@@ -144,13 +144,13 @@ export function SalesSection({
               <div>
                 <Subhead>Por qué se perdieron</Subhead>
                 {data.lossReasons.length === 0 ? (
-                  <p className="text-sm text-text-3">Ningún trato perdido en este periodo.</p>
+                  <p className="text-sm text-text-3">No deals lost in this period.</p>
                 ) : (
                   <table className="w-full text-sm">
                     <thead className="sr-only">
                       <tr>
                         <th scope="col">Motivo</th>
-                        <th scope="col">Tratos</th>
+                        <th scope="col">Deals</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -175,7 +175,7 @@ export function SalesSection({
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:max-w-xl">
               <StatCard label="Dinero en tratos abiertos" value={money(data.pipeline.openCents)} />
               <StatCard
-                label="Tratos sin monto"
+                label="Deals with no amount"
                 value={String(data.pipeline.withoutAmount)}
                 hint={data.pipeline.withoutAmount > 0 ? "no suman al dinero abierto" : undefined}
               />

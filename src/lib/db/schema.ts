@@ -1,6 +1,7 @@
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -129,7 +130,9 @@ export const contact = pgTable(
      * 014: canal por el que vive este contacto. Aditivo y con default: toda
      * fila existente sigue significando exactamente lo mismo.
      */
-    channel: text("channel", { enum: ["whatsapp", "instagram", "messenger", "tiktok"] })
+    channel: text("channel", {
+      enum: ["whatsapp", "instagram", "messenger", "tiktok", "sms", "email"],
+    })
       .notNull()
       .default("whatsapp"),
     /**
@@ -142,6 +145,17 @@ export const contact = pgTable(
     waIdentity: text("wa_identity").notNull(),
     /** Teléfono como ATRIBUTO opcional (003): falta en contactos BSUID. */
     phone: text("phone"),
+    /** Correo. Obligatorio para el canal email; opcional en los demás. */
+    email: text("email"),
+    addressStreet: text("address_street"),
+    addressCity: text("address_city"),
+    addressState: text("address_state"),
+    addressZip: text("address_zip"),
+    /**
+     * Servicios de exteriores (windows, roofing, …). Lista cerrada en la app;
+     * la columna es jsonb para no migrar cada vez que se agregue uno.
+     */
+    services: jsonb("services").$type<string[]>().notNull().default([]),
     /** Business-Scoped User ID si se conoce (003). */
     waUserId: text("wa_user_id"),
     name: text("name").notNull(),
@@ -245,6 +259,13 @@ export const lead = pgTable(
     amountCents: integer("amount_cents"),
     /** Moneda del monto; la del negocio al capturarlo (Ajustes → Marca). */
     currency: text("currency"),
+    /** Fecha de la cotización (día civil, sin hora). NULL = todavía no. */
+    quoteDate: date("quote_date", { mode: "string" }),
+    /**
+     * Marca con la que se cotiza. `daniel_exteriors` | `presidential_exteriors`.
+     * NULL en tratos anteriores a esta columna.
+     */
+    brand: text("brand"),
     /**
      * Prioridad de cierre. NULL = nadie la ha decidido, que NO es lo mismo que
      * "media": nada la escribe automáticamente, así que el dueño puede confiar
@@ -364,7 +385,9 @@ export const conversation = pgTable(
      * 014: canal de la conversacion. Denormalizado del contacto a proposito:
      * el ruteo de salida y el filtro de la bandeja lo leen en cada mensaje.
      */
-    channel: text("channel", { enum: ["whatsapp", "instagram", "messenger", "tiktok"] })
+    channel: text("channel", {
+      enum: ["whatsapp", "instagram", "messenger", "tiktok", "sms", "email"],
+    })
       .notNull()
       .default("whatsapp"),
     /**
@@ -800,7 +823,7 @@ export const calendarSettings = pgTable(
     bufferMinutes: integer("buffer_minutes").notNull().default(0),
     minNoticeHours: integer("min_notice_hours").notNull().default(2),
     maxDaysAhead: integer("max_days_ahead").notNull().default(7),
-    timezone: text("timezone").notNull().default("America/Mexico_City"),
+    timezone: text("timezone").notNull().default("America/New_York"),
     /**
      * Cómo se entrega la reunión. `enlace-fijo` no habla con nadie: es el
      * default y la razón de que encender la agenda no exija terceros.
@@ -862,8 +885,14 @@ export const booking = pgTable(
      */
     meetingLink: text("meeting_link"),
     /**
+     * Dirección de la visita en casa. Se copia al agendar: cambiar la del
+     * contacto después no reescribe la cita.
+     */
+    propertyAddress: text("property_address"),
+    /**
      * El proveedor falló al crear la reunión. La cita existe igual —un tercero
      * caído no cuesta la conversión— y el operador reintenta desde "Citas".
+     * En una visita en casa, true significa que falta la dirección (y el mapa).
      */
     linkPending: boolean("link_pending").notNull().default(false),
     /** Conversación del Laboratorio: jamás llama a un conector real. */

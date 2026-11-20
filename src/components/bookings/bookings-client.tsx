@@ -29,6 +29,7 @@ import type { WeeklyHours } from "@/server/agenda/settings";
 import { cn } from "@/lib/utils";
 import { AgendaList } from "./agenda-list";
 import { BlockDialog } from "./block-dialog";
+import { NewVisitDialog } from "./new-visit-dialog";
 import { BookingDrawer, type ActResult } from "./booking-drawer";
 import type { Booking } from "./booking-look";
 import { CalendarToolbar } from "./calendar-toolbar";
@@ -101,6 +102,7 @@ export function BookingsClient({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<Booking | null>(null);
   const [blockDraft, setBlockDraft] = useState<{ day: string; time: string } | null>(null);
+  const [visitOpen, setVisitOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [now, setNow] = useState<number | null>(null);
   const seq = useRef(0);
@@ -332,6 +334,7 @@ export function BookingsClient({
         onView={changeView}
         onListRange={changeListRange}
         onBlock={() => openBlock()}
+        onNewVisit={() => setVisitOpen(true)}
       />
 
       {/* En escritorio ancho el panel de la cita EMPUJA el calendario en vez
@@ -430,6 +433,19 @@ export function BookingsClient({
         )}
       </div>
 
+      {visitOpen && (
+        <NewVisitDialog
+          day={anchor}
+          time="09:00"
+          timezone={timezone}
+          onCancel={() => setVisitOpen(false)}
+          onCreated={(day) => {
+            setVisitOpen(false);
+            reveal(day);
+            void reload();
+          }}
+        />
+      )}
       {blockDraft && (
         <BlockDialog
           initialDay={blockDraft.day}

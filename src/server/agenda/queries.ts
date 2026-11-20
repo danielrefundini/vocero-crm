@@ -22,6 +22,7 @@ export type BookingListItem = {
   /** Con qué conector nació la entrega de esta cita. */
   connector: string | null;
   meetingLink: string | null;
+  propertyAddress: string | null;
   /** El proveedor falló al crear la reunión: se puede reintentar. */
   linkPending: boolean;
   isTest: boolean;
@@ -135,6 +136,7 @@ function toListItem(r: Row, timezone: string): BookingListItem {
     conversationId: r.booking.conversationId,
     connector: r.booking.connector,
     meetingLink: r.booking.meetingLink,
+    propertyAddress: r.booking.propertyAddress,
     linkPending: r.booking.linkPending,
     isTest: r.booking.isTest,
     notes: r.booking.notes,

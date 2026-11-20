@@ -112,8 +112,21 @@ export async function borrarRespuesta(organizationId: string, id: string): Promi
 
 /** Las cuatro de la demo (D6). Idempotente: no pisa ni duplica. */
 export const RESPUESTAS_DEMO: { atajo: string; texto: string }[] = [
-  { atajo: "hola", texto: "¡Hola {nombre}! Gracias por escribir. ¿En qué te ayudo?" },
-  { atajo: "horario", texto: "Abrimos de lunes a sábado de 8:00 a 19:00, y domingo de 9:00 a 14:00." },
-  { atajo: "envio", texto: "Hacemos envíos en la ciudad el mismo día si pides antes de las 14:00. Fuera de la ciudad, de 2 a 4 días." },
-  { atajo: "pago", texto: "Aceptamos transferencia, tarjeta y efectivo en tienda. Te paso los datos de la cuenta si quieres pagar por transferencia." },
+  {
+    atajo: "hello",
+    texto: "Hi {nombre}, thanks for reaching out. Which part of the exterior are you looking at?",
+  },
+  {
+    atajo: "visit",
+    texto: "I can come by the property. What city is it in, and which days work for you?",
+  },
+  {
+    atajo: "services",
+    texto:
+      "We handle windows, roofing, siding, doors, gutters, attic insulation, and decks in DC, Maryland, and Virginia.",
+  },
+  {
+    atajo: "next",
+    texto: "I'll send a written quote after I see the property. I won't guess a price before that.",
+  },
 ];

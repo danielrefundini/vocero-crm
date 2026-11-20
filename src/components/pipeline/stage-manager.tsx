@@ -108,7 +108,7 @@ export function StageManager({
               />
               {s.kind !== "open" ? (
                 <Badge variant={s.kind === "won" ? "success" : "secondary"}>
-                  {s.kind === "won" ? "ganado" : "perdido"}
+                  {s.kind === "won" ? "won" : "lost"}
                 </Badge>
               ) : (
                 <Button

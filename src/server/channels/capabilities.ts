@@ -148,6 +148,39 @@ export const CHANNEL_CAPABILITIES: Record<Channel, ChannelCapabilities> = {
     deliveryReceipts: false,
     quoteReplies: false,
   },
+  /**
+   * SMS no tiene ventana de 24 h ni plantillas: es el seguimiento de quien
+   * llegó por la web o no está en WhatsApp. El tope de Twilio es 1600
+   * caracteres por segmento concatenado.
+   */
+  sms: {
+    label: CHANNEL_LABEL.sms,
+    windowMs: null,
+    outsideWindow: "none",
+    humanAgentWindowMs: null,
+    textFormat: "plain",
+    maxTextBytes: null,
+    maxTextChars: 1600,
+    maxOutboundPerWindow: null,
+    outboundMedia: false,
+    structuredMessages: false,
+    deliveryReceipts: true,
+    quoteReplies: false,
+  },
+  email: {
+    label: CHANNEL_LABEL.email,
+    windowMs: null,
+    outsideWindow: "none",
+    humanAgentWindowMs: null,
+    textFormat: "plain",
+    maxTextBytes: null,
+    maxTextChars: null,
+    maxOutboundPerWindow: null,
+    outboundMedia: false,
+    structuredMessages: false,
+    deliveryReceipts: false,
+    quoteReplies: false,
+  },
 };
 
 /**

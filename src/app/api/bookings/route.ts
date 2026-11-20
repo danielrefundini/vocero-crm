@@ -52,6 +52,8 @@ const postSchema = z.discriminatedUnion("kind", [
     conversationId: z.string().min(1).nullish(),
     startUtc: z.string().min(1),
     notes: z.string().nullish(),
+    connector: z.enum(["enlace-fijo", "zoom", "google", "in-home"]).optional(),
+    propertyAddress: z.string().max(300).nullish(),
   }),
   z.object({
     kind: z.literal("block"),
@@ -93,6 +95,8 @@ export const POST = withAuth(async (session, req: Request) => {
       conversationId: body.data.conversationId ?? null,
       startUtc: body.data.startUtc,
       notes: body.data.notes ?? null,
+      connector: body.data.connector,
+      propertyAddress: body.data.propertyAddress ?? null,
       source: "manual",
       requireOffer: false,
     });

@@ -15,9 +15,9 @@ import type { PriorityValue } from "@/lib/types";
 export const PRIORITY_VALUES: readonly PriorityValue[] = ["alta", "media", "baja"];
 
 export const PRIORITY_LABELS: Record<PriorityValue, string> = {
-  alta: "Alta",
-  media: "Media",
-  baja: "Baja",
+  alta: "High",
+  media: "Medium",
+  baja: "Low",
 };
 
 export function isPriority(v: unknown): v is PriorityValue {
