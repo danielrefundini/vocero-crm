@@ -29,6 +29,8 @@ export type MeetingRequest = {
   /** Zona IANA del negocio: el proveedor la usa para mostrarla a los suyos. */
   timezone: string;
   notes?: string;
+  /** Dirección de una visita en casa. Los demás conectores la ignoran. */
+  location?: string;
 };
 
 export type MeetingResult = {

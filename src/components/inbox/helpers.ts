@@ -60,15 +60,15 @@ export function formatBytes(bytes: number): string {
  */
 export function channelList(labels: readonly string[]): string {
   if (labels.length <= 1) return labels[0] ?? "";
-  return `${labels.slice(0, -1).join(", ")} o ${labels[labels.length - 1]}`;
+  return `${labels.slice(0, -1).join(", ")} or ${labels[labels.length - 1]}`;
 }
 
 /** 028 — El texto de la bandeja vacía, con los canales encendidos. */
 export function emptyInboxDescription(labels: readonly string[]): string {
   if (labels.length <= 1) {
-    return "Cuando alguien escriba a tu número de WhatsApp, su conversación aparecerá aquí en tiempo real.";
+    return "When someone messages your WhatsApp number, the conversation shows up here.";
   }
-  return `Cuando alguien te escriba por ${channelList(labels)}, su conversación aparecerá aquí en tiempo real.`;
+  return `When someone messages you on ${channelList(labels)}, the conversation shows up here.`;
 }
 
 export function previewText(preview: string | null): string {

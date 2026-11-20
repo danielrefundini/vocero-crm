@@ -40,7 +40,7 @@ export type BoardLead = {
 
 export function PipelineClient() {
   const [stages, setStages] = useState<StageDto[]>([]);
-  const [currency, setCurrency] = useState("MXN");
+  const [currency, setCurrency] = useState("USD");
   const [leads, setLeads] = useState<BoardLead[]>([]);
   const [activeLead, setActiveLead] = useState<BoardLead | null>(null);
   const [managing, setManaging] = useState(false);
@@ -118,7 +118,7 @@ export function PipelineClient() {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       // Sin `stageId`: esto NO mueve la tarjeta, solo escribe el importe.
-      body: JSON.stringify({ amountCents: cents }),
+      body: JSON.stringify({ amountCents: cents, currency: cents === null ? null : "USD" }),
     }).catch(() => null);
     void refetch();
   }

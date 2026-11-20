@@ -1,6 +1,7 @@
 /** DTOs que viajan por la API interna (lado cliente). */
 
 import type { Channel } from "@/lib/channels";
+import type { Brand, ServiceType } from "@/lib/exteriors";
 
 export type ConversationDto = {
   id: string;
@@ -8,6 +9,7 @@ export type ConversationDto = {
   channel: Channel;
   contact: { id: string; name: string; phone: string | null };
   stageName: string | null;
+  stageKind?: "open" | "won" | "lost" | null;
   aiEnabled: boolean;
   handoffAt: string | null;
   handoffReason: string | null;
@@ -138,6 +140,22 @@ export type ContactDto = {
   name: string;
   /** null en contactos que llegaron solo con BSUID (003). */
   phone: string | null;
+  email?: string | null;
+  address?: {
+    street: string | null;
+    city: string | null;
+    state: string | null;
+    zip: string | null;
+    formatted: string;
+  };
+  services?: ServiceType[];
+  deal?: {
+    id: string;
+    amountCents: number | null;
+    currency: string | null;
+    quoteDate: string | null;
+    brand: Brand | null;
+  } | null;
   notes: string | null;
   /** Etapa del embudo del lead asociado; null si el contacto no tiene lead. */
   stageName: string | null;
@@ -167,12 +185,12 @@ export type LossReason =
   | "otro";
 
 export const LOSS_REASON_LABEL: Record<LossReason, string> = {
-  precio: "Le pareció caro",
-  no_es_perfil: "No era el perfil",
-  sin_presupuesto: "Sin presupuesto ahora",
-  eligio_otro: "Se fue con otro",
-  nunca_contesto: "Nunca contestó",
-  otro: "Otro",
+  precio: "Price was too high",
+  no_es_perfil: "Not a fit",
+  sin_presupuesto: "No budget right now",
+  eligio_otro: "Chose someone else",
+  nunca_contesto: "Never replied",
+  otro: "Other",
 };
 
 /** Quién provocó un movimiento de etapa. */

@@ -46,20 +46,19 @@ export function BrainStatusCard({
   return (
     <Card data-brain-card data-warning={status.warning ?? "ninguno"}>
       <CardHeader className="pb-4">
-        <CardTitle>Quién responde a tus clientes</CardTitle>
+        <CardTitle>Who replies to your customers</CardTitle>
         <CardDescription>
-          Vocero no trae agente: contesta el que conectas al lado (Nea, o el
-          tuyo), y solo con el interruptor de arriba encendido. Sin agente,
-          contestas tú desde la bandeja.
+          This CRM does not include an agent. Replies come from the brain you connect beside it
+          (Nea, or your own), and only while the switch above is on. Without that, you reply from the inbox.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {status.warning === "sin_cerebro" && (
-          <Callout tone="info" icon={Info} title="Sin agente conectado">
-            Vocero funciona como bandeja manual: tus clientes reciben lo que
-            contestes tú. Para que un agente conteste, levántalo al lado del CRM
-            y pon <Env>BRAIN_DISPATCH_URL</Env> y <Env>BOT_API_KEY</Env> en el
-            entorno.{" "}
+          <Callout tone="info" icon={Info} title="No agent connected">
+            This stays a manual inbox: customers get the replies you send. To let an agent reply,
+            run one beside the CRM and set <Env>BRAIN_DISPATCH_URL</Env> and <Env>BOT_API_KEY</Env>.
+            Leave the agent model key empty so it uses the Claude model already saved in Settings → AI.
+            See docs/agent-setup.md.{" "}
             <a
               href={GUIA_DEL_PAR_URL}
               target="_blank"
@@ -72,10 +71,9 @@ export function BrainStatusCard({
           </Callout>
         )}
         {status.warning === "apagado" && (
-          <Callout tone="warning" icon={AlertTriangle} title="Tu agente está conectado pero apagado">
-            Enciéndelo con el interruptor de arriba para que conteste. Mientras
-            tanto nadie contesta en automático: los mensajes esperan en la
-            bandeja.
+          <Callout tone="warning" icon={AlertTriangle} title="Your agent is connected but switched off">
+            Turn it on with the switch above so it can reply. Until then nobody replies automatically:
+            messages wait in the inbox.
           </Callout>
         )}
 

@@ -1,5 +1,6 @@
 import { and, eq, or } from "drizzle-orm";
 import { CHANNEL_LABEL, type Channel } from "@/lib/channels";
+import { EMAIL_PREFIX, SMS_PREFIX } from "@/lib/exteriors";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
 import { normalizeMx } from "@/lib/meta/client";
@@ -22,6 +23,7 @@ export const IG_PREFIX = "ig:";
 export const FB_PREFIX = "fb:";
 /** 022: identidad de TikTok: el id del remitente que entrega Zernio. */
 export const TT_PREFIX = "tt:";
+export { EMAIL_PREFIX, SMS_PREFIX };
 
 // El tipo vive en lib/ porque la interfaz tambien lo necesita; se reexporta
 // aqui para no tocar a quien ya lo importaba de este modulo.
@@ -120,7 +122,9 @@ export function parseIdentity(identity: string): ResolvedIdentity | null {
   if (
     identity.startsWith(IG_PREFIX) ||
     identity.startsWith(FB_PREFIX) ||
-    identity.startsWith(TT_PREFIX)
+    identity.startsWith(TT_PREFIX) ||
+    identity.startsWith(EMAIL_PREFIX) ||
+    identity.startsWith(SMS_PREFIX)
   ) {
     return null;
   }
@@ -212,7 +216,7 @@ export async function getOrCreateContactByIdentity(
         organizationId,
         channel,
         waIdentity: resolved.identity,
-        phone: null,
+        phone: resolved.phone,
         waUserId: null,
         name: resolved.profileName?.trim() || channelFallback(channel),
       })
@@ -324,5 +328,5 @@ function displayFallback(resolved: ResolvedIdentity): string {
  * PSID crudos, que en la bandeja no le dicen nada al operador.
  */
 function channelFallback(channel: Channel): string {
-  return `Contacto de ${CHANNEL_LABEL[channel] ?? channel}`;
+  return `${CHANNEL_LABEL[channel] ?? channel} contact`;
 }

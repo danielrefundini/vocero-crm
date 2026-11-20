@@ -47,6 +47,8 @@ const SETTINGS_HREF: Record<Channel, string> = {
   instagram: "/settings/instagram",
   messenger: "/settings/messenger",
   tiktok: "/settings/tiktok",
+  sms: "/settings/follow-up",
+  email: "/settings/follow-up",
 };
 
 const DOT: Record<Level, string> = {

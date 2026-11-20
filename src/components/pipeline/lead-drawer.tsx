@@ -17,6 +17,7 @@ import { ContactAvatar } from "@/components/avatar";
 import { FichaPanel } from "@/components/ficha-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ExteriorsEditor } from "@/components/exteriors/exteriors-fields";
 import { PriorityPicker } from "./priority-picker";
 import type { BoardLead } from "./pipeline-client";
 
@@ -154,12 +155,10 @@ export function LeadDrawer({
                 href={`/inbox?contact=${lead.contact.id}`}
                 className="mt-3 flex w-full items-center justify-center gap-2 rounded-md border bg-secondary px-3 py-2 text-sm font-medium hover:bg-accent"
               >
-                <MessageSquareText className="h-4 w-4" /> Abrir conversación
+                <MessageSquareText className="h-4 w-4" /> Open conversation
               </Link>
             ) : (
-              <p className="mt-3 text-xs text-text-3">
-                Todavía no hay conversación con este contacto.
-              </p>
+              <p className="mt-3 text-xs text-text-3">No conversation with this contact yet.</p>
             )}
 
             {anuncio && (
@@ -169,11 +168,11 @@ export function LeadDrawer({
             )}
           </section>
 
+          <ExteriorsEditor contactId={contactId} />
+
           {/* Cuánto */}
           <section className="border-b p-4">
-            <p className="mb-2 kicker">
-              Monto ({moneda})
-            </p>
+            <p className="mb-2 kicker">Quote ({moneda})</p>
             {editandoMonto ? (
               <>
                 <Input

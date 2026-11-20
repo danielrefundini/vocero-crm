@@ -82,7 +82,7 @@ export function LossReasonDialog({
             disabled={!reason}
             onClick={() => reason && onConfirm(reason, note.trim())}
           >
-            Marcar como perdido
+            Mark as lost
           </Button>
         </div>
       </div>

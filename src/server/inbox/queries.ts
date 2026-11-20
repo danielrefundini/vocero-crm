@@ -61,6 +61,12 @@ export async function listConversations(
     where l.contact_id = ${schema.contact.id}
     limit 1
   )`;
+  const stageKindSql = sql<"open" | "won" | "lost" | null>`(
+    select s.kind from lead l
+    join pipeline_stage s on s.id = l.stage_id
+    where l.contact_id = ${schema.contact.id}
+    limit 1
+  )`;
 
   const rows = await db
     .select({
@@ -68,6 +74,7 @@ export async function listConversations(
       contact: schema.contact,
       preview: previewSql,
       stageName: stageSql,
+      stageKind: stageKindSql,
       anuncio: anuncioDeLista,
     })
     .from(schema.conversation)
@@ -92,7 +99,8 @@ export async function listConversations(
       r.contact,
       r.preview,
       r.stageName,
-      aAnuncioDeLista(r.anuncio)
+      aAnuncioDeLista(r.anuncio),
+      r.stageKind
     )
   );
 }
@@ -155,7 +163,8 @@ export function serializeConversation(
   contact: typeof schema.contact.$inferSelect,
   preview: string | null = null,
   stageName: string | null = null,
-  anuncio: ConversationDto["anuncio"] = null
+  anuncio: ConversationDto["anuncio"] = null,
+  stageKind: "open" | "won" | "lost" | null = null
 ): ConversationDto {
   const caps = capabilitiesFor(c.channel);
   // 024: la extensión humana solo existe en los canales que la declaran.
@@ -168,6 +177,7 @@ export function serializeConversation(
     channel: c.channel,
     contact: { id: contact.id, name: contact.name, phone: contact.phone },
     stageName,
+    stageKind,
     aiEnabled: c.aiEnabled,
     handoffAt: c.handoffAt?.toISOString() ?? null,
     handoffReason: c.handoffReason,
@@ -175,7 +185,10 @@ export function serializeConversation(
     lastMessageAt: c.lastMessageAt?.toISOString() ?? null,
     unreadCount: c.unreadCount,
     // 022: la ventana es la del canal (48 h en TikTok, 24 en los demás).
-    windowOpen: isWindowOpen(c.lastInboundAt, new Date(), windowMsFor(c.channel)),
+    windowOpen:
+      capabilitiesFor(c.channel).windowMs === null
+        ? true
+        : isWindowOpen(c.lastInboundAt, new Date(), windowMsFor(c.channel)),
     windowRemainingMs: windowRemainingMs(
       c.lastInboundAt,
       new Date(),

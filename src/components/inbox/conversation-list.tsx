@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Clock3, Inbox, Megaphone, SlidersHorizontal, Search, Sparkles, UserRound, X } from "lucide-react";
+import { Clock3, Inbox, Megaphone, SlidersHorizontal, Search, UserRound, X } from "lucide-react";
 import type { ConversationDto } from "@/lib/types";
 import { etiquetaDeOrigen, titularDeOrigen } from "@/lib/anuncios";
 import { CHANNEL_LABEL, type Channel } from "@/lib/channels";
@@ -9,7 +9,6 @@ import { ChannelBadge } from "@/components/channel-badge";
 import { matchesQuery } from "@/lib/search";
 import { cn } from "@/lib/utils";
 import { ContactAvatar } from "@/components/avatar";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { emptyInboxDescription, formatTime, previewText } from "./helpers";
 import { EVENTO_BORRADOR, leerBorrador } from "@/lib/borradores";
@@ -19,14 +18,24 @@ import { etiquetaVence, porVencer } from "@/lib/filtros-bandeja";
 
 /* Puntos de etapa: los tokens del tema, no hex copiados del tema claro —
    así siguen al acento white-label y se recalculan en oscuro. */
-const STAGE_DOT: Record<string, string> = {
+const STAGE_DOT_BY_NAME: Record<string, string> = {
+  New: "var(--text-3)",
+  Contacted: "var(--accent)",
+  "Consult booked": "var(--warning)",
+  Quoted: "var(--accent)",
+  Won: "var(--success)",
+  Lost: "var(--danger)",
   Nuevo: "var(--text-3)",
   "En conversación": "var(--accent)",
   Interesado: "var(--warning)",
   Cliente: "var(--success)",
   Perdido: "var(--danger)",
 };
-const STAGE_DOT_FALLBACK = "var(--text-3)";
+const STAGE_DOT_BY_KIND: Record<string, string> = {
+  won: "var(--success)",
+  lost: "var(--danger)",
+  open: "var(--accent)",
+};
 
 /**
  * Foco por teclado de chips y selector: el anillo de `ui/button`, acento
@@ -39,44 +48,16 @@ const FOCO_SEPARADO =
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
 
 function InboxEmptyState({
-  onSeeded,
   channels,
 }: {
-  onSeeded: () => void;
   channels: readonly Channel[];
 }) {
-  const [seeding, setSeeding] = useState(false);
-  const [failed, setFailed] = useState(false);
-
-  async function seed() {
-    setSeeding(true);
-    const res = await fetch("/api/seed/demo", { method: "POST" }).catch(
-      () => null
-    );
-    setSeeding(false);
-    if (res?.ok) onSeeded();
-    else setFailed(true);
-  }
-
   return (
     <EmptyState
       icon={Inbox}
       className="h-full"
-      title="Sin conversaciones todavía"
+      title="No conversations yet"
       description={emptyInboxDescription(channels.map((ch) => CHANNEL_LABEL[ch]))}
-      action={
-        !failed && (
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={seeding}
-            onClick={() => void seed()}
-          >
-            <Sparkles className="h-4 w-4" strokeWidth={1.7} />
-            {seeding ? "Cargando demo…" : "Cargar datos de demostración"}
-          </Button>
-        )
-      }
     />
   );
 }
@@ -86,7 +67,7 @@ export function ConversationList({
   channels,
   selectedId,
   onSelect,
-  onSeeded,
+  onSeeded: _onSeeded,
 }: {
   conversations: ConversationDto[] | null;
   /** Canales encendidos en esta instancia (ADR-001). */
@@ -419,7 +400,7 @@ export function ConversationList({
         {loading ? (
           <p className="p-6 text-center text-xs text-text-3">Cargando…</p>
         ) : conversations.length === 0 ? (
-          <InboxEmptyState onSeeded={onSeeded} channels={channels} />
+          <InboxEmptyState channels={channels} />
         ) : visible.length === 0 ? (
           <p className="p-6 text-center text-xs text-text-3">
             {/* 028: un canal en el que nadie ha escrito no es una búsqueda fallida. */}
@@ -508,7 +489,10 @@ export function ConversationList({
                             <span
                               className="h-[7px] w-[7px] rounded-full"
                               style={{
-                                background: STAGE_DOT[c.stageName] ?? STAGE_DOT_FALLBACK,
+                                background:
+                                  (c.stageName && STAGE_DOT_BY_NAME[c.stageName]) ||
+                                  (c.stageKind && STAGE_DOT_BY_KIND[c.stageKind]) ||
+                                  "var(--text-3)",
                               }}
                             />
                             {c.stageName}

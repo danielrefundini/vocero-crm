@@ -87,6 +87,17 @@ export const envSchema = z.object({
   MEDIA_BUCKET_KEY_ID: z.string().optional(),
   MEDIA_BUCKET_SECRET: z.string().optional(),
   NODE_ENV: z.string().default("development"),
+  // Formulario del sitio. Sin token el alta responde 401. Ver docs/exteriors.md.
+  WEBSITE_FORM_TOKEN: z.string().optional(),
+  WEBSITE_FORMS: z.string().optional(),
+  // SMS. Las tres juntas encienden el envío y el webhook. Si falta una, el canal está apagado.
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_FROM_NUMBER: z.string().optional(),
+  // Correo. El secreto del webhook hace falta para recibir; las dos primeras, para enviar.
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

@@ -19,6 +19,8 @@ import { formatPhone } from "@/lib/utils";
 import { ContactAvatar } from "@/components/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExteriorsFields, EMPTY_EXTERIORS, type ExteriorsValue } from "@/components/exteriors/exteriors-fields";
+import { parseMoneyToCents } from "@/lib/money";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -94,14 +96,14 @@ export function ContactsClient() {
     <div className="flex h-full flex-col">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:gap-4 sm:px-6 sm:py-4">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-[17px] font-bold tracking-tight">Contactos</h2>
+          <h2 className="text-[17px] font-bold tracking-tight">Contacts</h2>
           <Button size="sm" onClick={() => setCreando(true)}>
             <UserPlus className="mr-1.5 h-4 w-4" strokeWidth={1.8} />
-            Nuevo contacto
+            New contact
           </Button>
           <Button size="sm" variant="secondary" onClick={() => setImportando(true)}>
             <Upload className="mr-1.5 h-4 w-4" strokeWidth={1.8} />
-            Importar
+            Import
           </Button>
         </div>
         <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:gap-3">
@@ -163,8 +165,8 @@ export function ContactsClient() {
             <EmptyState
               icon={Users}
               className="h-full"
-              title="Sin contactos"
-              description="Cada persona que escriba a tu WhatsApp quedará registrada aquí automáticamente."
+              title="No contacts yet"
+              description="People who message you, and leads from your website, show up here."
             />
           )
         ) : (
@@ -218,7 +220,7 @@ export function ContactsClient() {
                     size="sm"
                     onClick={() => setEditing(c)}
                   >
-                    Editar
+                    Edit
                   </Button>
                   {/* A quien nunca escribió hay que abrirle la conversación con
                       una plantilla: es regla de Meta, no del CRM. */}
@@ -327,11 +329,25 @@ function EditDialog({
 }: {
   contact: ContactDto;
   onClose: () => void;
-  onSave: (patch: { name: string; notes: string; aiPaused?: boolean }) => Promise<void>;
+  onSave: (patch: Record<string, unknown>) => Promise<void>;
 }) {
   const [name, setName] = useState(contact.name);
   const [notes, setNotes] = useState(contact.notes ?? "");
   const [aiPaused, setAiPaused] = useState(contact.aiPaused ?? false);
+  const [exteriors, setExteriors] = useState<ExteriorsValue>({
+    ...EMPTY_EXTERIORS,
+    email: contact.email ?? "",
+    addressStreet: contact.address?.street ?? "",
+    addressCity: contact.address?.city ?? "",
+    addressState: contact.address?.state ?? "",
+    addressZip: contact.address?.zip ?? "",
+    services: contact.services ?? [],
+    brand: contact.deal?.brand ?? "daniel_exteriors",
+    quoteAmount:
+      contact.deal?.amountCents == null ? "" : (contact.deal.amountCents / 100).toFixed(2),
+    quoteDate: contact.deal?.quoteDate ?? "",
+  });
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <div
@@ -339,33 +355,24 @@ function EditDialog({
       onClick={onClose}
     >
       <div
-        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-lg border bg-popover p-5 shadow-xl"
+        className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-lg border bg-popover p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-4 font-semibold">Editar contacto</h3>
+        <h3 className="mb-4 font-semibold">Edit contact</h3>
         <div className="space-y-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="edit-name">
-              Nombre
+              Name
             </label>
-            <Input
-              id="edit-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <Input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
+          <ExteriorsFields value={exteriors} onChange={setExteriors} />
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="edit-notes">
-              Notas
+              Notes
             </label>
-            <Textarea
-              id="edit-notes"
-              rows={4}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
+            <Textarea id="edit-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
-          {/* 027 */}
           <label className="flex items-start gap-2 text-sm">
             <input
               type="checkbox"
@@ -374,33 +381,48 @@ function EditDialog({
               className="mt-0.5 accent-primary"
             />
             <span>
-              El agente no le responde
-              <span className="block text-[11px] text-text-3">
-                Sus mensajes llegan a la Bandeja y los atiendes tú.
+              The agent does not reply to this person
+              <span className="block text-[11px] text-muted-foreground">
+                Their messages stay in the inbox for you.
               </span>
             </span>
           </label>
         </div>
+        {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             disabled={!name.trim()}
-            onClick={() =>
+            onClick={() => {
+              const amount = exteriors.quoteAmount.trim();
+              const cents = amount ? parseMoneyToCents(amount) : null;
+              if (amount && cents === null) {
+                setError("Quote amount must be a number, or left blank.");
+                return;
+              }
               void onSave({
                 name: name.trim(),
                 notes,
-                // Solo si cambió: mandarlo siempre reescribiría el interruptor
-                // de la Bandeja cada vez que alguien corrige un nombre.
                 ...(aiPaused !== (contact.aiPaused ?? false) ? { aiPaused } : {}),
-              })
-            }
+                email: exteriors.email.trim() || null,
+                addressStreet: exteriors.addressStreet,
+                addressCity: exteriors.addressCity,
+                addressState: exteriors.addressState,
+                addressZip: exteriors.addressZip,
+                services: exteriors.services,
+                brand: exteriors.brand || null,
+                amountCents: cents,
+                quoteDate: exteriors.quoteDate || null,
+              });
+            }}
           >
-            Guardar
+            Save
           </Button>
         </div>
       </div>
     </div>
   );
 }
+
