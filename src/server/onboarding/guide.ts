@@ -47,7 +47,7 @@ export type Guide = {
 
 /** 036 — A dónde lleva «Conecta tu agente»: la receta del par. */
 export const GUIA_DEL_PAR =
-  "https://github.com/kevinrivm/vocero-crm/blob/main/docs/migrar-a-2.0.md#el-par-crm--nea";
+  "/guides/connect-agent";
 
 const ready = (s: ReadinessStep | undefined) => s?.status === "ready";
 
@@ -64,42 +64,42 @@ export function guideFrom(status: OnboardingStatus): Guide {
   const steps: GuideStep[] = [
     {
       key: "agent",
-      title: "Configura tu agente",
+      title: "Set up your agent",
       description:
-        "Ponle nombre y cuéntale a qué se dedica tu negocio. Si quieres ver un ejemplo primero, carga la demo desde la Bandeja y cámbiala por tus datos.",
+        "Give it a name and tell it what your business does. If you want to see an example first, load the demo from the Inbox and swap in your details.",
       done: ready(profile),
       href: "/agent",
-      cta: "Ir a Agente",
+      cta: "Go to Agent",
       hint: ready(profile) ? null : (profile?.nextAction ?? null),
     },
     {
       key: "ai",
-      title: "Vincula tu proveedor de IA",
+      title: "Link your AI provider",
       description:
-        "Es la cuenta con la que tu agente piensa: OpenRouter o cualquier proveedor compatible con la API de OpenAI. La creas y la pagas tú; aquí solo pegas la llave y eliges el modelo.",
+        "It's the account your agent thinks with: OpenRouter or any OpenAI API-compatible provider. You create it and pay for it; here you just paste the key and pick the model.",
       done: ready(ai),
       href: "/settings/ai",
-      cta: "Vincular proveedor",
+      cta: "Link provider",
       hint: ai?.problem ?? null,
     },
     {
       key: "whatsapp",
-      title: "Vincula tu número de WhatsApp",
+      title: "Link your WhatsApp number",
       description:
-        "Conecta el número donde te escriben tus clientes. El CRM registra el webhook en Meta por ti al guardar.",
+        "Connect the number your customers message. The CRM registers the webhook in Meta for you when you save.",
       done: ready(whatsapp),
       href: "/settings/whatsapp",
-      cta: "Conectar WhatsApp",
+      cta: "Connect WhatsApp",
       hint: whatsapp?.problem ?? null,
     },
     {
       key: "brain",
-      title: "Conecta tu agente",
+      title: "Connect your agent",
       description:
-        "Vocero no trae agente: contesta el que conectas al lado (Nea, o el tuyo). Sin agente, Vocero funciona como bandeja manual y contestas tú.",
+        "Vocero doesn't ship an agent: the one you connect alongside answers (Nea, or your own). Without an agent, Vocero works as a manual inbox and you answer.",
       done: ready(brain),
       href: GUIA_DEL_PAR,
-      cta: "Cómo conectarlo",
+      cta: "How to connect it",
       hint: ready(brain) ? null : (brain?.problem ?? brain?.nextAction ?? null),
       optional: true,
     },
@@ -109,12 +109,12 @@ export function guideFrom(status: OnboardingStatus): Guide {
   if (calendar && calendar.status !== "not_applicable") {
     steps.push({
       key: "calendar",
-      title: "Configura tu agenda",
+      title: "Set up your calendar",
       description:
-        "Define tus horarios y cómo se entrega la reunión para que tu agente pueda agendar por ti.",
+        "Set your hours and how the meeting is delivered so your agent can book for you.",
       done: ready(calendar),
-      href: "/settings/calendar",
-      cta: "Configurar agenda",
+      href: "/guides/calendar",
+      cta: "How to set it up",
       hint: calendar.problem,
     });
   }

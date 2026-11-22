@@ -23,7 +23,7 @@ describe("fichaLabel", () => {
 
 describe("fichaValueText", () => {
   it("los booleanos se leen Sí/No: nadie califica en true", () => {
-    expect(fichaValueText(true)).toBe("Sí");
+    expect(fichaValueText(true)).toBe("Yes");
     expect(fichaValueText(false)).toBe("No");
   });
 

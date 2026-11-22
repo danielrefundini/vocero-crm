@@ -33,17 +33,17 @@ export type DateRange = { from: string; to: string };
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 const MONTHS = [
-  "enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto",
-  "septiembre", "octubre", "noviembre", "diciembre",
+  "January", "February", "March", "April", "May", "June", "July", "August",
+  "September", "October", "November", "December",
 ];
 const MONTHS_SHORT = [
-  "ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic",
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 /** De lunes a domingo, como `WEEKDAYS` y como el horario de Ajustes → Agenda. */
 const WEEKDAYS_LONG = [
-  "lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo",
+  "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday",
 ];
-const WEEKDAYS_SHORT = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+const WEEKDAYS_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 export function isCalendarView(v: unknown): v is CalendarView {
   return typeof v === "string" && (CALENDAR_VIEWS as readonly string[]).includes(v);
@@ -186,16 +186,16 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** "18 de sep de 2026", con el año solo si se pide. */
+/** "Sep 18, 2026", con el año solo si se pide. */
 function shortDate(iso: string, withYear: boolean, withMonth = true): string {
   const { y, m, d } = parts(iso);
-  const month = withMonth ? ` de ${MONTHS_SHORT[m - 1]}` : "";
-  return `${d}${month}${withYear ? ` de ${y}` : ""}`;
+  const month = withMonth ? `${MONTHS_SHORT[m - 1]} ` : "";
+  return `${month}${d}${withYear ? `, ${y}` : ""}`;
 }
 
 /**
- * «14 – 20 de sep de 2026» · «28 de sep – 4 de oct de 2026» ·
- * «29 de dic de 2025 – 4 de ene de 2026»: lo mismo que escribe Google.
+ * «Sep 14 – 20, 2026» · «Sep 28 – Oct 4, 2026» ·
+ * «Dec 29, 2025 – Jan 4, 2026»: lo mismo que escribe Google.
  */
 export function spanLabel(range: DateRange): string {
   if (range.from === range.to) return shortDate(range.from, true);
@@ -203,19 +203,19 @@ export function spanLabel(range: DateRange): string {
   const b = parts(range.to);
   if (a.y !== b.y) return `${shortDate(range.from, true)} – ${shortDate(range.to, true)}`;
   if (a.m !== b.m) return `${shortDate(range.from, false)} – ${shortDate(range.to, true)}`;
-  return `${a.d} – ${shortDate(range.to, true)}`;
+  return `${shortDate(range.from, false)} – ${b.d}, ${b.y}`;
 }
 
 /** Lo que dice la barra: el día, la semana, el mes o el rango de la Lista. */
 export function rangeLabel(view: CalendarView, anchor: string, listTo?: string | null): string {
   switch (view) {
     case "dia":
-      return capitalize(`${longDayLabel(anchor)} de ${parts(anchor).y}`);
+      return capitalize(`${longDayLabel(anchor)}, ${parts(anchor).y}`);
     case "semana":
       return spanLabel(visibleRange("semana", anchor));
     case "mes": {
       const { y, m } = parts(anchor);
-      return capitalize(`${MONTHS[m - 1]} de ${y}`);
+      return capitalize(`${MONTHS[m - 1]} ${y}`);
     }
     case "lista":
       return spanLabel(visibleRange("lista", anchor, listTo));
@@ -225,7 +225,7 @@ export function rangeLabel(view: CalendarView, anchor: string, listTo?: string |
 /** "viernes, 18 de septiembre". */
 export function longDayLabel(iso: string): string {
   const { m, d } = parts(iso);
-  return `${WEEKDAYS_LONG[weekdayIndex(iso)]}, ${d} de ${MONTHS[m - 1]}`;
+  return `${WEEKDAYS_LONG[weekdayIndex(iso)]}, ${MONTHS[m - 1]} ${d}`;
 }
 
 /** Encabezado de columna: "vie" y 18. */
@@ -422,15 +422,15 @@ export type RangeQuery =
 export function parseRangeQuery(from: string | null, to: string | null): RangeQuery {
   if (!from && !to) return { ok: true, range: null };
   if (!from || !to) {
-    return { ok: false, message: "Pide el rango con from y to juntos (AAAA-MM-DD)" };
+    return { ok: false, message: "Request the range with from and to together (YYYY-MM-DD)" };
   }
   if (!isIsoDate(from) || !isIsoDate(to)) {
-    return { ok: false, message: "Fechas inválidas: usa el formato AAAA-MM-DD" };
+    return { ok: false, message: "Invalid dates: use the YYYY-MM-DD format" };
   }
   const span = daysBetween(from, to);
-  if (span < 0) return { ok: false, message: "La fecha inicial va antes que la final" };
+  if (span < 0) return { ok: false, message: "The start date goes before the end date" };
   if (span + 1 > MAX_RANGE_DAYS) {
-    return { ok: false, message: `El rango máximo es de ${MAX_RANGE_DAYS} días` };
+    return { ok: false, message: `The maximum range is ${MAX_RANGE_DAYS} days` };
   }
   return { ok: true, range: { from, to } };
 }

@@ -83,7 +83,7 @@ export async function getAiCredentialSecret(
 export class AiCredentialError extends Error {
   constructor(readonly code: "sin_token") {
     super(
-      "No hay una llave guardada: pega la llave del proveedor para configurar la IA"
+      "No key saved: paste the provider key to set up AI"
     );
     this.name = "AiCredentialError";
   }
@@ -154,7 +154,7 @@ export async function saveAiCredential(input: {
     })
     .returning();
   const row = rows[0];
-  if (!row) throw new Error("no se pudo leer la credencial recién guardada");
+  if (!row) throw new Error("couldn't read the just-saved credential");
   return toPublic(row);
 }
 

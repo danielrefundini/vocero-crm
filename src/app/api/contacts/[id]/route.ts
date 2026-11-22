@@ -9,6 +9,8 @@ import {
   serializeContact,
 } from "@/server/contacts";
 import { upsertFicha } from "@/server/bot/ficha";
+import { validateAddressInput, normalizeEmail, mapServices } from "@/lib/exteriors";
+import { applyStructuredFields } from "@/server/exteriors/apply";
 import { pauseConversations } from "@/server/contacts-import";
 import { cuentaComoAnuncio } from "@/lib/anuncios";
 import {
@@ -23,7 +25,7 @@ type Params = { params: Promise<{ id: string }> };
 export const GET = withAuth(async (session, _req: Request, ctx: Params) => {
   const { id } = await ctx.params;
   const contact = await getContactById(session.organizationId, id);
-  if (!contact) return apiError(404, "not_found", "Contacto no encontrado");
+  if (!contact) return apiError(404, "not_found", "Contact not found");
   const [stageRow, anuncio] = await Promise.all([
     getContactStage(session.organizationId, id),
     anuncioDelContacto(session.organizationId, id),
@@ -33,7 +35,21 @@ export const GET = withAuth(async (session, _req: Request, ctx: Params) => {
     repararImagenSiFalta(session.organizationId, id);
   }
   return Response.json({
-    contact: serializeContact(contact, null, null, cuentaComoAnuncio(anuncio)),
+    contact: serializeContact(
+      contact,
+      stageRow?.stage.name ?? null,
+      stageRow?.lead.priority ?? null,
+      cuentaComoAnuncio(anuncio),
+      stageRow
+        ? {
+            id: stageRow.lead.id,
+            amountCents: stageRow.lead.amountCents,
+            currency: stageRow.lead.currency,
+            quoteDate: stageRow.lead.quoteDate,
+            brand: stageRow.lead.brand,
+          }
+        : null
+    ),
     // 018 — de qué anuncio llegó, o null si escribió por su cuenta.
     anuncio,
     stage: stageRow
@@ -61,6 +77,15 @@ const patchSchema = z.object({
    * borrara lo recién descubierto al otro.
    */
   ficha: z.record(z.string(), z.unknown()).optional(),
+  email: z.string().max(200).nullable().optional(),
+  addressStreet: z.string().max(200).nullable().optional(),
+  addressCity: z.string().max(120).nullable().optional(),
+  addressState: z.string().max(8).nullable().optional(),
+  addressZip: z.string().max(12).nullable().optional(),
+  services: z.array(z.string()).max(7).optional(),
+  brand: z.enum(["daniel_exteriors", "presidential_exteriors"]).nullable().optional(),
+  amountCents: z.number().int().min(0).nullable().optional(),
+  quoteDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
 });
 
 export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
@@ -77,7 +102,55 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
       contactId: id,
       ficha: body.data.ficha,
     });
-    if (!res) return apiError(404, "not_found", "Contacto no encontrado");
+    if (!res) return apiError(404, "not_found", "Contact not found");
+  }
+
+  const structured: Record<string, unknown> = {};
+  if (body.data.email !== undefined) structured.email = body.data.email;
+  if (body.data.addressStreet !== undefined) structured.address_street = body.data.addressStreet;
+  if (body.data.addressCity !== undefined) structured.address_city = body.data.addressCity;
+  if (body.data.addressState !== undefined) structured.address_state = body.data.addressState;
+  if (body.data.addressZip !== undefined) structured.address_zip = body.data.addressZip;
+  if (body.data.services !== undefined) {
+    const mapped = mapServices(body.data.services);
+    if (mapped.unrecognized.length > 0) {
+      return apiError(422, "invalid_service", "Service type must be one of the listed exterior services");
+    }
+    structured.services = mapped.services;
+  }
+  if (body.data.brand !== undefined) structured.brand = body.data.brand;
+  if (body.data.amountCents !== undefined) structured.amount_cents = body.data.amountCents;
+  if (body.data.quoteDate !== undefined) structured.quote_date = body.data.quoteDate;
+  if (Object.keys(structured).length > 0) {
+    if (body.data.email) {
+      const email = normalizeEmail(body.data.email);
+      if (!email) return apiError(422, "invalid_email", "Email is not valid");
+      structured.email = email;
+    }
+    if (
+      body.data.addressStreet !== undefined ||
+      body.data.addressCity !== undefined ||
+      body.data.addressState !== undefined ||
+      body.data.addressZip !== undefined
+    ) {
+      const existing = await getContactById(session.organizationId, id);
+      if (!existing) return apiError(404, "not_found", "Contact not found");
+      const address = validateAddressInput({
+        street: body.data.addressStreet === undefined ? existing.addressStreet : body.data.addressStreet,
+        city: body.data.addressCity === undefined ? existing.addressCity : body.data.addressCity,
+        state: body.data.addressState === undefined ? existing.addressState : body.data.addressState,
+        zip: body.data.addressZip === undefined ? existing.addressZip : body.data.addressZip,
+      });
+      if (!address.ok) return apiError(422, "invalid_address", address.error.message);
+    }
+    const existing = await getContactById(session.organizationId, id);
+    if (!existing) return apiError(404, "not_found", "Contact not found");
+    await applyStructuredFields({
+      organizationId: session.organizationId,
+      contactId: id,
+      fields: structured,
+      servicesMode: "replace",
+    });
   }
 
   const set: Record<string, unknown> = { updatedAt: new Date() };
@@ -104,7 +177,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
       )
     )
     .returning();
-  if (!updated[0]) return apiError(404, "not_found", "Contacto no encontrado");
+  if (!updated[0]) return apiError(404, "not_found", "Contact not found");
   // 027: la pausa se lleva a la conversación que ya exista; sin esto no
   // tendría efecto hasta que naciera otra.
   if (body.data.aiPaused !== undefined) {

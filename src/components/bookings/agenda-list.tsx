@@ -48,8 +48,8 @@ export function AgendaList({
       <EmptyState
         icon={CalendarDays}
         className="min-h-0 flex-1 rounded-lg border bg-card p-8"
-        title={`Nada agendado del ${spanLabel(range)}`}
-        description="Aquí aparecen las citas que agenda la IA o tu equipo. El horario que se ofrece se configura en Ajustes → Agenda."
+        title={`Nothing booked from ${spanLabel(range)}`}
+        description="Appointments booked by the AI or your team show up here. The hours offered are set in Settings → Scheduling."
       />
     );
   }
@@ -62,7 +62,7 @@ export function AgendaList({
             {longDayLabel(day)}
             {day === today && (
               <span className="rounded-full bg-brand px-2 py-px text-[10.5px] font-semibold text-brand-fg">
-                Hoy
+                Today
               </span>
             )}
           </h3>
@@ -90,23 +90,23 @@ export function AgendaList({
                     >
                       <span className="truncate">{bookingTitle(b)}</span>
                       {b.source === "ai" && b.kind === "session" && (
-                        <Sparkles aria-label="Agendó la IA" className="h-3.5 w-3.5 shrink-0 text-brand-text" />
+                        <Sparkles aria-label="Booked by AI" className="h-3.5 w-3.5 shrink-0 text-brand-text" />
                       )}
                     </span>
                     <span className="block truncate text-xs text-text-3">
                       {b.kind === "block"
-                        ? `Bloqueo · ${b.durationMinutes} min`
-                        : `${b.durationMinutes} min · ${b.source === "ai" ? "Agendó la IA" : "Manual"}${b.isTest ? " · Prueba" : ""}`}
+                        ? `Block · ${b.durationMinutes} min`
+                        : `${b.durationMinutes} min · ${b.source === "ai" ? "Booked by AI" : "Manual"}${b.isTest ? " · Test" : ""}`}
                     </span>
                   </span>
                   {hasDeliveryIssue(b) && (
-                    <AlertTriangle aria-label="Sin enlace de la reunión" className="h-4 w-4 shrink-0 text-warning-text" />
+                    <AlertTriangle aria-label="No meeting link" className="h-4 w-4 shrink-0 text-warning-text" />
                   )}
                   {b.meetingLink && b.status === "agendada" && (
-                    <Video aria-label="Tiene enlace de reunión" className="hidden h-4 w-4 shrink-0 text-text-3 sm:block" />
+                    <Video aria-label="Has a meeting link" className="hidden h-4 w-4 shrink-0 text-text-3 sm:block" />
                   )}
                   <span className="hidden shrink-0 text-xs font-medium text-text-2 sm:block">
-                    {b.kind === "block" ? (b.status === "cancelada" ? "Bloqueo quitado" : "Bloqueo") : STATUS_LABEL[b.status]}
+                    {b.kind === "block" ? (b.status === "cancelada" ? "Block removed" : "Block") : STATUS_LABEL[b.status]}
                   </span>
                 </button>
               </li>

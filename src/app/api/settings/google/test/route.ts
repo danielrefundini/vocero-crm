@@ -27,7 +27,7 @@ export const POST = withAuth(async (session, req: Request) => {
     body.data.calendarId || stored?.calendarId || "primary";
 
   if (!clientId || !clientSecret || !refreshToken) {
-    return apiError(422, "invalid_body", "Faltan credenciales que probar");
+    return apiError(422, "invalid_body", "No credentials to test");
   }
 
   const check = await googleConnector.testConnection({

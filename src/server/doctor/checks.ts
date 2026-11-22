@@ -107,7 +107,7 @@ export function translateIssue(issue: ZodIssue, value?: string): string {
         ? "no es una URL válida (debe empezar por http:// o https://)"
         : issue.message;
     case "too_small":
-      return `demasiado corta: mínimo ${issue.minimum} caracteres`;
+      return `demasiado corta: mínimo ${issue.minimum} characters`;
     default:
       return issue.message;
   }
@@ -479,7 +479,7 @@ export async function checkWhatsApp(deps: WhatsAppDeps = {}): Promise<CheckResul
       results.push({
         status: "ok",
         label,
-        detail: `Meta respondió ${check.displayPhoneNumber}${name} · token …${tokenLast4(token)}`,
+        detail: `Meta answered ${check.displayPhoneNumber}${name} · token …${tokenLast4(token)}`,
       });
     } else if (check.code === "invalid_token") {
       results.push({

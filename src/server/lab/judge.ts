@@ -53,7 +53,7 @@ export async function judgeCase(input: {
     // Diagnóstico operativo: el caso queda visible como judge_failed y aquí
     // queda el porqué (incluye el raw= truncado del proveedor).
     console.error(
-      `[lab] juez falló para ${input.personaKey}: ${result.error} — ${result.detail}`
+      `[lab] judge failed for ${input.personaKey}: ${result.error} — ${result.detail}`
     );
     return { status: "judge_failed", detail: result.detail };
   }

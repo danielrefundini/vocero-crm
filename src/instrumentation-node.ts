@@ -81,7 +81,7 @@ export async function encryptLegacySecrets(): Promise<void> {
   } catch (err) {
     console.error(
       "[boot] no se pudieron cifrar los secretos de firma de Zernio guardados en claro; se reintenta en el próximo arranque:",
-      err instanceof Error ? err.message : "error desconocido"
+      err instanceof Error ? err.message : "unknown error"
     );
   }
 }

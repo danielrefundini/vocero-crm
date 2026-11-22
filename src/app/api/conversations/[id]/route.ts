@@ -24,7 +24,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
   if (!body.ok) return body.response;
 
   const updated = await updateConversation(session.organizationId, id, body.data);
-  if (!updated) return apiError(404, "not_found", "Conversación no encontrada");
+  if (!updated) return apiError(404, "not_found", "Conversation not found");
 
   const row = await getConversation(session.organizationId, id);
   if (row) {
@@ -44,7 +44,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
   return Response.json({ conversation: null });
 });
 
-const FECHA_DE_CITA = new Intl.DateTimeFormat("es-MX", { dateStyle: "long" });
+const FECHA_DE_CITA = new Intl.DateTimeFormat("en-US", { dateStyle: "long" });
 
 /**
  * 026 — Elimina la conversación y le pide al cerebro que la olvide.
@@ -58,7 +58,7 @@ export const DELETE = withAuth(async (session, req: Request, ctx: Params) => {
     return apiError(
       403,
       "forbidden",
-      "Solo quien administra el negocio puede eliminar conversaciones"
+      "Only a business admin can delete conversations"
     );
   }
   const { id } = await ctx.params;
@@ -71,15 +71,15 @@ export const DELETE = withAuth(async (session, req: Request, ctx: Params) => {
       return apiError(
         409,
         "cita_pendiente",
-        `Tiene una cita agendada para el ${FECHA_DE_CITA.format(resultado.cuando)}. Cancélala en Citas antes de eliminar.`
+        `They have an appointment booked for ${FECHA_DE_CITA.format(resultado.cuando)}. Cancel it in Appointments before deleting.`
       );
     }
-    return apiError(404, "not_found", "Conversación no encontrada");
+    return apiError(404, "not_found", "Conversation not found");
   }
 
   // Irreversible y sin papelera: que al menos quede quién y cuándo. Solo ids.
   console.info(
-    `[bandeja] ${session.userId} eliminó ${id} (${alcance}) en ${session.organizationId}`
+    `[inbox] ${session.userId} deleted ${id} (${alcance}) at ${session.organizationId}`
   );
 
   // El aviso va DESPUÉS del borrado y no lo condiciona: lo que se pidió ya

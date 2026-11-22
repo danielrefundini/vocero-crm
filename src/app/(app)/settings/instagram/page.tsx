@@ -4,8 +4,8 @@ import { isChannelEnabled } from "@/server/channels/enabled";
 
 export const dynamic = "force-dynamic";
 
-export default function InstagramSettingsPage() {
+export default async function InstagramSettingsPage() {
   // Sin el canal encendido esta pantalla no existe en esta instancia (ADR-001).
-  if (!isChannelEnabled("instagram")) notFound();
+  if (!(await isChannelEnabled("instagram"))) notFound();
   return <InstagramClient />;
 }

@@ -53,16 +53,16 @@ const inputSchema = z.object({
 export const POST = withAuth(async (session, req: Request) => {
   if (!embeddedConfig().ready) return new Response(null, { status: 404 });
   if (!canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo quien administra la cuenta puede conectar WhatsApp.");
+    return apiError(403, "forbidden", "Only the account admin can connect WhatsApp.");
   }
-  if (!mismoOrigen(req)) return apiError(403, "invalid_origin", "Origen no autorizado.");
+  if (!mismoOrigen(req)) return apiError(403, "invalid_origin", "Unauthorized origin.");
   if (
     !checkRateLimit(`embedded:${session.organizationId}:${session.userId}`, {
       max: 10,
       windowMs: 60_000,
     }).allowed
   ) {
-    return apiError(429, "rate_limit", "Espera un minuto antes de volver a intentarlo.");
+    return apiError(429, "rate_limit", "Wait a minute before trying again.");
   }
   const body = await parseBody(req, inputSchema);
   if (!body.ok) return body.response;
@@ -75,11 +75,11 @@ export const POST = withAuth(async (session, req: Request) => {
   } catch (err) {
     if (err instanceof EmbeddedSignupError) return apiError(err.status, err.code, err.message);
     // Nunca el error crudo: puede traer el código o el token.
-    console.error("[embedded] fallo no controlado en el alta");
+    console.error("[embedded] unhandled failure during signup");
     return apiError(
       503,
       "connection_failed",
-      "No pudimos guardar la conexión. Repite el proceso; tu conexión anterior se conserva."
+      "We couldn't save the connection. Repeat the process; your previous connection is kept."
     );
   }
 });

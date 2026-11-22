@@ -131,7 +131,7 @@ export async function tanda(ahora: Date = new Date()): Promise<number> {
       if (!fila) break;
       const latido = setInterval(() => {
         void renovarLease(fila).catch(() =>
-          console.error("[despacho] no se pudo renovar el lease")
+          console.error("[dispatch] couldn't renew the lease")
         );
       }, LATIDO_MS);
       latido.unref?.();
@@ -143,7 +143,7 @@ export async function tanda(ahora: Date = new Date()): Promise<number> {
     }
     return count;
   } catch (err) {
-    console.error("[despacho] la tanda falló:", err);
+    console.error("[dispatch] the batch failed:", err);
     return 0;
   } finally {
     e.corriendo = false;
@@ -155,7 +155,7 @@ async function procesar(fila: FilaDespacho): Promise<void> {
   if (!config.active) {
     // Quedó de antes de que se quitara o se rompiera la configuración: ya no
     // hay a quién entregarlo, y el agente incluido vuelve a ser quien manda.
-    await descartarDespacho(fila, "el despacho ya no está configurado");
+    await descartarDespacho(fila, "dispatch is no longer configured");
     return;
   }
 
@@ -180,7 +180,7 @@ async function procesar(fila: FilaDespacho): Promise<void> {
     )
     .limit(1);
   if (!conv) {
-    await descartarDespacho(fila, "la conversación ya no existe");
+    await descartarDespacho(fila, "the conversation no longer exists");
     return;
   }
   // 033 — Una conversación de prueba SÍ se despacha: la ingesta nunca encola
@@ -188,13 +188,13 @@ async function procesar(fila: FilaDespacho): Promise<void> {
   // Laboratorio. Su respuesta vuelve por `/api/bot/messages`, que la guarda
   // sin enviarla.
   if (!conv.aiEnabled || conv.handoffAt) {
-    await descartarDespacho(fila, "la IA se pausó antes de despachar");
+    await descartarDespacho(fila, "AI was paused before dispatching");
     return;
   }
 
   const evento = await construirEvento(fila);
   if (!evento) {
-    await descartarDespacho(fila, "la conversación ya no existe");
+    await descartarDespacho(fila, "the conversation no longer exists");
     return;
   }
   /**
@@ -206,7 +206,7 @@ async function procesar(fila: FilaDespacho): Promise<void> {
    * conversación acabaría con un humano por un fallo que no existió.
    */
   if (evento.messages.length === 0) {
-    await descartarDespacho(fila, "sin mensajes por despachar");
+    await descartarDespacho(fila, "no messages to dispatch");
     return;
   }
 
@@ -246,7 +246,7 @@ async function procesar(fila: FilaDespacho): Promise<void> {
   }
 
   console.error(
-    `[despacho] ${fila.id} (intento ${fila.attempts}): ${resultado.detalle}`
+    `[dispatch] ${fila.id} (attempt ${fila.attempts}): ${resultado.detalle}`
   );
   const caduco = resultado.reintentable
     ? await reintentarOCaducar(fila, resultado.detalle)

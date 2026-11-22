@@ -60,7 +60,8 @@ function evento(over: Record<string, unknown> = {}) {
 describe("022 · TikTok en el catálogo de canales", () => {
   it("existe, va al final, se enciende con CHANNELS y tiene nombre y distintivo", () => {
     expect(isChannel("tiktok")).toBe(true);
-    expect(CHANNEL_ORDER.at(-1)).toBe("tiktok");
+    expect(CHANNEL_ORDER.at(-1)).toBe("email");
+    expect(CHANNEL_ORDER).toContain("tiktok");
     expect(CHANNEL_LABEL.tiktok).toBe("TikTok");
     expect(parseChannels("whatsapp,tiktok").has("tiktok")).toBe(true);
     expect(parseChannels("whatsapp,instagram,messenger").has("tiktok")).toBe(false);
@@ -106,7 +107,7 @@ describe("022 · lo que TikTok impone, declarado en las capacidades", () => {
     expect(windowMsFor("tiktok")).toBe(48 * HORA);
     // Al operador se le dice qué pasa Y qué lo arregla.
     expect(windowClosedMessage("tiktok")).toContain("TikTok");
-    expect(windowClosedMessage("tiktok")).toContain("vuelva a escribir");
+    expect(windowClosedMessage("tiktok")).toContain("write again");
   });
 
   it("los demás canales conservan su ventana de 24 h y no ganan topes", () => {
@@ -119,10 +120,10 @@ describe("022 · lo que TikTok impone, declarado en las capacidades", () => {
     expect(capabilitiesFor("messenger").maxTextChars).toBeNull();
     // Sus textos de siempre no cambian.
     expect(windowClosedMessage("whatsapp")).toBe(
-      "La ventana de 24 horas está cerrada; usa una plantilla aprobada"
+      "The 24-hour window is closed; use an approved template"
     );
     // 024: la extensión humana tiene tope (7 días) y su propio mensaje.
-    expect(windowClosedMessage("messenger")).toContain("7 días");
+    expect(windowClosedMessage("messenger")).toContain("7 days");
   });
 
   it("el texto se mide en CARACTERES: 6,000, y un emoji cuenta uno", () => {
@@ -153,8 +154,8 @@ describe("022 · lo que TikTok impone, declarado en las capacidades", () => {
     expect(cabeOtroMensaje("tiktok", 11)).toBe(false);
     // Un canal sin tope siempre deja pasar.
     expect(cabeOtroMensaje("whatsapp", 500)).toBe(true);
-    expect(outboundLimitMessage("tiktok")).toContain("10 mensajes");
-    expect(outboundLimitMessage("tiktok")).toContain("vuelva a escribir");
+    expect(outboundLimitMessage("tiktok")).toContain("10 messages");
+    expect(outboundLimitMessage("tiktok")).toContain("write again");
   });
 });
 

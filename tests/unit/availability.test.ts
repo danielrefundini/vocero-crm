@@ -15,7 +15,7 @@ import { daysWithAgenda, spreadByDay } from "@/server/agenda/spread";
 const MX = "America/Mexico_City";
 
 function settings(over: Partial<CalendarSettings> = {}): CalendarSettings {
-  return { ...DEFAULT_CALENDAR_SETTINGS, ...over };
+  return { ...DEFAULT_CALENDAR_SETTINGS, timezone: MX, ...over };
 }
 
 describe("buildCandidateSlots", () => {
@@ -198,8 +198,8 @@ describe("spreadByDay", () => {
       perDay: 1,
       now,
     });
-    expect(spread[0]!.dayLabel).toMatch(/^hoy /);
-    expect(spread[1]!.dayLabel).toMatch(/^mañana /);
+    expect(spread[0]!.dayLabel).toMatch(/^today /);
+    expect(spread[1]!.dayLabel).toMatch(/^tomorrow /);
     expect(spread[0]!.time).toBe("09:00");
   });
 

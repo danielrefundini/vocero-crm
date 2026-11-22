@@ -26,7 +26,7 @@ export function TimeBars({
   points,
   format,
   unit,
-  emptyText = "Sin movimientos en el periodo.",
+  emptyText = "No moves in the period.",
 }: {
   title: string;
   points: TimePoint[];
@@ -47,7 +47,7 @@ export function TimeBars({
       <figcaption className="mb-2 flex items-baseline justify-between gap-2">
         <span className="text-[13px] font-semibold text-text-2">{title}</span>
         <span className="text-xs text-text-3">
-          {format(total)} en el periodo
+          {format(total)} in the period
         </span>
       </figcaption>
 
@@ -119,7 +119,7 @@ export function TimeBars({
             <caption>{title}</caption>
             <thead>
               <tr>
-                <th scope="col">Fecha</th>
+                <th scope="col">Date</th>
                 <th scope="col">{unit}</th>
               </tr>
             </thead>

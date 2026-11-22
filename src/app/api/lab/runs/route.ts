@@ -49,14 +49,14 @@ export const POST = withAuth(async (session) => {
     return apiError(
       409,
       "sin_cerebro",
-      "Conecta tu agente para correr el Laboratorio: prueba al cerebro que contesta a tus clientes"
+      "Connect your agent to run the Lab: it tests the brain that answers your customers"
     );
   }
   if (!(await isAiConfiguredFor(session.organizationId))) {
     return apiError(
       409,
       "ai_not_configured",
-      "Configura tu proveedor de IA en Ajustes → IA para correr el Laboratorio"
+      "Set up your AI provider in Settings → AI to run the Lab"
     );
   }
   try {
@@ -67,7 +67,7 @@ export const POST = withAuth(async (session) => {
       return apiError(
         409,
         "run_in_progress",
-        "Ya hay una corrida en curso; espera a que termine"
+        "A run is already in progress; wait for it to finish"
       );
     }
     throw err;

@@ -34,7 +34,7 @@ export function FaviconCard({ branding }: { branding: Branding }) {
     setError(null);
     if (file.size > MAX_FAVICON_BYTES) {
       setError(
-        `El icono no puede pasar de ${Math.round(MAX_FAVICON_BYTES / 1024)} KB.`
+        `The icon can't exceed ${Math.round(MAX_FAVICON_BYTES / 1024)} KB.`
       );
       return;
     }
@@ -49,7 +49,7 @@ export function FaviconCard({ branding }: { branding: Branding }) {
       const data = (await res?.json().catch(() => null)) as {
         error?: { message?: string };
       } | null;
-      setError(data?.error?.message ?? "No se pudo subir el icono");
+      setError(data?.error?.message ?? "Couldn't upload the icon");
       return;
     }
     const data = (await res.json()) as { favicon: Branding["favicon"] };
@@ -66,7 +66,7 @@ export function FaviconCard({ branding }: { branding: Branding }) {
     }).catch(() => null);
     setSubiendo(false);
     if (!res?.ok) {
-      setError("No se pudo quitar el icono");
+      setError("Couldn't remove the icon");
       return;
     }
     setActual(null);
@@ -77,9 +77,9 @@ export function FaviconCard({ branding }: { branding: Branding }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Logo del negocio</CardTitle>
+        <CardTitle>Business logo</CardTitle>
         <p className="text-sm text-text-3">
-          Se ve en la pestaña del navegador y en la barra lateral del CRM.
+          It shows in the browser tab and in the CRM sidebar.
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -90,19 +90,19 @@ export function FaviconCard({ branding }: { branding: Branding }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={src}
-            alt="Vista previa del icono de la pestaña"
+            alt="Tab icon preview"
             width={48}
             height={48}
             className="h-12 w-12 rounded-lg border bg-card object-contain"
           />
           <div className="min-w-0 flex-1">
             <p className="text-sm">
-              {actual ? "Logo propio" : "Generado con tu marca"}
+              {actual ? "Custom logo" : "Generated from your branding"}
             </p>
             <p className="mt-0.5 text-xs text-text-3">
               {actual
-                ? "Reemplaza al generado en la pestaña y en la barra lateral. Puedes quitarlo para volver a él."
-                : "La inicial sobre tu color de acento. Sube tu logo para reemplazarla."}
+                ? "Replaces the generated one in the tab and the sidebar. You can remove it to go back."
+                : "The initial on your accent color. Upload your logo to replace it."}
             </p>
           </div>
         </div>
@@ -128,19 +128,18 @@ export function FaviconCard({ branding }: { branding: Branding }) {
             onClick={() => input.current?.click()}
           >
             <ImageUp className="h-4 w-4" />
-            {subiendo ? "Subiendo…" : actual ? "Cambiar logo" : "Subir logo"}
+            {subiendo ? "Uploading…" : actual ? "Change logo" : "Upload logo"}
           </Button>
           {actual && (
             <Button variant="ghost" disabled={subiendo} onClick={() => void quitar()}>
-              <Trash2 className="h-4 w-4" /> Quitar
+              <Trash2 className="h-4 w-4" /> Remove
             </Button>
           )}
         </div>
 
         <p className="text-xs text-text-3">
-          PNG, SVG, ICO, JPEG o WebP, hasta{" "}
-          {Math.round(MAX_FAVICON_BYTES / 1024)} KB. Cuadrado y con fondo
-          transparente se ve mejor: se dibuja sobre tu color de acento.
+          PNG, SVG, ICO, JPEG or WebP, up to{" "}
+          {Math.round(MAX_FAVICON_BYTES / 1024)} {"KB. Square with a transparent background looks best: it's drawn on your accent color."}
         </p>
 
         {error && <p className="text-sm text-destructive">{error}</p>}

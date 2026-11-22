@@ -74,7 +74,7 @@ describe("features: las banderas de despliegue", () => {
     // Mismos parsers que usan las rutas para responder 404: si aquí dijera
     // `true` y la agenda respondiera 404, el health mentiría.
     expect(
-      healthFeatures({ AGENDA: "onn", CHANNELS: "telegram", ATRIBUCION: "off" })
+      healthFeatures({ AGENDA: "onn", CHANNELS: "signal", ATRIBUCION: "off" })
     ).toEqual({ agenda: false, channels: ["whatsapp"], atribucion: false, media: "disco" });
   });
 });
@@ -163,7 +163,7 @@ describe("GET /api/health", () => {
     expect(res.status).toBe(503);
     expect(await res.json()).toEqual({
       ok: false,
-      error: { code: "db_unavailable", message: "Base de datos no disponible" },
+      error: { code: "db_unavailable", message: "Database unavailable" },
     });
   });
 });

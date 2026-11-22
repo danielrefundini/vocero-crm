@@ -67,27 +67,25 @@ export function StartConversation({
     if (!res?.ok) {
       // El fallo de Meta se explica aquí mismo (plantilla en pausa, número
       // que no la recibe…) en vez de perderse.
-      setError(data?.error?.message ?? "No se pudo iniciar la conversación");
+      setError(data?.error?.message ?? "Couldn't start the conversation");
       return;
     }
     onStarted(data?.conversationId ?? "");
   }
 
   if (templates === null) {
-    return <p className="text-xs text-text-3">Cargando plantillas…</p>;
+    return <p className="text-xs text-text-3">Loading templates…</p>;
   }
 
   if (templates.length === 0) {
     return (
       <div className="rounded-md border border-dashed bg-subtle px-3 py-2.5">
         <p className="text-[13px]">
-          Esta persona nunca te ha escrito, así que WhatsApp solo permite
-          contactarla con una <strong>plantilla aprobada</strong>, y todavía no
-          tienes ninguna.
+          This person has never messaged you, so WhatsApp only allows contacting them with an <strong>approved template</strong>{", and you don't have any yet."}
         </p>
         <Link href="/settings/templates">
           <Button size="sm" variant="secondary" className="mt-2">
-            Ir a plantillas
+            Go to templates
           </Button>
         </Link>
       </div>
@@ -97,7 +95,7 @@ export function StartConversation({
   return (
     <div className="space-y-2">
       <p className="text-xs text-text-3">
-        Nunca te ha escrito: para iniciar hay que usar una plantilla aprobada.
+        {"They've never messaged you: an approved template is required to start."}
       </p>
       <select
         value={templateId}
@@ -105,7 +103,7 @@ export function StartConversation({
           setTemplateId(e.target.value);
           setVars([]);
         }}
-        aria-label="Plantilla para iniciar"
+        aria-label="Template to start"
         className="h-9 w-full rounded-md border border-input bg-card px-2 text-sm"
       >
         {templates.map((t) => (
@@ -125,8 +123,8 @@ export function StartConversation({
         <Input
           key={i}
           value={vars[i] ?? ""}
-          aria-label={`Valor de la variable ${i + 1}`}
-          placeholder={`Valor de {{${i + 1}}}`}
+          aria-label={`Value of variable ${i + 1}`}
+          placeholder={`Value of {{${i + 1}}}`}
           onChange={(e) => {
             const next = [...vars];
             next[i] = e.target.value;
@@ -141,7 +139,7 @@ export function StartConversation({
         onClick={() => void enviar()}
       >
         <Send className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.7} />
-        {enviando ? "Enviando…" : "Iniciar conversación"}
+        {enviando ? "Sending…" : "Start conversation"}
       </Button>
       {error && <p className="text-xs text-danger-text">{error}</p>}
     </div>

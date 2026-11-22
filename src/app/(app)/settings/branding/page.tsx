@@ -20,7 +20,7 @@ export default async function BrandingSettingsPage() {
           la página y la vista previa de la marca lo sigue sin recargar. */}
       <BrandingClient
         favicon={branding.favicon}
-        kicker={navKicker([...enabledChannels()])}
+        kicker={navKicker([...(await enabledChannels())])}
       />
       <FaviconCard branding={branding} />
     </div>

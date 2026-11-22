@@ -89,14 +89,14 @@ export function AgentClient() {
   if (!profile) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-        Cargando…
+        Loading…
       </div>
     );
   }
 
   async function cargarPreset() {
     const ok = window.confirm(
-      `Cargar el rol «${ROLES.calificador.etiqueta}» reemplaza las instrucciones y las reglas de escalado, y enciende todas sus herramientas. ¿Continuar?`
+      `Loading the role «${ROLES.calificador.etiqueta}» replaces the instructions and escalation rules, and turns on all its tools. Continue?`
     );
     if (!ok) return;
     await fetch("/api/agent/profile/preset", {
@@ -122,7 +122,7 @@ export function AgentClient() {
       if (patch.enabled !== undefined) {
         setSwitchError(
           data?.error?.message ??
-            (patch.enabled ? "No se pudo encender el agente." : "No se pudo apagar el agente.")
+            (patch.enabled ? "Couldn't turn the agent on." : "Couldn't turn the agent off.")
         );
       }
       void refetch();
@@ -150,11 +150,11 @@ export function AgentClient() {
   return (
     <div className="h-full overflow-y-auto">
       <header className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-3 sm:px-6 sm:py-4">
-        <h2 className="text-[17px] font-bold tracking-tight">Agente de IA</h2>
+        <h2 className="text-[17px] font-bold tracking-tight">AI agent</h2>
         <div className="flex items-center gap-3">
-          {saved && <span className="text-xs text-primary">Guardado ✓</span>}
+          {saved && <span className="text-xs text-primary">Saved ✓</span>}
           <span className="text-sm text-muted-foreground">
-            {profile.enabled ? "Encendido" : "Apagado"}
+            {profile.enabled ? "On" : "Off"}
           </span>
           {/* El interruptor compartido (#53): el pomo propio de aquí era
               `absolute` sin `left`, arrancaba del centro de la pista y
@@ -165,7 +165,7 @@ export function AgentClient() {
           <Switch
             checked={profile.enabled}
             disabled={switchDisabled}
-            label="Agente encendido"
+            label="Agent on"
             onCheckedChange={(enabled) => void saveProfile({ enabled })}
           />
         </div>
@@ -178,7 +178,7 @@ export function AgentClient() {
                 : "w-full text-right text-xs text-muted-foreground"
             }
           >
-            {switchError ?? "Se enciende cuando conectes tu agente."}
+            {switchError ?? "It turns on once you connect your agent."}
           </p>
         )}
       </header>
@@ -193,18 +193,18 @@ export function AgentClient() {
         <div className="mx-4 mt-4 rounded-lg border border-brand-soft bg-brand-tint p-5 text-center sm:mx-6 sm:mt-6 sm:p-6">
           <Sparkles className="mx-auto mb-2 h-8 w-8 text-primary" />
           <p className="font-medium">
-            {aiMensaje ? "Tu agente no puede pensar" : "Tu agente no tiene con qué pensar"}
+            {aiMensaje ? "Your agent can't think" : "Your agent has nothing to think with"}
           </p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
             {aiMensaje ??
-              "Piensa a través del CRM con la llave de Ajustes → IA: elige el proveedor, el modelo y pega tu llave, sin reiniciar nada."}{" "}
-            (Si tu agente usa su propia llave, puedes ignorar este aviso.)
+              "It thinks through the CRM with the key in Settings → AI: pick the provider, the model and paste your key, no restart needed."}{" "}
+            (If your agent uses its own key, you can ignore this notice.)
           </p>
           <Link
             href="/settings/ai"
             className="mt-3 inline-block text-sm font-medium text-brand-text underline underline-offset-2"
           >
-            Ir a Ajustes → IA →
+            Go to Settings → AI →
           </Link>
         </div>
       )}
@@ -254,12 +254,12 @@ function RolSection({
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <CardTitle>
-              Rol: {rol.etiqueta}
+              Role: {rol.etiqueta}
             </CardTitle>
             <CardDescription>{rol.descripcion}</CardDescription>
           </div>
           <Button variant="outline" size="sm" onClick={onPreset}>
-            Cargar el rol {rol.etiqueta}
+            Load the role {rol.etiqueta}
           </Button>
         </div>
       </CardHeader>
@@ -281,7 +281,7 @@ function RolSection({
           ))}
         </ul>
         <p className="text-xs text-muted-foreground">
-          El agente toma los cambios en unos minutos, sin redesplegar nada.
+          The agent picks up changes within a few minutes, no redeploy needed.
         </p>
       </CardContent>
     </Card>
@@ -301,14 +301,14 @@ function ProfileSection({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Comportamiento</CardTitle>
+        <CardTitle>Behavior</CardTitle>
         <CardDescription>
-          Cómo se presenta y actúa el agente al responder a tus clientes.
+          How the agent introduces itself and acts when replying to your customers.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-1.5">
-          <Label htmlFor="agent-name">Nombre del agente</Label>
+          <Label htmlFor="agent-name">Agent name</Label>
           <Input
             id="agent-name"
             value={form.name}
@@ -316,39 +316,39 @@ function ProfileSection({
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="agent-tone">Tono</Label>
+          <Label htmlFor="agent-tone">Tone</Label>
           <Input
             id="agent-tone"
-            placeholder="p. ej. cercano y directo, con usted"
+            placeholder="e.g. friendly and direct, professional"
             value={form.tone ?? ""}
             onChange={(e) => setForm({ ...form, tone: e.target.value })}
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="agent-instructions">Instrucciones</Label>
+          <Label htmlFor="agent-instructions">Instructions</Label>
           <Textarea
             id="agent-instructions"
             rows={5}
-            placeholder="Qué debe y no debe hacer el agente…"
+            placeholder="What the agent should and shouldn't do…"
             value={form.instructions ?? ""}
             onChange={(e) => setForm({ ...form, instructions: e.target.value })}
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="agent-escalation">Reglas de escalado</Label>
+          <Label htmlFor="agent-escalation">Escalation rules</Label>
           <Textarea
             id="agent-escalation"
             rows={3}
-            placeholder="Cuándo pasar la conversación a un humano…"
+            placeholder="When to hand the conversation to a human…"
             value={form.escalationRules ?? ""}
             onChange={(e) => setForm({ ...form, escalationRules: e.target.value })}
           />
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="agent-greeting">Saludo</Label>
+          <Label htmlFor="agent-greeting">Greeting</Label>
           <Input
             id="agent-greeting"
-            placeholder="Saludo para conversaciones nuevas"
+            placeholder="Greeting for new conversations"
             value={form.greeting ?? ""}
             onChange={(e) => setForm({ ...form, greeting: e.target.value })}
           />
@@ -362,7 +362,7 @@ function ProfileSection({
             void onSave({ name, tone, instructions, escalationRules, greeting });
           }}
         >
-          Guardar comportamiento
+          Save behavior
         </Button>
       </CardContent>
     </Card>
@@ -417,33 +417,31 @@ function KbSection({
           <div>
             <CardTitle>Knowledge base</CardTitle>
             <CardDescription>
-              La única fuente de verdad del agente: lo que no está aquí, no lo
-              afirma.
+              {"The agent's only source of truth: if it's not here, it doesn't claim it."}
             </CardDescription>
           </div>
           {kbSize && (
             <Badge variant={kbSize.warning ? "warning" : "secondary"}>
-              {kbSize.chars.toLocaleString("es-MX")} caracteres
+              {kbSize.chars.toLocaleString("en-US")} characters
             </Badge>
           )}
         </div>
         {kbSize?.warning && (
           <p className="text-xs text-warning-text">
-            El conocimiento se acerca al límite del contexto del modelo (v1 lo
-            inyecta completo en cada turno). Considera depurar entradas.
+            {"The knowledge is approaching the model's context limit (v1 injects all of it every turn). Consider trimming entries."}
           </p>
         )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2 rounded-md border p-3">
-          <p className="text-sm font-medium">Nueva pregunta / respuesta</p>
+          <p className="text-sm font-medium">New question / answer</p>
           <Input
-            placeholder="Pregunta (p. ej. ¿Hacen envíos?)"
+            placeholder="Question (e.g. Do you deliver?)"
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
           />
           <Textarea
-            placeholder="Respuesta"
+            placeholder="Answer"
             rows={2}
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
@@ -453,20 +451,20 @@ function KbSection({
             onClick={() => void addQa()}
             disabled={!question.trim() || !answer.trim()}
           >
-            <Plus className="h-4 w-4" /> Agregar P/R
+            <Plus className="h-4 w-4" /> Add Q/A
           </Button>
         </div>
 
         <div className="space-y-2 rounded-md border p-3">
-          <p className="text-sm font-medium">Nuevo bloque de texto libre</p>
+          <p className="text-sm font-medium">New free-text block</p>
           <Textarea
-            placeholder="Horarios, direcciones, políticas…"
+            placeholder="Hours, addresses, policies…"
             rows={3}
             value={block}
             onChange={(e) => setBlock(e.target.value)}
           />
           <Button size="sm" onClick={() => void addBlock()} disabled={!block.trim()}>
-            <Plus className="h-4 w-4" /> Agregar bloque
+            <Plus className="h-4 w-4" /> Add block
           </Button>
         </div>
 
@@ -486,7 +484,7 @@ function KbSection({
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Eliminar entrada"
+                aria-label="Delete entry"
                 onClick={() => void remove(e.id)}
               >
                 <Trash2 className="h-4 w-4" />
@@ -495,7 +493,7 @@ function KbSection({
           ))}
           {entries.length === 0 && (
             <p className="py-2 text-center text-xs text-muted-foreground">
-              Sin entradas todavía: agrega lo que el agente debe saber.
+              No entries yet: add what the agent needs to know.
             </p>
           )}
         </ul>

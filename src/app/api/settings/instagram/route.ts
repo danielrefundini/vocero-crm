@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 /** 014 — Estado de la conexión de Instagram (el token nunca sale entero). */
 export const GET = withAuth(async (session) => {
-  if (!isChannelEnabled("instagram")) return channelDisabledResponse();
+  if (!(await isChannelEnabled("instagram"))) return channelDisabledResponse();
   const creds = await getInstagramCredentialsByOrg(session.organizationId);
   if (!creds) return Response.json({ connection: null });
   return Response.json({
@@ -50,9 +50,9 @@ const putSchema = z.object({
  * revisaba; Messenger y TikTok sí).
  */
 export const PUT = withAuth(async (session, req: Request) => {
-  if (!isChannelEnabled("instagram")) return channelDisabledResponse();
+  if (!(await isChannelEnabled("instagram"))) return channelDisabledResponse();
   if (session.role !== "owner") {
-    return apiError(403, "forbidden", "Solo el propietario puede conectar Instagram");
+    return apiError(403, "forbidden", "Only the owner can connect Instagram");
   }
   const body = await parseBody(req, putSchema);
   if (!body.ok) return body.response;
@@ -98,7 +98,7 @@ export const PUT = withAuth(async (session, req: Request) => {
     return apiError(
       422,
       "invalid_body",
-      "Con una app propia de Meta hace falta el ID de la cuenta de Instagram"
+      "With your own Meta app, the Instagram account ID is required"
     );
   }
   const check = await verify({ token: data.token, igUserId: data.igUserId });
@@ -139,7 +139,7 @@ async function verify(data: { token: string; igUserId: string }): Promise<Check>
       ok: false,
       status: 503,
       code: "platform_unavailable",
-      message: "No se pudo contactar la plataforma; intenta de nuevo",
+      message: "Couldn't reach the platform; try again",
     };
   }
 
@@ -148,7 +148,7 @@ async function verify(data: { token: string; igUserId: string }): Promise<Check>
       ok: false,
       status: 422,
       code: "invalid_token",
-      message: "El token de Instagram no es válido o no tiene permiso de mensajes",
+      message: "The Instagram token is invalid or lacks messaging permission",
     };
   }
 
@@ -161,7 +161,7 @@ async function verify(data: { token: string; igUserId: string }): Promise<Check>
       ok: false,
       status: 422,
       code: "id_mismatch",
-      message: `El IG_ID del token es ${json.id}, no ${data.igUserId}`,
+      message: `The token's IG_ID is ${json.id}, not ${data.igUserId}`,
     };
   }
   return { ok: true, username: json?.username ?? null };

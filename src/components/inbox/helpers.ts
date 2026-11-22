@@ -7,20 +7,20 @@ export function formatTime(iso: string | null): string {
   const now = new Date();
   const sameDay = d.toDateString() === now.toDateString();
   if (sameDay) {
-    return d.toLocaleTimeString("es-MX", {
+    return d.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
     });
   }
-  return d.toLocaleDateString("es-MX", { day: "numeric", month: "short" });
+  return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
 }
 
 /** 024 — Lo mismo, para plazos de días: «5 días», «1 día 3h», «7h 20m». */
 export function formatRemainingLong(ms: number): string {
   const totalH = Math.floor(ms / 3_600_000);
   const d = Math.floor(totalH / 24);
-  if (d >= 2) return `${d} días`;
-  if (d === 1) return `1 día ${totalH - 24}h`;
+  if (d >= 2) return `${d} days`;
+  if (d === 1) return `1 day ${totalH - 24}h`;
   return formatRemaining(ms);
 }
 
@@ -33,18 +33,18 @@ export function formatRemaining(ms: number): string {
 }
 
 const MEDIA_LABELS: Record<string, string> = {
-  image: "Imagen",
+  image: "Image",
   audio: "Audio",
   video: "Video",
-  document: "Documento",
+  document: "Document",
   sticker: "Sticker",
-  location: "Ubicación",
-  contacts: "Contacto compartido",
-  template: "Plantilla",
+  location: "Location",
+  contacts: "Shared contact",
+  template: "Template",
 };
 
 export function mediaLabel(type: string): string {
-  return MEDIA_LABELS[type] ?? "Contenido";
+  return MEDIA_LABELS[type] ?? "Content";
 }
 
 /** 008 — Tamaño humano de un adjunto. */
@@ -60,15 +60,15 @@ export function formatBytes(bytes: number): string {
  */
 export function channelList(labels: readonly string[]): string {
   if (labels.length <= 1) return labels[0] ?? "";
-  return `${labels.slice(0, -1).join(", ")} o ${labels[labels.length - 1]}`;
+  return `${labels.slice(0, -1).join(", ")} or ${labels[labels.length - 1]}`;
 }
 
 /** 028 — El texto de la bandeja vacía, con los canales encendidos. */
 export function emptyInboxDescription(labels: readonly string[]): string {
   if (labels.length <= 1) {
-    return "Cuando alguien escriba a tu número de WhatsApp, su conversación aparecerá aquí en tiempo real.";
+    return "When someone messages your WhatsApp number, their conversation will appear here in real time.";
   }
-  return `Cuando alguien te escriba por ${channelList(labels)}, su conversación aparecerá aquí en tiempo real.`;
+  return `When someone messages you via ${channelList(labels)}, their conversation will appear here in real time.`;
 }
 
 export function previewText(preview: string | null): string {
@@ -92,5 +92,5 @@ export function textoDeCita(cita: QuotedMessageDto): string {
   if (cita.text) return cita.text;
   if (cita.mediaKind) return mediaLabel(cita.mediaKind);
   if (cita.type && cita.type !== "text") return mediaLabel(cita.type);
-  return cita.id ? "Mensaje" : "Mensaje no disponible";
+  return cita.id ? "Message" : "Message unavailable";
 }

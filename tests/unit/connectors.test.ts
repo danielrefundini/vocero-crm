@@ -323,7 +323,7 @@ describe("google", () => {
         err instanceof ConnectorError &&
         err.isAuthError &&
         // El mensaje nombra la causa más común: la app OAuth en modo prueba.
-        /modo prueba/.test(err.message)
+        /testing mode/.test(err.message)
     );
   });
 });

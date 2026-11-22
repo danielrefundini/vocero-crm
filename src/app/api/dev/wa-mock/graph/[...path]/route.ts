@@ -326,7 +326,7 @@ export async function GET(req: Request, ctx: Params) {
   if (path.length === 1 && fields.includes("first_name")) {
     return Response.json({
       id: path[0],
-      first_name: "Cliente",
+      first_name: "Customer",
       last_name: "de Messenger",
     });
   }
@@ -415,7 +415,7 @@ export async function POST(req: Request, ctx: Params) {
       return Response.json(
         {
           error: {
-            message: `(#100) Invalid parameter: event_name ${eventName || "(vacío)"}`,
+            message: `(#100) Invalid parameter: event_name ${eventName || "(empty)"}`,
             type: "GraphMethodException",
             code: 100,
             fbtrace_id: "mock-capi-badname",

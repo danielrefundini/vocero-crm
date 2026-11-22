@@ -80,13 +80,13 @@ export async function onboardingStatus(
     pasoPerfil(profile, Boolean(kb)),
     {
       key: "ai",
-      label: "Proveedor de IA",
+      label: "AI provider",
       status: ia.activa ? "ready" : "pending",
       nextAction: ia.activa
         ? ia.origen === "org"
-          ? "Llave guardada en Ajustes → IA"
-          : "Respaldo del entorno (OPENROUTER_*)"
-        : "Pega la llave de tu proveedor y elige el modelo en Ajustes → IA",
+          ? "Key saved in Settings → AI"
+          : "Environment fallback (OPENROUTER_*)"
+        : "Paste your provider key and pick the model in Settings → AI",
       href: "/settings/ai",
       // «Sin configurar» es lo obvio del paso; lo que sí hay que decir es por
       // qué una llave que el dueño YA pegó no sirve.
@@ -101,14 +101,14 @@ export async function onboardingStatus(
       status: channel?.status === "connected" ? "ready" : "pending",
       nextAction:
         channel?.status === "connected"
-          ? "Número conectado"
+          ? "Number connected"
           : channel
-            ? "Vuelve a conectar el número con un token vigente"
-            : "Vincular tu número",
+            ? "Reconnect the number with a valid token"
+            : "Link your number",
       href: "/settings/whatsapp",
       problem:
         channel?.status === "reconnect_required"
-          ? "Meta dejó de aceptar el token de WhatsApp: vuelve a conectar el número."
+          ? "Meta stopped accepting the WhatsApp token: reconnect the number."
           : null,
     },
     await pasoCerebro(),
@@ -122,10 +122,10 @@ export async function onboardingStatus(
     // que respondería 404.
     steps.push({
       key: "calendar",
-      label: "Agenda",
+      label: "Scheduling",
       status: "not_applicable",
       nextAction:
-        "La agenda no está encendida en esta instancia (variable AGENDA).",
+        "Scheduling isn't turned on in this instance (AGENDA variable).",
       href: null,
       problem: null,
     });
@@ -144,19 +144,19 @@ type Perfil = { name: string; instructions: string | null; enabled: boolean };
  * configurado y el `/health` del cerebro contesta.
  */
 async function pasoCerebro(): Promise<ReadinessStep> {
-  const base = { key: "brain" as const, label: "Tu agente", href: null };
+  const base = { key: "brain" as const, label: "Your agent", href: null };
   const despacho = leerConfigDespacho();
   if (!despacho.active) {
     return {
       ...base,
       status: "pending",
       nextAction:
-        "Levanta tu agente (Nea) al lado del CRM y pon BRAIN_DISPATCH_URL y BOT_API_KEY en el entorno",
+        "Run your agent (Nea) next to the CRM and set BRAIN_DISPATCH_URL and BOT_API_KEY in the environment",
       problem:
         despacho.problem === "url"
-          ? "BRAIN_DISPATCH_URL no es una dirección válida."
+          ? "BRAIN_DISPATCH_URL is not a valid address."
           : despacho.problem === "sin_llave"
-            ? "Falta BOT_API_KEY (16 caracteres o más): sin ella no se firma el despacho."
+            ? "BOT_API_KEY is missing (16 characters or more): without it the dispatch isn't signed."
             : null,
     };
   }
@@ -165,16 +165,16 @@ async function pasoCerebro(): Promise<ReadinessStep> {
     return {
       ...base,
       status: "pending",
-      nextAction: `Tu agente (${despacho.host}) está configurado pero no contesta`,
-      problem: `El /health de ${salud.host || despacho.host} no responde: revisa que el servicio esté corriendo.`,
+      nextAction: `Your agent (${despacho.host}) is configured but not answering`,
+      problem: `The /health of ${salud.host || despacho.host} isn't responding: check that the service is running.`,
     };
   }
   return {
     ...base,
     status: "ready",
     nextAction: salud?.version
-      ? `Conectado: ${despacho.host} (versión ${salud.version})`
-      : `Conectado: ${despacho.host}`,
+      ? `Connected: ${despacho.host} (version ${salud.version})`
+      : `Connected: ${despacho.host}`,
     problem: null,
   };
 }
@@ -190,11 +190,11 @@ function pasoPerfil(profile: Perfil | undefined, hayConocimiento: boolean): Read
     (Boolean(profile?.instructions?.trim()) || hayConocimiento);
   return {
     key: "profile",
-    label: "Configuración del agente",
+    label: "Agent setup",
     status: listo ? "ready" : "pending",
     nextAction: listo
-      ? "Nombre, instrucciones y conocimiento revisados"
-      : "Dale un nombre y escribe sus instrucciones o carga conocimiento del negocio",
+      ? "Name, instructions and knowledge reviewed"
+      : "Give it a name and write its instructions or load business knowledge",
     href: "/agent",
     problem: null,
   };
@@ -227,23 +227,23 @@ async function pasoAgenda(organizationId: string, db: Db): Promise<ReadinessStep
 
   let problem: string | null = null;
   if (status === "unsupported") {
-    problem = `El conector «${settings?.connector}» no existe en esta instancia: elige otro en Ajustes → Agenda.`;
+    problem = `The connector «${settings?.connector}» doesn't exist in this instance: pick another one in Settings → Scheduling.`;
   } else if (status === "pending" && settings && settings.connector !== "enlace-fijo") {
     const nombre = settings.connector === "zoom" ? "Zoom" : "Google";
     const cred = settings.connector === "zoom" ? zoom : google;
     problem = cred
-      ? `${nombre} rechazó la credencial guardada: vuelve a conectarlo en Ajustes → Agenda.`
-      : `Elegiste ${nombre} pero no está conectado: pega sus credenciales en Ajustes → Agenda.`;
+      ? `${nombre} rejected the saved credential: reconnect it in Settings → Scheduling.`
+      : `You chose ${nombre} but it isn't connected: paste its credentials in Settings → Scheduling.`;
   }
 
   return {
     key: "calendar",
-    label: "Agenda",
+    label: "Scheduling",
     status,
     nextAction:
       status === "ready"
-        ? "Horarios y conector listos"
-        : "Guarda tus horarios y cómo se entrega la reunión en Ajustes → Agenda",
+        ? "Hours and connector ready"
+        : "Save your hours and how the meeting is delivered in Settings → Scheduling",
     href: "/settings/calendar",
     problem,
   };

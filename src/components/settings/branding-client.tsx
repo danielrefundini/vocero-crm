@@ -99,7 +99,7 @@ export function BrandingClient({
       const data = (await res?.json().catch(() => null)) as {
         error?: { message?: string };
       } | null;
-      setError(data?.error?.message ?? "No se pudo guardar");
+      setError(data?.error?.message ?? "Couldn't save");
       return;
     }
     setSaved(true);
@@ -107,21 +107,20 @@ export function BrandingClient({
     router.refresh();
   }
 
-  if (!loaded) return <p className="text-sm text-text-3">Cargando…</p>;
+  if (!loaded) return <p className="text-sm text-text-3">Loading…</p>;
 
   return (
     <div className="max-w-2xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Marca del CRM</CardTitle>
+          <CardTitle>CRM branding</CardTitle>
           <CardDescription>
-            Este CRM es tuyo: ponle el nombre de tu negocio y tu color. Se
-            reflejan en toda la interfaz y en la pantalla de inicio de sesión.
+            This CRM is yours: give it your business name and color. They show up across the interface and on the sign-in screen.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-1.5">
-            <Label htmlFor="brand-name">Nombre</Label>
+            <Label htmlFor="brand-name">Name</Label>
             <Input
               id="brand-name"
               maxLength={30}
@@ -133,7 +132,7 @@ export function BrandingClient({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="brand-currency">Moneda del negocio</Label>
+            <Label htmlFor="brand-currency">Business currency</Label>
             <select
               id="brand-currency"
               value={currency}
@@ -151,13 +150,12 @@ export function BrandingClient({
               ))}
             </select>
             <p className="text-xs text-text-3">
-              Es la única que el Pipeline suma. Los montos capturados en otra
-              moneda se muestran, pero quedan fuera del total de su columna.
+              {"It's the only one the Pipeline adds up. Amounts entered in another currency are shown, but are left out of their column total."}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label>Color de acento</Label>
+            <Label>Accent color</Label>
             <div className="flex flex-wrap items-center gap-2">
               {Object.entries(ACCENT_PRESETS).map(([hex, preset]) => (
                 <button
@@ -191,12 +189,11 @@ export function BrandingClient({
                   onChange={(e) => setAccent(e.target.value)}
                   className="h-4 w-4 cursor-pointer appearance-none border-0 bg-transparent p-0"
                 />
-                Personalizado
+                Custom
               </label>
             </div>
             <p className="text-xs text-text-3">
-              Con un color personalizado, los tonos derivados (hover, fondos
-              suaves) se calculan solos y se ajusta el contraste.
+              With a custom color, derived shades (hover, soft backgrounds) are calculated automatically and contrast is adjusted.
             </p>
           </div>
 
@@ -205,7 +202,7 @@ export function BrandingClient({
               misma clase (`nav-dark`) y el mismo renglón activo que la de
               verdad; a la derecha la página en el tema activo, con su botón. */}
           <div
-            aria-label="Vista previa de la marca"
+            aria-label="Brand preview"
             className="flex flex-col overflow-hidden rounded-md border border-border-strong sm:flex-row"
           >
             <div
@@ -220,7 +217,7 @@ export function BrandingClient({
               </div>
               <span className={cn(navItemClass(true), "mt-3")}>
                 <Inbox className="h-[17px] w-[17px] text-brand" strokeWidth={1.8} />
-                <span className="flex-1">Bandeja</span>
+                <span className="flex-1">Inbox</span>
               </span>
             </div>
             <div
@@ -228,15 +225,15 @@ export function BrandingClient({
               style={accentVars(previewSet)}
             >
               <span className="rounded-full bg-brand px-3.5 py-1.5 text-xs font-semibold text-brand-fg shadow-sm">
-                Botón de ejemplo
+                Sample button
               </span>
             </div>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
-          {saved && <p className="text-sm" style={{ color: previewSet.text }}>Marca guardada ✓</p>}
+          {saved && <p className="text-sm" style={{ color: previewSet.text }}>Branding saved ✓</p>}
           <Button disabled={saving || !name.trim()} onClick={() => void save()}>
-            {saving ? "Guardando…" : "Guardar marca"}
+            {saving ? "Saving…" : "Save branding"}
           </Button>
         </CardContent>
       </Card>

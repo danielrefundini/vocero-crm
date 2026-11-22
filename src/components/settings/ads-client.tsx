@@ -39,10 +39,10 @@ type ActivityRow = {
 };
 
 const STATUS_LABEL: Record<ActivityRow["status"], string> = {
-  sent: "Enviado",
-  failed: "Falló",
-  skipped: "Omitido",
-  pending: "En curso",
+  sent: "Sent",
+  failed: "Failed",
+  skipped: "Skipped",
+  pending: "In progress",
 };
 
 const STATUS_VARIANT: Record<
@@ -57,8 +57,8 @@ const STATUS_VARIANT: Record<
 
 /** Qué significa cada evento, en el idioma del negocio y no en el de Meta. */
 const EVENT_LABEL: Record<string, string> = {
-  QualifiedLead: "Lead calificado",
-  Purchase: "Venta",
+  QualifiedLead: "Qualified lead",
+  Purchase: "Sale",
 };
 
 export function AdsClient() {
@@ -118,7 +118,7 @@ export function AdsClient() {
       const body = (await res?.json().catch(() => null)) as
         | { error?: { message?: string } }
         | null;
-      setError(body?.error?.message ?? "No se pudo guardar");
+      setError(body?.error?.message ?? "Couldn't save");
       return;
     }
     setToken("");
@@ -145,18 +145,15 @@ export function AdsClient() {
     <div className="max-w-3xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Conversiones de anuncios</CardTitle>
+          <CardTitle>Ad conversions</CardTitle>
           <CardDescription>
-            Meta sabe qué conversaciones empezaron desde un anuncio, pero no
-            cuáles sirvieron. Conecta tu dataset y el CRM le avisará cuándo un
-            lead se califica y cuándo se cierra la venta, para que optimice
-            hacia quien compra y no hacia quien solo escribe.
+            Meta knows which conversations started from an ad, but not which ones paid off. Connect your dataset and the CRM will tell it when a lead qualifies and when the sale closes, so it optimizes toward buyers and not just people who message.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {capi ? (
             <p className="text-sm text-muted-foreground">
-              Conectado al dataset{" "}
+              Connected to the dataset{" "}
               <span className="font-medium text-foreground">
                 {capi.datasetId}
               </span>{" "}
@@ -165,7 +162,7 @@ export function AdsClient() {
           ) : null}
 
           <div className="space-y-1.5">
-            <Label htmlFor="capi-dataset">ID del dataset</Label>
+            <Label htmlFor="capi-dataset">Dataset ID</Label>
             <Input
               id="capi-dataset"
               value={datasetId}
@@ -173,35 +170,33 @@ export function AdsClient() {
               placeholder="1708105527110154"
             />
             <p className="text-xs text-muted-foreground">
-              Administrador de eventos de Meta → tu conjunto de datos. Suele ser
-              el de tu propia cuenta de WhatsApp.
+              {"Meta Events Manager → your dataset. It's usually the one for your own WhatsApp account."}
             </p>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="capi-token">Token (opcional)</Label>
+            <Label htmlFor="capi-token">Token (optional)</Label>
             <Input
               id="capi-token"
               value={token}
               onChange={(e) => setToken(e.target.value)}
-              placeholder="Déjalo vacío para reusar el de WhatsApp"
+              placeholder="Leave it empty to reuse the WhatsApp one"
               autoComplete="off"
             />
             <p className="text-xs text-muted-foreground">
-              El token de tu conexión de WhatsApp ya suele poder publicar en el
-              dataset. Solo pega uno si Meta te dio otro distinto.
+              Your WhatsApp connection token can usually publish to the dataset already. Only paste one if Meta gave you a different one.
             </p>
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="capi-stage">¿Qué etapa es un lead calificado?</Label>
+            <Label htmlFor="capi-stage">Which stage is a qualified lead?</Label>
             <select
               id="capi-stage"
               value={qualifiedStageId}
               onChange={(e) => setQualifiedStageId(e.target.value)}
               className="h-9 w-full rounded-md border border-input bg-card px-2 text-sm"
             >
-              <option value="">No reportar leads calificados</option>
+              <option value="">{"Don't report qualified leads"}</option>
               {stages
                 .filter((s) => s.kind === "open")
                 .map((s) => (
@@ -211,7 +206,7 @@ export function AdsClient() {
                 ))}
             </select>
             <p className="text-xs text-muted-foreground">
-              La venta se reporta sola cuando el trato entra a tu etapa ganada.
+              The sale is reported automatically when the deal enters your won stage.
             </p>
           </div>
 
@@ -221,16 +216,16 @@ export function AdsClient() {
             </p>
           ) : null}
           {saved ? (
-            <p className="text-sm text-success-text">Guardado.</p>
+            <p className="text-sm text-success-text">Saved.</p>
           ) : null}
 
           <div className="flex gap-2">
             <Button onClick={save} disabled={saving || !datasetId.trim()}>
-              {saving ? "Guardando…" : "Guardar"}
+              {saving ? "Saving…" : "Save"}
             </Button>
             {capi ? (
               <Button variant="outline" onClick={disconnect} disabled={saving}>
-                Desconectar
+                Disconnect
               </Button>
             ) : null}
           </div>
@@ -239,33 +234,31 @@ export function AdsClient() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Actividad reciente</CardTitle>
+          <CardTitle>Recent activity</CardTitle>
           <CardDescription>
-            Lo último que se le reportó a Meta. Si algo no salió, aquí dice por
-            qué — es la forma de saber si esto funciona, sin salir del CRM.
+            The latest reported to Meta. If something failed, it says why here — the way to know this works without leaving the CRM.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <Button variant="outline" onClick={() => void loadActivity()}>
-            Actualizar
+            Refresh
           </Button>
           {activity === null ? (
-            <p className="text-sm text-muted-foreground">Cargando…</p>
+            <p className="text-sm text-muted-foreground">Loading…</p>
           ) : activity.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Todavía no hay conversiones. Aparecerán cuando un lead que llegó
-              por un anuncio avance de etapa.
+              {"No conversions yet. They'll appear when a lead who came from an ad moves to another stage."}
             </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="kicker text-left">
                   <tr>
-                    <th className="py-2 pr-3 font-medium">Evento</th>
-                    <th className="py-2 pr-3 font-medium">Contacto</th>
-                    <th className="py-2 pr-3 font-medium">Estado</th>
-                    <th className="py-2 pr-3 font-medium">Cuándo</th>
-                    <th className="py-2 font-medium">Detalle</th>
+                    <th className="py-2 pr-3 font-medium">Event</th>
+                    <th className="py-2 pr-3 font-medium">Contact</th>
+                    <th className="py-2 pr-3 font-medium">Status</th>
+                    <th className="py-2 pr-3 font-medium">When</th>
+                    <th className="py-2 font-medium">Detail</th>
                   </tr>
                 </thead>
                 <tbody>

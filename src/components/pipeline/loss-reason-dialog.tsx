@@ -32,14 +32,13 @@ export function LossReasonDialog({
     >
       <div
         role="dialog"
-        aria-label="Motivo de pérdida"
+        aria-label="Loss reason"
         className="w-full max-w-md rounded-lg border bg-popover p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-1 font-semibold">¿Por qué se perdió?</h3>
+        <h3 className="mb-1 font-semibold">Why was it lost?</h3>
         <p className="mb-4 text-xs text-text-3">
-          {leadName} pasa a Perdido. El motivo es lo único que después explica
-          qué cambiar: sin él, la gráfica de pérdidas no dice nada.
+          {leadName} moves to Lost. The reason is the only thing that later explains what to change: without it, the loss chart says nothing.
         </p>
 
         <div className="space-y-2">
@@ -62,7 +61,7 @@ export function LossReasonDialog({
 
         <div className="mt-3 space-y-1.5">
           <label className="text-sm font-medium" htmlFor="loss-note">
-            Nota (opcional)
+            Note (optional)
           </label>
           <Textarea
             id="loss-note"
@@ -70,19 +69,19 @@ export function LossReasonDialog({
             onChange={(e) => setNote(e.target.value)}
             rows={2}
             maxLength={500}
-            placeholder="Se fue con una agencia local por la mitad del precio"
+            placeholder="Went with a local agency for half the price"
           />
         </div>
 
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={onCancel}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             disabled={!reason}
             onClick={() => reason && onConfirm(reason, note.trim())}
           >
-            Marcar como perdido
+            Mark as lost
           </Button>
         </div>
       </div>

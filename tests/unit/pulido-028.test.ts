@@ -25,21 +25,21 @@ describe("lo que el compositor ofrece por canal (D1)", () => {
 describe("la bandeja vacía nombra los canales encendidos (D2)", () => {
   it("une los canales como se dice", () => {
     expect(channelList(["WhatsApp"])).toBe("WhatsApp");
-    expect(channelList(["WhatsApp", "Instagram"])).toBe("WhatsApp o Instagram");
+    expect(channelList(["WhatsApp", "Instagram"])).toBe("WhatsApp or Instagram");
     expect(channelList(["WhatsApp", "Instagram", "Messenger"])).toBe(
-      "WhatsApp, Instagram o Messenger"
+      "WhatsApp, Instagram or Messenger"
     );
   });
 
   it("con solo WhatsApp, el texto de siempre", () => {
     expect(emptyInboxDescription(["WhatsApp"])).toBe(
-      "Cuando alguien escriba a tu número de WhatsApp, su conversación aparecerá aquí en tiempo real."
+      "When someone messages your WhatsApp number, their conversation will appear here in real time."
     );
   });
 
   it("con varios canales, los nombra todos", () => {
     expect(emptyInboxDescription(["WhatsApp", "Instagram", "Messenger", "TikTok"])).toBe(
-      "Cuando alguien te escriba por WhatsApp, Instagram, Messenger o TikTok, su conversación aparecerá aquí en tiempo real."
+      "When someone messages you via WhatsApp, Instagram, Messenger or TikTok, their conversation will appear here in real time."
     );
   });
 });
@@ -47,7 +47,7 @@ describe("la bandeja vacía nombra los canales encendidos (D2)", () => {
 describe("la etiqueta bajo el logo (D6)", () => {
   it("con solo WhatsApp, la de siempre; con más canales, Multicanal", () => {
     expect(navKicker(["whatsapp"])).toBe("CRM · WhatsApp");
-    expect(navKicker(["whatsapp", "instagram"])).toBe("CRM · Multicanal");
+    expect(navKicker(["whatsapp", "instagram"])).toBe("CRM · Multichannel");
   });
 });
 

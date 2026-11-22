@@ -16,7 +16,15 @@ import { createHmac, timingSafeEqual } from "node:crypto";
  * ediciones. La única diferencia está en `mediaId`, y se explica abajo.
  */
 
-export type CanalDelEvento = "whatsapp" | "instagram" | "messenger" | "tiktok";
+export type CanalDelEvento =
+  | "whatsapp"
+  | "instagram"
+  | "messenger"
+  | "tiktok"
+  | "telegram"
+  | "website"
+  | "sms"
+  | "email";
 
 export type MensajeDelEvento = {
   id: string;
@@ -323,12 +331,12 @@ export function clasificarRespuesta(status: number): ResultadoEntrega {
     return {
       ok: false,
       reintentable: true,
-      detalle: `el cerebro respondió ${status}`,
+      detalle: `the brain answered ${status}`,
     };
   }
   return {
     ok: false,
     reintentable: false,
-    detalle: `el cerebro respondió ${status} (no se reintenta)`,
+    detalle: `the brain answered ${status} (not retried)`,
   };
 }

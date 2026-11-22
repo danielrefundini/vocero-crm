@@ -59,10 +59,10 @@ export function Section({
         {error ? (
           <p className="py-6 text-center text-sm text-danger-text">{error}</p>
         ) : !hasData ? (
-          <p className="py-6 text-center text-sm text-text-3">Calculando…</p>
+          <p className="py-6 text-center text-sm text-text-3">Calculating…</p>
         ) : empty ? (
           <p className="py-6 text-center text-sm text-text-3">
-            {emptyText ?? "No hay datos en este periodo."}
+            {emptyText ?? "No data in this period."}
           </p>
         ) : (
           children
@@ -86,7 +86,7 @@ export function Rate({
   className?: string;
 }) {
   if (rate.value === null) {
-    return <span className={cn("text-text-3", className)}>sin datos</span>;
+    return <span className={cn("text-text-3", className)}>no data</span>;
   }
   return (
     <span className={cn("inline-flex flex-wrap items-baseline gap-x-1.5", className)}>
@@ -94,8 +94,8 @@ export function Rate({
         {rate.value}%
       </span>
       <span className="text-xs text-text-3">
-        de {rate.sample} {unit}
-        {!rate.reliable && " · muestra chica"}
+        of {rate.sample} {unit}
+        {!rate.reliable && " · small sample"}
       </span>
     </span>
   );

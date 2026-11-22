@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { apiError } from "@/lib/api";
 import { requireBotKey, resolveInstanceOrg } from "@/server/bot/auth";
+import { formatAddress, servicesFromStored, isBrand } from "@/lib/exteriors";
 import { serializeFicha } from "@/server/bot/ficha";
 import { findContactByIdentity } from "@/server/inbox/identity";
 import { isWindowOpen, windowRemainingMs } from "@/server/inbox/window";
@@ -42,7 +43,7 @@ export async function GET(req: Request) {
 
   const organizationId = await resolveInstanceOrg();
   if (!organizationId) {
-    return apiError(409, "no_org", "La instancia aún no tiene organización");
+    return apiError(409, "no_org", "This instance doesn't have an organization yet");
   }
 
   const url = new URL(req.url);
@@ -50,7 +51,7 @@ export async function GET(req: Request) {
     url.searchParams.get("identity") ?? url.searchParams.get("waIdentity");
   const conversationId = url.searchParams.get("conversationId");
   if (!waIdentity && !conversationId) {
-    return apiError(422, "invalid", "Falta identity (o waIdentity) o conversationId");
+    return apiError(422, "invalid", "identity (or waIdentity) or conversationId is missing");
   }
 
   const db = getDb();
@@ -99,7 +100,7 @@ export async function GET(req: Request) {
   }
 
   if (!contact || !conversation) {
-    return apiError(404, "not_found", "Conversación no encontrada");
+    return apiError(404, "not_found", "Conversation not found");
   }
 
   const [leadRows, booking, anuncio] = await Promise.all([
@@ -134,6 +135,20 @@ export async function GET(req: Request) {
       waIdentity: contact.waIdentity,
       channel: contact.channel,
       phone: contact.phone,
+      email: contact.email,
+      address: {
+        street: contact.addressStreet,
+        city: contact.addressCity,
+        state: contact.addressState,
+        zip: contact.addressZip,
+        formatted: formatAddress({
+          street: contact.addressStreet,
+          city: contact.addressCity,
+          state: contact.addressState,
+          zip: contact.addressZip,
+        }),
+      },
+      services: servicesFromStored(contact.services),
       ficha: serializeFicha(contact),
     },
     conversation: {
@@ -155,7 +170,18 @@ export async function GET(req: Request) {
       ),
     },
     lead: leadRows[0]
-      ? { id: leadRows[0].lead.id, stageName: leadRows[0].stage.name, nextStages }
+      ? {
+          id: leadRows[0].lead.id,
+          stageName: leadRows[0].stage.name,
+          nextStages,
+          amountCents: leadRows[0].lead.amountCents,
+          currency: leadRows[0].lead.currency,
+          quoteDate: leadRows[0].lead.quoteDate,
+          brand:
+            leadRows[0].lead.brand && isBrand(leadRows[0].lead.brand)
+              ? leadRows[0].lead.brand
+              : null,
+        }
       : null,
     adOrigen: anuncio
       ? {

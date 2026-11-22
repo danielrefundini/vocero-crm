@@ -72,7 +72,7 @@ describe("el error que se guarda", () => {
   it("es el mensaje recortado a 300 caracteres, nunca otra cosa", () => {
     expect(resumenDeError(new Error("x".repeat(500)))).toHaveLength(300);
     expect(resumenDeError("texto")).toBe("texto");
-    expect(resumenDeError(new Error(""))).toBe("error desconocido");
+    expect(resumenDeError(new Error(""))).toBe("unknown error");
   });
 });
 
@@ -187,14 +187,20 @@ describe("guardarraíl: ninguna ruta de webhook procesa por su cuenta", () => {
     return out;
   }
 
-  it("las cuatro pasan por recibirEvento y ninguna usa after() directo", () => {
+  it("las rutas de Meta y Zernio pasan por recibirEvento; SMS y correo verifican firma", () => {
     const archivos = rutas(join(process.cwd(), "src", "app", "api", "webhooks"));
     expect(archivos.length).toBeGreaterThanOrEqual(4);
     for (const f of archivos) {
       const src = readFileSync(f, "utf8");
-      // Un after() suelto en una ruta es justo lo que perdía mensajes.
       expect(src, f).not.toMatch(/\bafter\(/);
-      expect(src, f).toContain("recibirEvento(");
+      const unix = f.split("\\").join("/");
+      const followUp = unix.includes("/sms/") || unix.includes("/email/");
+      if (followUp) {
+        expect(src, f).toMatch(/Signature|signature/);
+        expect(src, f).toContain("ingestInboundMessage");
+      } else {
+        expect(src, f).toContain("recibirEvento(");
+      }
     }
   });
 });

@@ -207,7 +207,7 @@ describe("chatJson (reintentos y errores tipados)", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.error).toBe("not_configured");
-      expect(result.detail).toContain("saldo");
+      expect(result.detail).toContain("credit");
     }
     expect(fetchMock).not.toHaveBeenCalled();
   });

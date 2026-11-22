@@ -64,15 +64,15 @@ export function requireBotKey(req: Request): Response | null {
     const ip = clientIp(req.headers);
     const fails = checkRateLimit(`bot-api-fail:${ip}`, BOT_AUTH_FAILURES);
     return fails.allowed
-      ? apiError(401, "unauthorized", "No autorizado")
-      : apiError(429, "rate_limited", "Demasiados intentos fallidos");
+      ? apiError(401, "unauthorized", "Unauthorized")
+      : apiError(429, "rate_limited", "Too many failed attempts");
   }
   // «Quién responde»: la única huella que deja el cerebro externo en el CRM.
   // Se marca al autenticar, antes del presupuesto: un cerebro frenado por 429
   // sigue siendo el que contesta.
   markBotSeen();
   const rl = checkRateLimit("bot-api", BOT_API_BUDGET);
-  if (!rl.allowed) return apiError(429, "rate_limited", "Demasiadas solicitudes");
+  if (!rl.allowed) return apiError(429, "rate_limited", "Too many requests");
   return null;
 }
 

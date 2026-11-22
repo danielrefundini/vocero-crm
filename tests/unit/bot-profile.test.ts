@@ -91,7 +91,7 @@ describe("serializeBotProfile", () => {
         role: "calificador",
         tools: ["ficha", "etapa", "agendar", "reprogramar", "salida", "escalar"],
       },
-      kb: "P: ¿Cuánto cuesta?\nR: $800.",
+      kb: "Q: ¿Cuánto cuesta?\nA: $800.",
       resources: [],
       llm: null,
     });
@@ -114,7 +114,7 @@ describe("serializeBotProfile", () => {
   });
 
   it("KB vacío → render canónico '(knowledge base vacío)'", () => {
-    expect(serializeBotProfile(profileRow(), []).kb).toBe("(knowledge base vacío)");
+    expect(serializeBotProfile(profileRow(), []).kb).toBe("(empty knowledge base)");
   });
 
   it("enabled NO viaja: gobierna solo la IA in-process", () => {
@@ -131,7 +131,7 @@ describe("serializeBotProfile", () => {
   it("bloques del KB van tal cual, mezclados con P/R en orden", () => {
     const block: KbEntry = { ...qa("x", "y"), kind: "block", question: null, answer: null, content: "Horario: L-V 9-18." };
     const out = serializeBotProfile(profileRow(), [qa("¿Dónde están?", "En Querétaro."), block]);
-    expect(out.kb).toBe("P: ¿Dónde están?\nR: En Querétaro.\n\nHorario: L-V 9-18.");
+    expect(out.kb).toBe("Q: ¿Dónde están?\nA: En Querétaro.\n\nHorario: L-V 9-18.");
   });
 });
 
@@ -170,7 +170,7 @@ describe("GET /api/bot/profile (ruta, DB fake)", () => {
     expect(res.status).toBe(200);
     const body = (await res.json()) as ReturnType<typeof serializeBotProfile>;
     expect(body.profile.name).toBe("Sofi");
-    expect(body.kb).toBe("P: ¿Cuánto?\nR: $800.");
+    expect(body.kb).toBe("Q: ¿Cuánto?\nA: $800.");
     expect(body.resources).toEqual([]);
   });
 });

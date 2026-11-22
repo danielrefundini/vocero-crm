@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     session = await requireSession();
   } catch (err) {
     if (err instanceof UnauthorizedError) {
-      return new Response("No autenticado", { status: 401 });
+      return new Response("Not authenticated", { status: 401 });
     }
     throw err;
   }
@@ -35,7 +35,7 @@ export async function GET(req: Request) {
         }
       };
 
-      send(`: conectado\n\n`);
+      send(`: connected `);
 
       const unsubscribe = subscribe(organizationId, (event) => {
         send(

@@ -87,7 +87,7 @@ export function BookingDrawer({
           panel es lateral y NO modal, como el detalle de Google: tocar otra
           cita del calendario cambia el panel sin cerrarlo primero. */}
       <button
-        aria-label="Cerrar la cita"
+        aria-label="Close the appointment"
         tabIndex={-1}
         onClick={onClose}
         className="fixed inset-0 z-40 bg-overlay md:hidden"
@@ -95,15 +95,15 @@ export function BookingDrawer({
 
       <aside
         role="dialog"
-        aria-label={`${isSession ? "Cita" : "Bloqueo"}: ${bookingTitle(b)}`}
+        aria-label={`${isSession ? "Appointment" : "Block"}: ${bookingTitle(b)}`}
         className="fixed inset-y-0 right-0 z-50 flex w-[min(400px,94vw)] flex-col border-l bg-popover shadow-pop lg:static lg:z-auto lg:w-[360px] lg:shrink-0 lg:shadow-none"
       >
         <header className="flex items-center justify-between border-b px-4 py-3">
-          <h3 className="kicker text-text-2">{isSession ? "Cita" : "Bloqueo de horario"}</h3>
+          <h3 className="kicker text-text-2">{isSession ? "Appointment" : "Time block"}</h3>
           <button
             autoFocus
             onClick={onClose}
-            aria-label="Cerrar el panel de la cita"
+            aria-label="Close the appointment panel"
             className="rounded p-1 text-text-3 hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-soft"
           >
             <X className="h-4 w-4" strokeWidth={1.7} />
@@ -127,7 +127,7 @@ export function BookingDrawer({
                 {first && last && (
                   <p className="mt-0.5 text-sm text-text-2 first-letter:uppercase">
                     {longDayLabel(first.day)} · {hhmm(first.startMin)} – {hhmm(last.endMin)}
-                    {last.day !== first.day && " del día siguiente"}
+                    {last.day !== first.day && " of the next day"}
                   </p>
                 )}
                 <p className="text-xs text-text-3">
@@ -153,16 +153,16 @@ export function BookingDrawer({
               {isSession && (
                 <Badge variant="secondary" className="gap-1">
                   {b.source === "ai" && <Sparkles className="h-3 w-3" />}
-                  {b.source === "ai" ? "Agendó la IA" : "Manual"}
+                  {b.source === "ai" ? "Booked by AI" : "Manual"}
                 </Badge>
               )}
-              {b.isTest && <Badge variant="secondary">Prueba del Laboratorio</Badge>}
-              {canRetrySync(b) && <Badge variant="warning">Sin enlace</Badge>}
+              {b.isTest && <Badge variant="secondary">Lab test</Badge>}
+              {canRetrySync(b) && <Badge variant="warning">No link</Badge>}
             </div>
 
             {active && endMs < nowMs && isSession && (
               <p className="rounded-sm bg-warning-tint px-3 py-2 text-xs text-warning-text">
-                La hora ya pasó: márcala como realizada o como que no asistió.
+                The time has passed: mark it as completed or as a no-show.
               </p>
             )}
           </section>
@@ -175,7 +175,7 @@ export function BookingDrawer({
                   href={`/inbox?contact=${b.contact.id}`}
                   className="flex w-full items-center justify-center gap-2 rounded-md border bg-secondary px-3 py-2 text-sm font-medium hover:bg-accent"
                 >
-                  <MessageSquareText className="h-4 w-4" /> Abrir conversación
+                  <MessageSquareText className="h-4 w-4" /> Open conversation
                 </Link>
               )}
               {b.meetingLink && (
@@ -185,17 +185,26 @@ export function BookingDrawer({
                   rel="noreferrer noopener"
                   className="flex items-center gap-2 break-all text-sm text-brand-text hover:underline"
                 >
-                  <Video className="h-4 w-4 shrink-0" /> Enlace de la reunión
+                  <Video className="h-4 w-4 shrink-0" />
+                  {b.connector === "in-home" ? "Open in Google Maps" : "Meeting link"}
                 </a>
+              )}
+              {b.connector === "in-home" && b.propertyAddress && (
+                <p className="text-sm text-text-2">{b.propertyAddress}</p>
+              )}
+              {b.connector === "in-home" && !b.meetingLink && (
+                <p className="text-sm text-warning-text">
+                  Map link is missing. Add a property address on the contact and book again, or set one on the next visit.
+                </p>
               )}
               {b.connector === "google" && (
                 <p className="text-xs text-text-3">
-                  Mueve y cancela desde Vocero: los cambios hechos en Google Calendar no se importan.
+                  {"Move and cancel from Vocero: changes made in Google Calendar aren't imported."}
                 </p>
               )}
               {b.notes && isSession && (
                 <div>
-                  <p className="kicker mb-1">Notas</p>
+                  <p className="kicker mb-1">Notes</p>
                   <p className="whitespace-pre-wrap text-sm text-text-2">{b.notes}</p>
                 </div>
               )}
@@ -209,7 +218,7 @@ export function BookingDrawer({
             <section className="border-b p-4">
               <div className="space-y-2 rounded-sm bg-subtle p-3">
                 <p className="text-sm text-text-2">
-                  Esta cita quedó sin enlace: el proveedor no respondió.
+                  {"This appointment has no link: the provider didn't respond."}
                 </p>
                 <Button
                   size="sm"
@@ -217,7 +226,7 @@ export function BookingDrawer({
                   disabled={busy}
                   onClick={() => void run({ action: "retry_link" })}
                 >
-                  Reintentar enlace
+                  Retry link
                 </Button>
               </div>
             </section>
@@ -252,7 +261,7 @@ export function BookingDrawer({
               disabled={busy}
               onClick={() => setRescheduling((r) => !r)}
             >
-              <CalendarClock className="h-3.5 w-3.5" /> Reprogramar
+              <CalendarClock className="h-3.5 w-3.5" /> Reschedule
             </Button>
             {/* Un bloqueo no se "realiza" ni tiene quien falte: solo se mueve
                 o se quita. */}
@@ -264,7 +273,7 @@ export function BookingDrawer({
                   disabled={busy}
                   onClick={() => void run({ action: "status", status: "realizada" })}
                 >
-                  Realizada
+                  Completed
                 </Button>
                 <Button
                   size="sm"
@@ -272,7 +281,7 @@ export function BookingDrawer({
                   disabled={busy}
                   onClick={() => void run({ action: "status", status: "no_show" })}
                 >
-                  No asistió
+                  No-show
                 </Button>
               </>
             )}
@@ -283,7 +292,7 @@ export function BookingDrawer({
               className="text-danger-text"
               onClick={() => void run({ action: "cancel" })}
             >
-              {isSession ? "Cancelar cita" : "Quitar bloqueo"}
+              {isSession ? "Cancel appointment" : "Remove block"}
             </Button>
           </footer>
         )}
@@ -342,33 +351,33 @@ function Reschedule({
   const times = days.find(([d]) => d === selected)?.[1] ?? [];
 
   return (
-    <section className="space-y-3 border-b p-4" aria-label="Mover a">
+    <section className="space-y-3 border-b p-4" aria-label="Move to">
       <div className="flex items-center justify-between">
-        <p className="kicker">Mover a</p>
+        <p className="kicker">Move to</p>
         <button
           type="button"
           onClick={onCancel}
           className="text-xs font-medium text-text-3 hover:text-foreground"
         >
-          Cancelar
+          Cancel
         </button>
       </div>
 
-      {slots === null && <p className="text-sm text-text-3">Buscando huecos libres…</p>}
+      {slots === null && <p className="text-sm text-text-3">Looking for open slots…</p>}
       {slots !== null && days.length === 0 && (
         <p className="text-sm text-text-3">
           {failed
-            ? "No se pudo comprobar la disponibilidad. Intenta de nuevo."
-            : "No hay huecos libres para mover esta cita."}
+            ? "Couldn't check availability. Try again."
+            : "There are no open slots to move this appointment to."}
         </p>
       )}
 
       {days.length > 0 && (
         <>
-          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="group" aria-label="Días con huecos">
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1" role="group" aria-label="Days with openings">
             {days.map(([d, list]) => {
               const h = dayHeading(d);
-              const prefix = d === today ? "Hoy" : d === addDaysISO(today, 1) ? "Mañana" : h.weekday;
+              const prefix = d === today ? "Today" : d === addDaysISO(today, 1) ? "Tomorrow" : h.weekday;
               return (
                 <button
                   key={d}
@@ -385,12 +394,12 @@ function Reschedule({
                   <span className="text-sm font-semibold tabular-nums">
                     {h.day} {h.month}
                   </span>
-                  <span className="text-[10.5px] text-text-3">{list.length} libres</span>
+                  <span className="text-[10.5px] text-text-3">{list.length} open</span>
                 </button>
               );
             })}
           </div>
-          <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Horarios libres">
+          <div className="grid grid-cols-4 gap-1.5" role="group" aria-label="Open slots">
             {times.map((s) => (
               <button
                 key={s.startUtc}

@@ -5,22 +5,22 @@ import type { BookingListItem } from "@/server/agenda/queries";
 export type Booking = BookingListItem;
 
 export const STATUS_LABEL: Record<Booking["status"], string> = {
-  agendada: "Agendada",
-  realizada: "Realizada",
-  no_show: "No asistió",
-  cancelada: "Cancelada",
+  agendada: "Booked",
+  realizada: "Completed",
+  no_show: "No-show",
+  cancelada: "Canceled",
 };
 
 /** Un bloqueo no se "agenda" ni se "cancela": está activo o se quitó. */
 export function statusLabel(b: Booking): string {
-  if (b.kind === "block") return b.status === "cancelada" ? "Quitado" : "Activo";
+  if (b.kind === "block") return b.status === "cancelada" ? "Removed" : "Active";
   return STATUS_LABEL[b.status];
 }
 
 /** Lo que se lee en la rejilla: el contacto o, en un bloqueo, su nota. */
 export function bookingTitle(b: Booking): string {
-  if (b.kind === "block") return b.notes?.trim() || "Bloqueo";
-  return b.contact?.name.trim() || "Sin contacto";
+  if (b.kind === "block") return b.notes?.trim() || "Block";
+  return b.contact?.name.trim() || "No contact";
 }
 
 /**

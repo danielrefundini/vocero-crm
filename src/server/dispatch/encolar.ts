@@ -63,6 +63,6 @@ export async function despacharAlCerebro(
     // Que despierte justo cuando la ventana venza, no en su siguiente barrido.
     programarTanda(notBefore);
   } catch (err) {
-    console.error("[despacho] no se pudo encolar el turno:", err);
+    console.error("[dispatch] couldn't queue the turn:", err);
   }
 }

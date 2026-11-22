@@ -34,7 +34,7 @@ async function cargar<T>(
     res = await fetch(url, { signal });
   } catch {
     if (signal.aborted) return;
-    set(() => ({ data: null, loading: false, error: "No se pudo cargar. Revisa tu conexión." }));
+    set(() => ({ data: null, loading: false, error: "Couldn't load. Check your connection." }));
     return;
   }
   const body = (await res.json().catch(() => null)) as
@@ -45,7 +45,7 @@ async function cargar<T>(
     set(() => ({
       data: null,
       loading: false,
-      error: body?.error?.message ?? "No se pudo calcular este bloque.",
+      error: body?.error?.message ?? "Couldn't calculate this block.",
     }));
     return;
   }
@@ -98,9 +98,9 @@ export function ResultsClient({
     <div className="flex h-full flex-col">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-6 sm:py-4">
         <div className="min-w-0">
-          <h2 className="text-[17px] font-bold tracking-tight">Resultados</h2>
+          <h2 className="text-[17px] font-bold tracking-tight">Results</h2>
           <p className="text-xs text-text-3">
-            Ventas, el trabajo del agente, de dónde llegan y qué se está cayendo.
+            {"Sales, the agent's work, where they come from and what's slipping."}
           </p>
         </div>
         <RangePicker value={range} onChange={setRange} today={today} timezone={timezone} />

@@ -95,9 +95,9 @@ export async function processZernioPayload(payload: unknown): Promise<void> {
   const channel = zernioTargetChannel(payload);
   if (!channel) return; // otra plataforma conectada a la misma llave: no es nuestra
 
-  if (!isChannelEnabled(channel)) {
+  if (!(await isChannelEnabled(channel))) {
     console.warn(
-      `[zernio] evento de ${channel} con el canal apagado en esta instancia: descartado`
+      `[zernio] event from ${channel} with the channel off on this instance: discarded`
     );
     return;
   }

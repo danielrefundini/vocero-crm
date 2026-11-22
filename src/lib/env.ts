@@ -10,13 +10,16 @@ import { z } from "zod";
 
 export const envSchema = z.object({
   APP_BASE_URL: z.string().url(),
+  // Other addresses the app is also opened from (comma-separated), e.g.
+  // http://localhost:3002 while APP_BASE_URL points at a public tunnel.
+  AUTH_TRUSTED_ORIGINS: z.string().optional(),
   DATABASE_URL: z.string().min(1),
   BETTER_AUTH_SECRET: z.string().min(16),
   ENCRYPTION_KEY: z
     .string()
     .refine((v) => Buffer.from(v, "base64").length === 32, {
       message:
-        "ENCRYPTION_KEY debe ser 32 bytes en base64 (genera con: openssl rand -base64 32)",
+        "ENCRYPTION_KEY must be 32 bytes in base64 (generate with: openssl rand -base64 32)",
     }),
   META_WEBHOOK_VERIFY_TOKEN: z.string().min(8),
   META_APP_SECRET: z.string().optional(),
@@ -35,6 +38,16 @@ export const envSchema = z.object({
   // Ej.: CHANNELS=whatsapp,instagram,messenger. Sin ella, la instancia es solo
   // WhatsApp y las superficies de los demas canales responden 404.
   CHANNELS: z.string().optional(),
+  // Telegram bot channel (official Bot API, no Zernio). Its own switch, off by
+  // default and separate from CHANNELS. Ex.: TELEGRAM=on
+  TELEGRAM: z.string().optional(),
+  // Website form intake (Formspree webhook or a direct post from the site).
+  // Off by default. WEBSITE_FORMS=on turns it on; WEBSITE_FORM_TOKEN is the
+  // secret segment of its URL; FORMSPREE_SIGNING_SECRET (optional) makes the
+  // CRM check Formspree's signature on webhook deliveries.
+  WEBSITE_FORMS: z.string().optional(),
+  WEBSITE_FORM_TOKEN: z.string().optional(),
+  FORMSPREE_SIGNING_SECRET: z.string().optional(),
   // 015: motor de agenda. Apagado por defecto — sin el, toda la superficie de
   // agenda responde 404 y la UI no la menciona. Ej.: AGENDA=on
   AGENDA: z.string().optional(),
@@ -87,6 +100,17 @@ export const envSchema = z.object({
   MEDIA_BUCKET_KEY_ID: z.string().optional(),
   MEDIA_BUCKET_SECRET: z.string().optional(),
   NODE_ENV: z.string().default("development"),
+  // POST /api/intake/website (same WEBSITE_FORM_TOKEN, as a Bearer header).
+  // Optional allow-list of form ids or origins. See docs/exteriors.md.
+  WEBSITE_FORM_ALLOWLIST: z.string().optional(),
+  // SMS. Las tres juntas encienden el envío y el webhook. Si falta una, el canal está apagado.
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  TWILIO_FROM_NUMBER: z.string().optional(),
+  // Correo. El secreto del webhook hace falta para recibir; las dos primeras, para enviar.
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM_EMAIL: z.string().optional(),
+  RESEND_WEBHOOK_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -124,8 +148,8 @@ export function getEnv(): Env {
       .map((i) => `${i.path.join(".")}: ${i.message}`)
       .join("\n  ");
     throw new Error(
-      `Variables de entorno inválidas o faltantes:\n  ${missing}\n` +
-        "Revisa .env.example para la guía de cada variable."
+      `Invalid or missing environment variables:\n  ${missing}\n` +
+        "Check .env.example for guidance on each variable."
     );
   }
   cached = parsed.data;

@@ -31,27 +31,27 @@ export const MEDIA_LIMITS: Record<
   image: {
     maxBytes: 5 * 1024 * 1024,
     mimes: /^image\/(jpeg|png|webp)$/,
-    label: "imagen (jpeg/png/webp, máx. 5 MB)",
+    label: "image (jpeg/png/webp, max 5 MB)",
   },
   sticker: {
     maxBytes: 100 * 1024,
     mimes: /^image\/webp$/,
-    label: "sticker (webp, máx. 100 KB)",
+    label: "sticker (webp, max 100 KB)",
   },
   audio: {
     maxBytes: 16 * 1024 * 1024,
     mimes: /^audio\/(aac|mp4|mpeg|amr|ogg|opus)/,
-    label: "audio (aac/mp4/mpeg/amr/ogg, máx. 16 MB)",
+    label: "audio (aac/mp4/mpeg/amr/ogg, max 16 MB)",
   },
   video: {
     maxBytes: 16 * 1024 * 1024,
     mimes: /^video\/(mp4|3gpp)$/,
-    label: "video (mp4/3gpp, máx. 16 MB)",
+    label: "video (mp4/3gpp, max 16 MB)",
   },
   document: {
     maxBytes: 100 * 1024 * 1024,
     mimes: /^[\w.-]+\/[\w.+-]+$/,
-    label: "documento (máx. 100 MB)",
+    label: "document (max 100 MB)",
   },
 };
 
@@ -84,12 +84,12 @@ export function validateOutgoing(mimeConParametros: string, sizeBytes: number) {
   // trae parámetros; el tipo es lo de antes del `;`.
   const mime = mimeConParametros.split(";")[0]!.trim();
   if (!/^[\w.-]+\/[\w.+-]+$/.test(mime)) {
-    throw new MediaValidationError("unsupported_type", "Tipo de archivo no reconocido");
+    throw new MediaValidationError("unsupported_type", "Unrecognized file type");
   }
   if (isForbiddenUploadMime(mime)) {
     throw new MediaValidationError(
       "unsupported_type",
-      "Los archivos HTML y SVG no se pueden enviar como adjunto: un navegador los abriría como página. Conviértelo a PDF o a imagen"
+      "HTML and SVG files can't be sent as attachments: a browser would open them as a page. Convert it to PDF or an image"
     );
   }
   const kind = kindFromMime(mime);
@@ -97,7 +97,7 @@ export function validateOutgoing(mimeConParametros: string, sizeBytes: number) {
   if (sizeBytes > limit.maxBytes) {
     throw new MediaValidationError(
       "too_large",
-      `El archivo excede el límite de ${limit.label}`
+      `The file exceeds the limit of ${limit.label}`
     );
   }
   return kind;
@@ -162,11 +162,11 @@ export async function downloadGraphMedia(
     meta = await graphRequest<GraphMediaMeta>(waMediaId, { token });
   } catch (err) {
     const gone = err instanceof MetaApiError && err.status === 404;
-    throw new MediaFetchError("Meta no entregó la metadata del adjunto", gone);
+    throw new MediaFetchError("Meta didn't provide the attachment metadata", gone);
   }
-  if (!meta.url) throw new MediaFetchError("Meta no entregó URL del adjunto");
+  if (!meta.url) throw new MediaFetchError("Meta didn't provide the attachment URL");
   if (meta.file_size && meta.file_size > maxBytes) {
-    throw new MediaFetchError("El adjunto excede el límite de tamaño", true);
+    throw new MediaFetchError("The attachment exceeds the size limit", true);
   }
 
   let res: Response;
@@ -175,17 +175,17 @@ export async function downloadGraphMedia(
       headers: { Authorization: `Bearer ${token}` },
     });
   } catch {
-    throw new MediaFetchError("No se pudo descargar el adjunto");
+    throw new MediaFetchError("Couldn't download the attachment");
   }
   if (!res.ok) {
     throw new MediaFetchError(
-      `La descarga devolvió ${res.status}`,
+      `The download returned ${res.status}`,
       res.status === 404 || res.status === 410
     );
   }
   const buf = Buffer.from(await res.arrayBuffer());
   if (buf.byteLength > maxBytes) {
-    throw new MediaFetchError("El adjunto excede el límite de tamaño", true);
+    throw new MediaFetchError("The attachment exceeds the size limit", true);
   }
   return {
     data: buf,
@@ -248,7 +248,7 @@ export async function ensureAssetAvailable(
       .update(schema.mediaAsset)
       .set({ fetchStatus: "failed", fetchError: message, updatedAt: new Date() })
       .where(eq(schema.mediaAsset.id, assetId));
-    console.warn(`[media] descarga del asset ${assetId} falló: ${message}`);
+    console.warn(`[media] download of asset ${assetId} failed: ${message}`);
     return null;
   }
 }
@@ -275,7 +275,7 @@ export async function leerAdjunto(
   if (!recuperado || recuperado.fetchStatus !== "available") return null;
   try {
     const data = await readMediaFile(organizationId, asset.id);
-    console.log(`[media] ${asset.id} no estaba en el volumen; se recuperó de Meta`);
+    console.log(`[media] ${asset.id} wasn't in the volume; recovered from Meta`);
     return { asset: recuperado, data };
   } catch {
     return null;
@@ -313,7 +313,7 @@ export async function uploadGraphMedia(
       body: form,
     });
   } catch (cause) {
-    throw new MetaApiError("No se pudo contactar la API de Meta", {
+    throw new MetaApiError("Couldn't reach the Meta API", {
       status: 0,
       details: cause,
     });
@@ -326,7 +326,7 @@ export async function uploadGraphMedia(
   if (!res.ok) {
     const err = (json as { error?: { message?: string; code?: number; type?: string } })
       ?.error;
-    throw new MetaApiError(err?.message ?? `Meta respondió ${res.status}`, {
+    throw new MetaApiError(err?.message ?? `Meta answered ${res.status}`, {
       status: res.status,
       code: err?.code ?? null,
       type: err?.type ?? null,
@@ -335,7 +335,7 @@ export async function uploadGraphMedia(
   }
   const id = (json as { id?: string })?.id;
   if (!id) {
-    throw new MetaApiError("Meta no devolvió ID del media subido", {
+    throw new MetaApiError("Meta didn't return the uploaded media ID", {
       status: res.status,
     });
   }

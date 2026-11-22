@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
 
 /** 017 — Estado de la conexión de Messenger (el token nunca sale entero). */
 export const GET = withAuth(async (session) => {
-  if (!isChannelEnabled("messenger")) return channelDisabledResponse();
+  if (!(await isChannelEnabled("messenger"))) return channelDisabledResponse();
   const creds = await getMessengerCredentialsByOrg(session.organizationId);
   if (!creds) return Response.json({ connection: null });
   return Response.json({
@@ -47,9 +47,9 @@ const putSchema = z.object({
  * de la organización puede hacerlo.
  */
 export const PUT = withAuth(async (session, req: Request) => {
-  if (!isChannelEnabled("messenger")) return channelDisabledResponse();
+  if (!(await isChannelEnabled("messenger"))) return channelDisabledResponse();
   if (session.role !== "owner") {
-    return apiError(403, "forbidden", "Solo el propietario puede conectar la página");
+    return apiError(403, "forbidden", "Only the owner can connect the page");
   }
   const body = await parseBody(req, putSchema);
   if (!body.ok) return body.response;
@@ -61,7 +61,7 @@ export const PUT = withAuth(async (session, req: Request) => {
     return apiError(
       422,
       "invalid_body",
-      "En modo Meta hace falta el ID de la página"
+      "In Meta mode, the page ID is required"
     );
   }
 
@@ -140,14 +140,14 @@ async function verify(data: VerifyInput): Promise<Check> {
         ok: false,
         status: 422,
         code: "id_mismatch",
-        message: `El token pertenece a la página ${res.id}, no a ${data.pageId}`,
+        message: `The token belongs to page ${res.id}, not to ${data.pageId}`,
       };
     }
     return { ok: true, pageName: res.name?.trim() || null };
   } catch (err) {
     return translate(
       err,
-      "El token de la página no es válido o no tiene permiso de mensajes (pages_messaging)"
+      "The page token is invalid or lacks messaging permission (pages_messaging)"
     );
   }
 }
@@ -159,7 +159,7 @@ function translate(err: unknown, invalidMessage: string): Check {
         ok: false,
         status: 503,
         code: "platform_unavailable",
-        message: "No se pudo contactar la plataforma; intenta de nuevo",
+        message: "Couldn't reach the platform; try again",
       };
     }
     return { ok: false, status: 422, code: "invalid_token", message: invalidMessage };

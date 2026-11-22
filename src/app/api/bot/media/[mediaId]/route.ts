@@ -24,16 +24,16 @@ export async function GET(
 
   const organizationId = await resolveInstanceOrg();
   if (!organizationId) {
-    return apiError(409, "no_org", "La instancia aún no tiene organización");
+    return apiError(409, "no_org", "This instance doesn't have an organization yet");
   }
   const creds = await getCredentialsByOrg(organizationId);
   if (!creds) {
-    return apiError(409, "no_connection", "WhatsApp no está conectado");
+    return apiError(409, "no_connection", "WhatsApp is not connected");
   }
 
   const { mediaId } = await ctx.params;
   if (!/^[\w.-]{1,64}$/.test(mediaId)) {
-    return apiError(422, "invalid", "mediaId inválido");
+    return apiError(422, "invalid", "Invalid mediaId");
   }
 
   try {
@@ -50,8 +50,8 @@ export async function GET(
     });
   } catch (err) {
     if (err instanceof MediaFetchError) {
-      if (err.message.includes("límite")) {
-        return apiError(413, "too_large", "El adjunto excede el límite de 16 MB");
+      if (err.message.includes("limit")) {
+        return apiError(413, "too_large", "The attachment exceeds the 16 MB limit");
       }
       return apiError(
         err.gone ? 404 : 502,
@@ -59,6 +59,6 @@ export async function GET(
         err.message
       );
     }
-    return apiError(502, "media_download_failed", "No se pudo descargar el adjunto");
+    return apiError(502, "media_download_failed", "Couldn't download the attachment");
   }
 }

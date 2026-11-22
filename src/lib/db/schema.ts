@@ -1,6 +1,7 @@
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -129,7 +130,9 @@ export const contact = pgTable(
      * 014: canal por el que vive este contacto. Aditivo y con default: toda
      * fila existente sigue significando exactamente lo mismo.
      */
-    channel: text("channel", { enum: ["whatsapp", "instagram", "messenger", "tiktok"] })
+    channel: text("channel", {
+      enum: ["whatsapp", "instagram", "messenger", "tiktok", "telegram", "website", "sms", "email"],
+    })
       .notNull()
       .default("whatsapp"),
     /**
@@ -142,6 +145,17 @@ export const contact = pgTable(
     waIdentity: text("wa_identity").notNull(),
     /** Teléfono como ATRIBUTO opcional (003): falta en contactos BSUID. */
     phone: text("phone"),
+    /** Correo. Obligatorio para el canal email; opcional en los demás. */
+    email: text("email"),
+    addressStreet: text("address_street"),
+    addressCity: text("address_city"),
+    addressState: text("address_state"),
+    addressZip: text("address_zip"),
+    /**
+     * Servicios de exteriores (windows, roofing, …). Lista cerrada en la app;
+     * la columna es jsonb para no migrar cada vez que se agregue uno.
+     */
+    services: jsonb("services").$type<string[]>().notNull().default([]),
     /** Business-Scoped User ID si se conoce (003). */
     waUserId: text("wa_user_id"),
     name: text("name").notNull(),
@@ -245,6 +259,13 @@ export const lead = pgTable(
     amountCents: integer("amount_cents"),
     /** Moneda del monto; la del negocio al capturarlo (Ajustes → Marca). */
     currency: text("currency"),
+    /** Fecha de la cotización (día civil, sin hora). NULL = todavía no. */
+    quoteDate: date("quote_date", { mode: "string" }),
+    /**
+     * Marca con la que se cotiza. `daniel_exteriors` | `presidential_exteriors`.
+     * NULL en tratos anteriores a esta columna.
+     */
+    brand: text("brand"),
     /**
      * Prioridad de cierre. NULL = nadie la ha decidido, que NO es lo mismo que
      * "media": nada la escribe automáticamente, así que el dueño puede confiar
@@ -364,7 +385,9 @@ export const conversation = pgTable(
      * 014: canal de la conversacion. Denormalizado del contacto a proposito:
      * el ruteo de salida y el filtro de la bandeja lo leen en cada mensaje.
      */
-    channel: text("channel", { enum: ["whatsapp", "instagram", "messenger", "tiktok"] })
+    channel: text("channel", {
+      enum: ["whatsapp", "instagram", "messenger", "tiktok", "telegram", "website", "sms", "email"],
+    })
       .notNull()
       .default("whatsapp"),
     /**
@@ -681,6 +704,40 @@ export const tiktokCredentials = pgTable(
   ]
 );
 
+/**
+ * Telegram channel credentials: one bot per organization, through the
+ * official Bot API. The bot token and the webhook secret (Telegram sends it
+ * back in `X-Telegram-Bot-Api-Secret-Token`) are encrypted at rest.
+ */
+export const telegramCredentials = pgTable(
+  "telegram_credentials",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    /** Numeric bot id (the part of the token before `:`): routes the webhook. */
+    botId: text("bot_id").notNull(),
+    botUsername: text("bot_username"),
+    botName: text("bot_name"),
+    tokenCipher: text("token_cipher").notNull(),
+    tokenIv: text("token_iv").notNull(),
+    tokenTag: text("token_tag").notNull(),
+    webhookSecretCipher: text("webhook_secret_cipher").notNull(),
+    webhookSecretIv: text("webhook_secret_iv").notNull(),
+    webhookSecretTag: text("webhook_secret_tag").notNull(),
+    status: text("status", { enum: ["connected", "reconnect_required"] })
+      .notNull()
+      .default("connected"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("telegram_credentials_org_uq").on(t.organizationId),
+    uniqueIndex("telegram_credentials_bot_id_uq").on(t.botId),
+  ]
+);
+
 export const agentProfile = pgTable(
   "agent_profile",
   {
@@ -800,7 +857,7 @@ export const calendarSettings = pgTable(
     bufferMinutes: integer("buffer_minutes").notNull().default(0),
     minNoticeHours: integer("min_notice_hours").notNull().default(2),
     maxDaysAhead: integer("max_days_ahead").notNull().default(7),
-    timezone: text("timezone").notNull().default("America/Mexico_City"),
+    timezone: text("timezone").notNull().default("America/New_York"),
     /**
      * Cómo se entrega la reunión. `enlace-fijo` no habla con nadie: es el
      * default y la razón de que encender la agenda no exija terceros.
@@ -862,8 +919,14 @@ export const booking = pgTable(
      */
     meetingLink: text("meeting_link"),
     /**
+     * Dirección de la visita en casa. Se copia al agendar: cambiar la del
+     * contacto después no reescribe la cita.
+     */
+    propertyAddress: text("property_address"),
+    /**
      * El proveedor falló al crear la reunión. La cita existe igual —un tercero
      * caído no cuesta la conversión— y el operador reintenta desde "Citas".
+     * En una visita en casa, true significa que falta la dirección (y el mapa).
      */
     linkPending: boolean("link_pending").notNull().default(false),
     /** Conversación del Laboratorio: jamás llama a un conector real. */
@@ -1309,7 +1372,7 @@ export const webhookEvent = pgTable(
       .references(() => organization.id, { onDelete: "cascade" }),
     /** Quién lo procesa: el adaptador del canal y la fuente. */
     fuente: text("fuente", {
-      enum: ["whatsapp", "meta_instagram", "meta_messenger", "zernio"],
+      enum: ["whatsapp", "meta_instagram", "meta_messenger", "zernio", "telegram", "website"],
     }).notNull(),
     payload: jsonb("payload").notNull(),
     /** SHA-256 del cuerpo crudo: la misma entrega dos veces es una fila. */
@@ -1401,3 +1464,18 @@ export const conversationNote = pgTable(
     index("conversation_note_conv_idx").on(t.organizationId, t.conversationId, t.createdAt),
   ]
 );
+
+/* ============================================================
+ * Instance settings (no organization: one instance = one business)
+ * ============================================================ */
+
+/**
+ * Settings that belong to the whole instance and used to live only in
+ * environment variables. Today: `channels`, the channels the owner turned on
+ * from Settings → Channels → On / off. Without a row, the env vars decide.
+ */
+export const instanceSetting = pgTable("instance_setting", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

@@ -10,37 +10,37 @@
 
 const DESCRIPTIONS: Record<number, string> = {
   130472:
-    "Meta tiene el número del destinatario en un experimento y le está bloqueando los mensajes de MARKETING. No es un fallo de tu configuración: prueba con una plantilla de categoría UTILITY o con otro número.",
+    "Meta has the recipient's number in an experiment and is blocking MARKETING messages to it. It's not a problem with your setup: try a UTILITY template or another number.",
   131049:
-    "Meta limitó los mensajes de marketing hacia este usuario para cuidar la calidad del ecosistema. Espera o usa una plantilla de categoría UTILITY.",
+    "Meta limited marketing messages to this user to protect ecosystem quality. Wait or use a UTILITY template.",
   131047:
-    "Pasaron más de 24 h desde el último mensaje del cliente: solo se puede reabrir con una plantilla aprobada.",
+    "More than 24 h have passed since the customer's last message: it can only be reopened with an approved template.",
   131048:
-    "Meta frenó el envío por límite de spam en tu número. Baja el ritmo de envíos y revisa la calidad del número.",
+    "Meta throttled the send due to the spam limit on your number. Slow down your sending rate and check the number's quality.",
   131026:
-    "El destinatario no puede recibir mensajes de WhatsApp (número inexistente, sin cuenta o que no acepta mensajes de empresas).",
+    "The recipient can't receive WhatsApp messages (nonexistent number, no account, or doesn't accept business messages).",
   131031:
-    "Tu cuenta de WhatsApp Business está bloqueada o restringida por Meta. Revísalo en el Administrador de WhatsApp.",
+    "Your WhatsApp Business account is blocked or restricted by Meta. Check it in WhatsApp Manager.",
   131030:
-    "El número del destinatario no está en la lista de permitidos de tu app en modo de prueba.",
+    "The recipient's number isn't on your app's allowed list in test mode.",
   130429:
-    "Superaste el límite de mensajes por segundo de Meta. Reintenta en unos momentos.",
+    "You exceeded Meta's messages-per-second limit. Retry in a few moments.",
   132000:
-    "La plantilla y los parámetros enviados no coinciden (faltan o sobran variables).",
+    "The template and the parameters sent don't match (variables missing or extra).",
   132001:
-    "Meta no encuentra esa plantilla con ese idioma. Sincroniza las plantillas y confirma que sigue aprobada.",
+    "Meta can't find that template in that language. Sync templates and confirm it's still approved.",
   132005:
-    "El texto traducido de la plantilla supera el límite de caracteres de Meta.",
+    "The template's translated text exceeds Meta's character limit.",
   132007:
-    "El contenido de la plantilla viola las políticas de Meta.",
+    "The template content violates Meta's policies.",
   132012:
-    "Los parámetros de la plantilla no respetan el formato que Meta espera.",
+    "The template parameters don't follow the format Meta expects.",
   132015:
-    "La plantilla está pausada por baja calidad: Meta no la deja enviar hasta que se recupere.",
+    "The template is paused for low quality: Meta won't let it send until it recovers.",
   132016:
-    "La plantilla fue deshabilitada por calidad y ya no se puede enviar.",
-  133010: "El número no está registrado en la Cloud API.",
-  368: "El número está temporalmente bloqueado por infringir las políticas de Meta.",
+    "The template was disabled for quality and can no longer be sent.",
+  133010: "The number isn't registered on the Cloud API.",
+  368: "The number is temporarily blocked for violating Meta's policies.",
 };
 
 /**
@@ -54,6 +54,6 @@ export function describeSendError(
   const known = code != null ? DESCRIPTIONS[code] : undefined;
   // `||` y no `??`: Meta a veces manda el texto vacío o en blanco, y un
   // mensaje de error vacío es tan inútil como el triángulo mudo.
-  const base = known || detail?.trim() || "Meta rechazó el envío";
+  const base = known || detail?.trim() || "Meta rejected the send";
   return code != null ? `${base} (Meta ${code})` : base;
 }

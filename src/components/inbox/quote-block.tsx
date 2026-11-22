@@ -21,7 +21,7 @@ export function QuoteBlock({
   className?: string;
 }) {
   const autor =
-    cita.direction === "in" ? contactName : cita.direction === "out" ? "Tú" : null;
+    cita.direction === "in" ? contactName : cita.direction === "out" ? "You" : null;
   const contenido = (
     <>
       {autor && (
@@ -57,7 +57,7 @@ export function QuoteBlock({
         type="button"
         data-quote-of={id}
         onClick={() => onJump(id)}
-        title="Ir al mensaje citado"
+        title="Go to quoted message"
         className={cn(base, "transition-colors hover:bg-quote-hover")}
       >
         {contenido}

@@ -3,6 +3,7 @@ import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
 import { scoped } from "@/lib/db/tenant";
 import { labelInTz } from "@/lib/time/slots";
+import { formatAddress } from "@/lib/exteriors";
 import { CONNECTOR_META, type ConnectorId } from "@/lib/agenda-connectors";
 import {
   computeAvailability,
@@ -89,6 +90,10 @@ export async function createSessionBooking(input: {
   /** Camino manual del operador. */
   contactId?: string | null;
   notes?: string | null;
+  /** Conector de esta cita. Si no viene, el activo de la agenda. */
+  connector?: ConnectorId | null;
+  /** Dirección de la visita. En in-home, si falta, se copia del contacto. */
+  propertyAddress?: string | null;
   /**
    * true ⇒ exige que el instante figure entre los ofrecidos a la conversación
    * (agente/bot). El operador elige de la disponibilidad que está viendo, así
@@ -101,7 +106,7 @@ export async function createSessionBooking(input: {
   const settings = await getSettings(input.organizationId);
 
   if (Number.isNaN(Date.parse(input.startUtc))) {
-    throw new BookingError("invalid", "Instante inválido");
+    throw new BookingError("invalid", "Invalid instant");
   }
 
   // Contexto de la conversación: contacto y si es del Laboratorio.
@@ -124,29 +129,34 @@ export async function createSessionBooking(input: {
       )
       .limit(1);
     const conv = rows[0];
-    if (!conv) throw new BookingError("not_found", "Conversación no encontrada");
+    if (!conv) throw new BookingError("not_found", "Conversation not found");
     isTest = conv.isTest;
     contactId = contactId ?? conv.contactId;
   }
 
   if (!contactId) {
-    throw new BookingError("invalid", "La cita necesita un contacto");
+    throw new BookingError("invalid", "The appointment needs a contact");
   }
   contactName = await getContactName(input.organizationId, contactId);
+  const connector = input.connector ?? settings.connector;
+  let propertyAddress = input.propertyAddress?.trim() || null;
+  if (!propertyAddress && connector === "in-home") {
+    propertyAddress = await propertyAddressOf(input.organizationId, contactId);
+  }
 
   // REGLA 1: solo se reserva lo que se ofreció.
   if (input.requireOffer) {
     if (!input.conversationId) {
       throw new BookingError(
         "invalid",
-        "Se necesita la conversación para validar la oferta"
+        "The conversation is needed to validate the offer"
       );
     }
     const offers = await getOffers(input.organizationId, input.conversationId);
     if (!findOffered(offers, input.startUtc)) {
       throw new BookingError(
         "slot_not_offered",
-        "Ese horario no se ofreció en esta conversación",
+        "That time wasn't offered in this conversation",
         offers
       );
     }
@@ -160,7 +170,7 @@ export async function createSessionBooking(input: {
   if (!slot) {
     throw new BookingError(
       "slot_taken",
-      "Ese horario ya no está disponible",
+      "That time is no longer available",
       await refreshOffer(input.organizationId, input.conversationId, {
         now: input.now,
       })
@@ -195,7 +205,8 @@ export async function createSessionBooking(input: {
         durationMinutes: settings.slotMinutes,
         // Copia histórica: si el negocio cambia de conector, esta cita conserva
         // el que le tocó y sigue hablando con él al moverse o cancelarse.
-        connector: settings.connector,
+        connector,
+        propertyAddress,
         isTest,
         notes: input.notes ?? null,
       })
@@ -208,7 +219,7 @@ export async function createSessionBooking(input: {
     if (isUniqueViolation(err)) {
       throw new BookingError(
         "slot_taken",
-        "Ese horario acaba de ocuparse",
+        "That time was just taken",
         await refreshOffer(input.organizationId, input.conversationId, {
           now: input.now,
         })
@@ -221,7 +232,7 @@ export async function createSessionBooking(input: {
   if (input.conversationId) {
     await clearOffers(input.organizationId, input.conversationId).catch(
       (err) => {
-        console.warn(`[agenda] no pude limpiar la oferta: ${err}`);
+        console.warn(`[agenda] couldn't clear the offer: ${err}`);
       }
     );
   }
@@ -233,7 +244,7 @@ export async function createSessionBooking(input: {
     contactId,
     input.source === "ai" ? "bot" : "dueno"
   ).catch((err) => {
-    console.warn(`[agenda] avance de etapa falló: ${err}`);
+    console.warn(`[agenda] stage advance failed: ${err}`);
   });
 
   publish(input.organizationId, {
@@ -256,7 +267,7 @@ export async function createBlock(input: {
   notes?: string | null;
 }): Promise<BookingRow> {
   if (Number.isNaN(Date.parse(input.startUtc))) {
-    throw new BookingError("invalid", "Instante inválido");
+    throw new BookingError("invalid", "Invalid instant");
   }
   const db = getDb();
   try {
@@ -280,7 +291,7 @@ export async function createBlock(input: {
     return block;
   } catch (err) {
     if (isUniqueViolation(err)) {
-      throw new BookingError("slot_taken", "Ese horario ya está ocupado");
+      throw new BookingError("slot_taken", "That time is already taken");
     }
     throw err;
   }
@@ -295,7 +306,7 @@ export async function rescheduleBooking(input: {
   const db = getDb();
   const booking = await getOwnBooking(input.organizationId, input.bookingId);
   if (booking.status === "cancelada") {
-    throw new BookingError("invalid", "La cita está cancelada");
+    throw new BookingError("invalid", "The appointment is canceled");
   }
 
   const settings = await getSettings(input.organizationId);
@@ -306,7 +317,7 @@ export async function rescheduleBooking(input: {
     settings,
   });
   if (!slot) {
-    throw new BookingError("slot_taken", "Ese horario ya no está disponible");
+    throw new BookingError("slot_taken", "That time is no longer available");
   }
 
   let next: BookingRow;
@@ -319,7 +330,7 @@ export async function rescheduleBooking(input: {
     next = updated[0]!;
   } catch (err) {
     if (isUniqueViolation(err)) {
-      throw new BookingError("slot_taken", "Ese horario acaba de ocuparse");
+      throw new BookingError("slot_taken", "That time was just taken");
     }
     throw err;
   }
@@ -373,14 +384,14 @@ export async function rescheduleForConversation(input: {
     )
     .limit(1);
   const conv = convRows[0];
-  if (!conv) throw new BookingError("not_found", "Conversación no encontrada");
+  if (!conv) throw new BookingError("not_found", "Conversation not found");
 
   // Mismas reglas que al crear: el instante nuevo tiene que haberse ofrecido.
   const offers = await getOffers(input.organizationId, input.conversationId);
   if (!findOffered(offers, input.startUtc)) {
     throw new BookingError(
       "slot_not_offered",
-      "Ese horario no se ofreció en esta conversación",
+      "That time wasn't offered in this conversation",
       offers
     );
   }
@@ -405,7 +416,7 @@ export async function rescheduleForConversation(input: {
 
   const target = rows[0];
   if (!target) {
-    throw new BookingError("not_found", "No hay una cita activa que mover");
+    throw new BookingError("not_found", "There's no active appointment to move");
   }
 
   const result = await rescheduleBooking({
@@ -458,7 +469,7 @@ export async function markBookingStatus(input: {
   } catch (err) {
     // Reactivar a `realizada` un instante que otra cita ya ocupa.
     if (isUniqueViolation(err)) {
-      throw new BookingError("slot_taken", "Ese horario ya está ocupado");
+      throw new BookingError("slot_taken", "That time is already taken");
     }
     throw err;
   }
@@ -481,7 +492,7 @@ export async function retryMeetingLink(input: {
 }): Promise<BookingResult> {
   const booking = await getOwnBooking(input.organizationId, input.bookingId);
   if (!booking.linkPending) {
-    throw new BookingError("invalid", "Esta cita no tiene un enlace pendiente");
+    throw new BookingError("invalid", "This appointment has no pending link");
   }
   const settings = await getSettings(input.organizationId);
   const contactName = booking.contactId
@@ -530,11 +541,12 @@ async function deliverMeeting(
       booking.externalRef && conn.refreshMeeting
         ? await conn.refreshMeeting(booking.externalRef)
         : await conn.createMeeting({
-            topic: contactName ? `Cita — ${contactName}` : "Cita",
+            topic: contactName ? `Appointment — ${contactName}` : "Appointment",
             startUtc: booking.scheduledAt.toISOString(),
             durationMinutes: booking.durationMinutes,
             timezone: settings.timezone,
             notes: booking.notes ?? undefined,
+            location: booking.propertyAddress ?? undefined,
           });
 
     return await persistDelivery(booking.id, {
@@ -547,7 +559,7 @@ async function deliverMeeting(
     });
   } catch (err) {
     console.warn(
-      `[agenda] el conector ${connectorId} no pudo entregar la reunión: ${err}`
+      `[agenda] connector ${connectorId} couldn't deliver the meeting: ${err}`
     );
     if (err instanceof ConnectorError && err.isAuthError) {
       await markConnectorAuthError(booking.organizationId, connectorId).catch(
@@ -605,7 +617,7 @@ async function withConnector(
     );
     await run(conn, booking.externalRef);
   } catch (err) {
-    console.warn(`[agenda] efecto en ${connectorId} falló: ${err}`);
+    console.warn(`[agenda] effect on ${connectorId} failed: ${err}`);
     if (err instanceof ConnectorError && err.isAuthError) {
       await markConnectorAuthError(booking.organizationId, connectorId).catch(
         () => {}
@@ -631,7 +643,7 @@ async function refreshOffer(
       FRESH_ALTERNATIVES
     );
   } catch (err) {
-    console.warn(`[agenda] no pude calcular alternativas: ${err}`);
+    console.warn(`[agenda] couldn't calculate alternatives: ${err}`);
     return [];
   }
   const offers: OfferedSlot[] = fresh.map((s) => ({
@@ -640,7 +652,7 @@ async function refreshOffer(
   }));
   if (conversationId && offers.length > 0) {
     await replaceOffers(organizationId, conversationId, offers).catch((err) => {
-      console.warn(`[agenda] no pude registrar la nueva oferta: ${err}`);
+      console.warn(`[agenda] couldn't record the new offer: ${err}`);
     });
   }
   return offers;
@@ -662,14 +674,11 @@ async function getOwnBooking(
       )
     )
     .limit(1);
-  if (!rows[0]) throw new BookingError("not_found", "Cita no encontrada");
+  if (!rows[0]) throw new BookingError("not_found", "Appointment not found");
   return rows[0];
 }
 
-async function getContactName(
-  organizationId: string,
-  contactId: string
-): Promise<string> {
+async function getContactName(organizationId: string, contactId: string): Promise<string> {
   const db = getDb();
   const rows = await db
     .select({ name: schema.contact.name })
@@ -683,6 +692,35 @@ async function getContactName(
     )
     .limit(1);
   return rows[0]?.name ?? "";
+}
+
+async function propertyAddressOf(organizationId: string, contactId: string): Promise<string | null> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      addressStreet: schema.contact.addressStreet,
+      addressCity: schema.contact.addressCity,
+      addressState: schema.contact.addressState,
+      addressZip: schema.contact.addressZip,
+    })
+    .from(schema.contact)
+    .where(
+      scoped(
+        schema.contact.organizationId,
+        organizationId,
+        eq(schema.contact.id, contactId)
+      )
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  const formatted = formatAddress({
+    street: row.addressStreet,
+    city: row.addressCity,
+    state: row.addressState,
+    zip: row.addressZip,
+  });
+  return formatted || null;
 }
 
 /**

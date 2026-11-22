@@ -97,8 +97,8 @@ describe("motivosDePerdida", () => {
       desenlace({ leadId: "d", kind: "won" }),
     ]);
     expect(m).toEqual([
-      { reason: "precio", label: "Le pareció caro", count: 2 },
-      { reason: "sin_registro", label: "Sin motivo registrado", count: 1 },
+      { reason: "precio", label: "Price was too high", count: 2 },
+      { reason: "sin_registro", label: "No reason recorded", count: 1 },
     ]);
   });
 });
@@ -135,7 +135,7 @@ describe("armarEmbudo", () => {
 
   it("sin etapa ganada configurada, el último paso sigue llamándose Ganado", () => {
     const pasos = armarEmbudo([etapas[0]!], [{ maxOpenPos: 0, won: 1 }]);
-    expect(pasos.at(-1)).toMatchObject({ name: "Ganado", kind: "won", reached: 1 });
+    expect(pasos.at(-1)).toMatchObject({ name: "Won", kind: "won", reached: 1 });
   });
 });
 
@@ -156,8 +156,8 @@ describe("unirFuentes", () => {
       ["referido", 0, 1, 1],
       ["desconocida", 3, 0, 0],
     ]);
-    expect(filas[0]!.label).toBe("Anuncio");
-    expect(filas.at(-1)!.label).toBe("Sin identificar");
+    expect(filas[0]!.label).toBe("Ad");
+    expect(filas.at(-1)!.label).toBe("Unknown");
     // La tasa de la fila es ventas entre prospectos, calculada en el servidor.
     expect(filas[0]!.winRate).toEqual({ value: 25, sample: 4, reliable: false });
     expect(filas.at(-1)!.winRate.value).toBeNull();

@@ -69,7 +69,7 @@ export async function canjearCodigo(code: string): Promise<string> {
   }
   throw new EmbeddedSignupError(
     "exchange_failed",
-    "Meta no pudo completar la autorización. Revisa que META_APP_ID, META_APP_SECRET y la configuración de Embedded Signup sean de la misma app y vuelve a conectar."
+    "Meta couldn't complete the authorization. Check that META_APP_ID, META_APP_SECRET and the Embedded Signup configuration belong to the same app and reconnect."
   );
 }
 
@@ -80,7 +80,7 @@ function oauthGet(url: URL): Promise<string | null> {
     process.env.NODE_ENV !== "production" &&
     ["localhost", "127.0.0.1"].includes(url.hostname);
   if (url.protocol !== "https:" && !local) {
-    return Promise.reject(new Error("transporte no permitido"));
+    return Promise.reject(new Error("transport not allowed"));
   }
   const send = url.protocol === "https:" ? httpsRequest : httpRequest;
   return new Promise((resolve, reject) => {
@@ -131,13 +131,13 @@ async function graph<T>(
     if (err instanceof MetaApiError && (err.status === 0 || err.status >= 500)) {
       throw new EmbeddedSignupError(
         "meta_unavailable",
-        "No pudimos contactar con Meta. Inténtalo de nuevo; tu conexión anterior se conserva.",
+        "We couldn't reach Meta. Try again; your previous connection is kept.",
         503
       );
     }
     throw new EmbeddedSignupError(
       "meta_rejected",
-      "Meta no aceptó este paso. Revisa que hayas compartido la cuenta de WhatsApp y el número en la ventana de Meta, y vuelve a conectar."
+      "Meta didn't accept this step. Check that you shared the WhatsApp account and the number in Meta's window, and reconnect."
     );
   }
 }
@@ -178,19 +178,19 @@ export async function resolverNumero(
     throw new EmbeddedSignupError(
       phoneNumberId ? "asset_mismatch" : numeros.length > 1 ? "varios_numeros" : "sin_numero",
       phoneNumberId
-        ? "El número elegido no pertenece a la cuenta de WhatsApp que se autorizó."
+        ? "The chosen number doesn't belong to the WhatsApp account that was authorized."
         : numeros.length > 1
-          ? "La cuenta de WhatsApp tiene varios números y Meta no dijo cuál se conectó. Repite la conexión eligiendo el número, o conéctalo a mano."
-          : "Meta no devolvió ningún número en esa cuenta de WhatsApp. Repite la conexión y agrega el número en la ventana de Meta."
+          ? "The WhatsApp account has several numbers and Meta didn't say which one was connected. Repeat the connection choosing the number, or connect it manually."
+          : "Meta didn't return any number on that WhatsApp account. Repeat the connection and add the number in Meta's window."
     );
   }
   if (!elegido.display_phone_number) {
-    throw new EmbeddedSignupError("asset_mismatch", "Meta no devolvió los datos del número.");
+    throw new EmbeddedSignupError("asset_mismatch", "Meta didn't return the number's details.");
   }
   if (elegido.platform_type === "ON_PREMISE") {
     throw new EmbeddedSignupError(
       "migration_required",
-      "Ese número usa la API local antigua y requiere una migración. No se modificó nada."
+      "That number uses the old On-Premises API and requires a migration. Nothing was changed."
     );
   }
   return elegido;
@@ -221,7 +221,7 @@ export async function registrarNumero(
     if (err instanceof EmbeddedSignupError && err.code === "meta_rejected") {
       throw new EmbeddedSignupError(
         "registration_failed",
-        "Meta no registró el número. Si ya tenía verificación en dos pasos, escribe su PIN y repite la conexión. No se guardó nada."
+        "Meta didn't register the number. If it already had two-step verification, enter its PIN and repeat the connection. Nothing was saved."
       );
     }
     throw err;
@@ -229,7 +229,7 @@ export async function registrarNumero(
   if (!res.success) {
     throw new EmbeddedSignupError(
       "registration_failed",
-      "Meta no confirmó el registro del número. Repite la conexión; no se guardó nada."
+      "Meta didn't confirm the number's registration. Repeat the connection; nothing was saved."
     );
   }
   return true;

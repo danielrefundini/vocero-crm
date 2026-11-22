@@ -119,8 +119,8 @@ export function sameInstant(a: string, b: string): boolean {
  * a verde sin ejercitar nada.
  */
 export const CABECERA_HUECOS =
-  "Horarios vigentes de esta conversación. Para book_slot usa el startUtc " +
-  "EXACTO de la columna derecha, copiado tal cual:";
+  "Current time slots for this conversation. For book_slot use the " +
+  "EXACT startUtc from the right column, copied as-is:";
 
 /**
  * Los huecos vigentes, en la forma en que el modelo puede usarlos.

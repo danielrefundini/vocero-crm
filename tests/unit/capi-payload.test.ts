@@ -112,7 +112,7 @@ describe("catálogo cerrado", () => {
         token: "tok",
         event: { ...EVENT, eventName: "LeadQualified" },
       })
-    ).rejects.toThrow(/catálogo/);
+    ).rejects.toThrow(/catalog/);
     expect(graphRequest).not.toHaveBeenCalled();
   });
 });

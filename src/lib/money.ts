@@ -20,42 +20,42 @@
  * Añadir una es añadir un renglón: nada en la BD restringe el código.
  */
 export const CURRENCY_OPTIONS = [
-  { code: "MXN", name: "Peso mexicano", where: "México", group: "latam" },
+  { code: "MXN", name: "Mexican peso", where: "Mexico", group: "latam" },
   { code: "GTQ", name: "Quetzal", where: "Guatemala", group: "latam" },
   { code: "HNL", name: "Lempira", where: "Honduras", group: "latam" },
   { code: "NIO", name: "Córdoba", where: "Nicaragua", group: "latam" },
-  { code: "CRC", name: "Colón costarricense", where: "Costa Rica", group: "latam" },
-  { code: "PAB", name: "Balboa", where: "Panamá", group: "latam" },
-  { code: "BZD", name: "Dólar beliceño", where: "Belice", group: "latam" },
-  { code: "DOP", name: "Peso dominicano", where: "República Dominicana", group: "latam" },
-  { code: "CUP", name: "Peso cubano", where: "Cuba", group: "latam" },
-  { code: "HTG", name: "Gourde", where: "Haití", group: "latam" },
-  { code: "JMD", name: "Dólar jamaiquino", where: "Jamaica", group: "latam" },
-  { code: "TTD", name: "Dólar de Trinidad y Tobago", where: "Trinidad y Tobago", group: "latam" },
-  { code: "COP", name: "Peso colombiano", where: "Colombia", group: "latam" },
+  { code: "CRC", name: "Costa Rican colón", where: "Costa Rica", group: "latam" },
+  { code: "PAB", name: "Balboa", where: "Panama", group: "latam" },
+  { code: "BZD", name: "Belize dollar", where: "Belize", group: "latam" },
+  { code: "DOP", name: "Dominican peso", where: "Dominican Republic", group: "latam" },
+  { code: "CUP", name: "Cuban peso", where: "Cuba", group: "latam" },
+  { code: "HTG", name: "Gourde", where: "Haiti", group: "latam" },
+  { code: "JMD", name: "Jamaican dollar", where: "Jamaica", group: "latam" },
+  { code: "TTD", name: "Trinidad and Tobago dollar", where: "Trinidad and Tobago", group: "latam" },
+  { code: "COP", name: "Colombian peso", where: "Colombia", group: "latam" },
   { code: "VES", name: "Bolívar", where: "Venezuela", group: "latam" },
-  { code: "PEN", name: "Sol", where: "Perú", group: "latam" },
+  { code: "PEN", name: "Sun", where: "Peru", group: "latam" },
   { code: "BOB", name: "Boliviano", where: "Bolivia", group: "latam" },
-  { code: "CLP", name: "Peso chileno", where: "Chile", group: "latam" },
-  { code: "ARS", name: "Peso argentino", where: "Argentina", group: "latam" },
-  { code: "UYU", name: "Peso uruguayo", where: "Uruguay", group: "latam" },
+  { code: "CLP", name: "Chilean peso", where: "Chile", group: "latam" },
+  { code: "ARS", name: "Argentine peso", where: "Argentina", group: "latam" },
+  { code: "UYU", name: "Uruguayan peso", where: "Uruguay", group: "latam" },
   { code: "PYG", name: "Guaraní", where: "Paraguay", group: "latam" },
-  { code: "BRL", name: "Real", where: "Brasil", group: "latam" },
-  { code: "USD", name: "Dólar estadounidense", where: "EE. UU., Ecuador, El Salvador, Puerto Rico, Panamá", group: "norte" },
-  { code: "CAD", name: "Dólar canadiense", where: "Canadá", group: "norte" },
-  { code: "EUR", name: "Euro", where: "España y zona euro", group: "europa" },
-  { code: "GBP", name: "Libra esterlina", where: "Reino Unido", group: "europa" },
-  { code: "CHF", name: "Franco suizo", where: "Suiza", group: "europa" },
-  { code: "XAF", name: "Franco CFA", where: "Guinea Ecuatorial", group: "otras" },
-  { code: "AUD", name: "Dólar australiano", where: "Australia", group: "otras" },
-  { code: "JPY", name: "Yen", where: "Japón", group: "otras" },
+  { code: "BRL", name: "Real", where: "Brazil", group: "latam" },
+  { code: "USD", name: "US dollar", where: "USA, Ecuador, El Salvador, Puerto Rico, Panama", group: "norte" },
+  { code: "CAD", name: "Canadian dollar", where: "Canada", group: "norte" },
+  { code: "EUR", name: "Euro", where: "Spain and the eurozone", group: "europa" },
+  { code: "GBP", name: "Pound sterling", where: "United Kingdom", group: "europa" },
+  { code: "CHF", name: "Swiss franc", where: "Switzerland", group: "europa" },
+  { code: "XAF", name: "CFA franc", where: "Equatorial Guinea", group: "otras" },
+  { code: "AUD", name: "Australian dollar", where: "Australia", group: "otras" },
+  { code: "JPY", name: "Yen", where: "Japan", group: "otras" },
 ] as const;
 
 export const CURRENCY_GROUPS = [
-  { id: "latam", label: "Latinoamérica y el Caribe" },
-  { id: "norte", label: "Norteamérica" },
-  { id: "europa", label: "Europa" },
-  { id: "otras", label: "Otras" },
+  { id: "latam", label: "Latin America and the Caribbean" },
+  { id: "norte", label: "North America" },
+  { id: "europa", label: "Europe" },
+  { id: "otras", label: "Others" },
 ] as const;
 
 export type Currency = (typeof CURRENCY_OPTIONS)[number]["code"];
@@ -65,7 +65,7 @@ export const CURRENCIES = CURRENCY_OPTIONS.map((c) => c.code) as [
   ...Currency[],
 ];
 
-export const DEFAULT_CURRENCY: Currency = "MXN";
+export const DEFAULT_CURRENCY: Currency = "USD";
 
 export function isCurrency(v: unknown): v is Currency {
   return typeof v === "string" && (CURRENCIES as readonly string[]).includes(v);
@@ -89,7 +89,7 @@ export function sumable(
 export function formatMoneyCents(
   cents: number | null | undefined,
   currency: string,
-  locale = "es-MX"
+  locale = "en-US"
 ): string | null {
   if (cents === null || cents === undefined) return null;
   try {

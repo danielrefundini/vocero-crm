@@ -13,7 +13,9 @@ export async function register(): Promise<void> {
       resumeWebhooks,
     } = await import("./instrumentation-node");
     await checkMediaDir();
-    await cleanupOrphanRuns();
+    // On Vercel many instances start and stop on their own, so a new one
+    // can't tell a crashed Lab run from one still running elsewhere.
+    if (!process.env.VERCEL) await cleanupOrphanRuns();
     await encryptLegacySecrets();
     resumeDispatch();
     resumeWebhooks();

@@ -1,5 +1,6 @@
 import { and, eq, or } from "drizzle-orm";
 import { CHANNEL_LABEL, type Channel } from "@/lib/channels";
+import { EMAIL_PREFIX, SMS_PREFIX } from "@/lib/exteriors";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
 import { normalizeMx } from "@/lib/meta/client";
@@ -22,6 +23,11 @@ export const IG_PREFIX = "ig:";
 export const FB_PREFIX = "fb:";
 /** 022: identidad de TikTok: el id del remitente que entrega Zernio. */
 export const TT_PREFIX = "tt:";
+/** Telegram identity: the private chat id with the bot. */
+export const TG_PREFIX = "tg:";
+/** Website form leads: `web:<email>` or `web:<phone digits>`. */
+export const WEB_PREFIX = "web:";
+export { EMAIL_PREFIX, SMS_PREFIX };
 
 // El tipo vive en lib/ porque la interfaz tambien lo necesita; se reexporta
 // aqui para no tocar a quien ya lo importaba de este modulo.
@@ -120,7 +126,11 @@ export function parseIdentity(identity: string): ResolvedIdentity | null {
   if (
     identity.startsWith(IG_PREFIX) ||
     identity.startsWith(FB_PREFIX) ||
-    identity.startsWith(TT_PREFIX)
+    identity.startsWith(TT_PREFIX) ||
+    identity.startsWith(TG_PREFIX) ||
+    identity.startsWith(WEB_PREFIX) ||
+    identity.startsWith(EMAIL_PREFIX) ||
+    identity.startsWith(SMS_PREFIX)
   ) {
     return null;
   }
@@ -212,7 +222,7 @@ export async function getOrCreateContactByIdentity(
         organizationId,
         channel,
         waIdentity: resolved.identity,
-        phone: null,
+        phone: resolved.phone,
         waUserId: null,
         name: resolved.profileName?.trim() || channelFallback(channel),
       })
@@ -237,7 +247,7 @@ export async function getOrCreateContactByIdentity(
       )
       .limit(1);
     const contactIg = racedIg[0];
-    if (!contactIg) throw new Error("contacto no encontrado tras upsert");
+    if (!contactIg) throw new Error("contact not found after upsert");
     return { contact: contactIg, isNew: false };
   }
 
@@ -309,14 +319,14 @@ export async function getOrCreateContactByIdentity(
     )
     .limit(1);
   const contact = raced[0];
-  if (!contact) throw new Error("contacto no encontrado tras upsert");
+  if (!contact) throw new Error("contact not found after upsert");
   return { contact, isNew: false };
 }
 
 /** Nombre de respaldo cuando no hay nombre de perfil: nunca el BSUID crudo. */
 function displayFallback(resolved: ResolvedIdentity): string {
   if (resolved.phone) return resolved.phone;
-  return "Contacto de WhatsApp";
+  return "WhatsApp contact";
 }
 
 /**
@@ -324,5 +334,5 @@ function displayFallback(resolved: ResolvedIdentity): string {
  * PSID crudos, que en la bandeja no le dicen nada al operador.
  */
 function channelFallback(channel: Channel): string {
-  return `Contacto de ${CHANNEL_LABEL[channel] ?? channel}`;
+  return `${CHANNEL_LABEL[channel] ?? channel} contact`;
 }

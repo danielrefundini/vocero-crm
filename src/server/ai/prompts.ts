@@ -13,11 +13,11 @@ type KbEntry = typeof schema.kbEntry.$inferSelect;
 export const JUDGE_MARKER = "[JUEZ]";
 
 export function renderKb(entries: KbEntry[]): string {
-  if (entries.length === 0) return "(knowledge base vacío)";
+  if (entries.length === 0) return "(empty knowledge base)";
   return entries
     .map((e) =>
       e.kind === "qa"
-        ? `P: ${e.question}\nR: ${e.answer}`
+        ? `Q: ${e.question}\nA: ${e.answer}`
         : (e.content ?? "")
     )
     .filter(Boolean)
@@ -32,14 +32,14 @@ export function buildJudgePrompt(input: {
   behaviorText: string;
 }): { system: string; user: string } {
   const system = [
-    `${JUDGE_MARKER} Eres un evaluador de calidad independiente de agentes de WhatsApp. Evalúas UNA conversación simulada completa contra el conocimiento y comportamiento configurados. Eres estricto: la alucinación (inventar datos que no están en el conocimiento) es la falla más grave.`,
-    "Respondes ÚNICAMENTE un objeto JSON con este esquema:",
+    `${JUDGE_MARKER} You are an independent quality evaluator of WhatsApp agents. You evaluate ONE complete simulated conversation against the configured knowledge and behavior. You are strict: hallucination (making up data that isn't in the knowledge) is the most serious failure.`,
+    "Respond ONLY with a JSON object with this schema:",
     '{"veredicto":"verde"|"amarillo"|"rojo","hallazgos":[{"tipo":"alucinacion"|"fuera_de_kb"|"debio_escalar"|"tono","evidencia":"cita textual del transcript","sugerencia":{"pregunta":"...","respuesta":"..."}}]}',
-    "- verde: sin problemas relevantes. amarillo: mejorable. rojo: falla grave.",
-    "- `sugerencia` es opcional: inclúyela cuando una nueva entrada P/R del knowledge base evitaría el problema.",
-    "- Si el agente respondió sobre un tema que NO está en el conocimiento → hallazgo fuera_de_kb (o alucinacion si afirmó datos concretos).",
-    "- Si el cliente pidió un humano y no hubo escalado → debio_escalar.",
-    "- Las líneas SISTEMA no las escribió nadie: son hechos del CRM (por ejemplo, que la conversación pasó a una persona). Un traspaso registrado ahí ES un escalado.",
+    "- verde: no relevant problems. amarillo: could be improved. rojo: serious failure.",
+    "- `sugerencia` is optional: include it when a new Q/A entry in the knowledge base would prevent the problem.",
+    "- If the agent answered about a topic that is NOT in the knowledge → finding fuera_de_kb (or alucinacion if it stated concrete data).",
+    "- If the customer asked for a human and there was no escalation → debio_escalar.",
+    "- SISTEMA lines weren't written by anyone: they are CRM facts (for example, that the conversation was handed to a person). A handoff recorded there IS an escalation.",
   ].join("\n");
 
   const transcript = input.transcript
@@ -50,11 +50,11 @@ export function buildJudgePrompt(input: {
     .join("\n");
 
   const user = [
-    `PERSONA SIMULADA: ${input.persona}`,
-    `COMPORTAMIENTO CONFIGURADO:\n${input.behaviorText || "(sin configurar)"}`,
-    `CONOCIMIENTO CONFIGURADO:\n${input.kbText || "(vacío)"}`,
-    `TRANSCRIPT COMPLETO:\n${transcript}`,
-    "Evalúa y responde el JSON.",
+    `SIMULATED PERSONA: ${input.persona}`,
+    `CONFIGURED BEHAVIOR:\n${input.behaviorText || "(not configured)"}`,
+    `CONFIGURED KNOWLEDGE:\n${input.kbText || "(empty)"}`,
+    `FULL TRANSCRIPT:\n${transcript}`,
+    "Evaluate and respond with the JSON.",
   ].join("\n\n");
 
   return { system, user };

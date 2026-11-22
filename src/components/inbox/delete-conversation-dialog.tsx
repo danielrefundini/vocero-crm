@@ -52,15 +52,13 @@ export function DeleteConversationDialog({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Eliminar conversación"
+        aria-label="Delete conversation"
         className="w-full max-w-md rounded-lg border bg-card p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-1 font-semibold">¿Eliminar esta conversación?</h3>
+        <h3 className="mb-1 font-semibold">Delete this conversation?</h3>
         <p className="mb-3 text-[13px] leading-relaxed text-text-2">
-          Se borran los mensajes con {contactName}, sus adjuntos, la ficha y lo
-          que el agente recuerda de esta conversación. Si vuelve a escribir, el
-          agente empieza de cero.
+          This deletes the messages with {contactName}, their attachments, the profile and what the agent remembers from this conversation. If they write again, the agent starts from scratch.
         </p>
 
         <label className="flex cursor-pointer items-start gap-2.5 rounded-md border bg-subtle p-3">
@@ -72,16 +70,16 @@ export function DeleteConversationDialog({
             onChange={(e) => setAlsoContact(e.target.checked)}
           />
           <span className="text-[13px] leading-snug">
-            <span className="font-medium">Borrar también el contacto y su lead</span>
+            <span className="font-medium">Also delete the contact and their lead</span>
             <span className="mt-0.5 block text-xs text-text-3">
               {alsoContact
-                ? "Se van además sus notas, su etapa en el pipeline y sus citas pasadas. Deja de contar en Resultados."
-                : "Sin marcar, el contacto conserva sus notas, su etapa y sus citas."}
+                ? "Their notes, pipeline stage and past appointments go too. They stop counting in Results."
+                : "Unchecked, the contact keeps their notes, stage and appointments."}
             </span>
           </span>
         </label>
 
-        <p className="mt-3 text-xs font-medium text-danger-text">No se puede deshacer.</p>
+        <p className="mt-3 text-xs font-medium text-danger-text">{"This can't be undone."}</p>
 
         {error && (
           <p
@@ -94,14 +92,14 @@ export function DeleteConversationDialog({
 
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" disabled={busy} onClick={onCancel}>
-            Cancelar
+            Cancel
           </Button>
           <Button variant="destructive" disabled={busy} onClick={() => void confirm()}>
             {busy
-              ? "Eliminando…"
+              ? "Deleting…"
               : alsoContact
-                ? "Eliminar conversación y contacto"
-                : "Eliminar conversación"}
+                ? "Delete conversation and contact"
+                : "Delete conversation"}
           </Button>
         </div>
       </div>

@@ -237,7 +237,7 @@ export async function eliminarConversacion(
     const fallidos = intentos.filter((r) => r.status === "rejected").length;
     if (fallidos > 0) {
       console.warn(
-        `[bandeja] ${fallidos} de ${archivos.length} adjuntos no se pudieron borrar del volumen (${organizationId})`
+        `[inbox] ${fallidos} de ${archivos.length} attachments couldn't be deleted from the volume (${organizationId})`
       );
     }
   }

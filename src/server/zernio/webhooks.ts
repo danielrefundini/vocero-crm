@@ -143,7 +143,7 @@ export function webhookHealth(
   if (aqui.length === 0) {
     return {
       level: "error",
-      message: "Zernio no tiene un webhook hacia esta instancia: los mensajes no llegan.",
+      message: "Zernio has no webhook to this instance: messages don't arrive.",
       ...nada,
     };
   }
@@ -151,7 +151,7 @@ export function webhookHealth(
   if (activos.length === 0) {
     return {
       level: "error",
-      message: "El webhook hacia esta instancia está desactivado en Zernio.",
+      message: "The webhook to this instance is disabled in Zernio.",
       ...nada,
     };
   }
@@ -163,8 +163,8 @@ export function webhookHealth(
     return {
       level: "error",
       message: sinEvento
-        ? `El webhook no está suscrito a «${ZERNIO_MESSAGE_EVENT}».`
-        : "El webhook no incluye esta cuenta: sus mensajes no llegan.",
+        ? `The webhook isn't subscribed to «${ZERNIO_MESSAGE_EVENT}».`
+        : "The webhook doesn't include this account: its messages don't arrive.",
       ...nada,
     };
   }
@@ -173,12 +173,12 @@ export function webhookHealth(
   if (failureCount > 0) {
     return {
       level: "warn",
-      message: `Zernio registra ${failureCount} ${failureCount === 1 ? "entrega fallida" : "entregas fallidas"} seguidas.`,
+      message: `Zernio records ${failureCount} ${failureCount === 1 ? "failed delivery" : "failed deliveries"} in a row.`,
       lastFiredAt,
       failureCount,
     };
   }
-  return { level: "ok", message: "Activo", lastFiredAt, failureCount };
+  return { level: "ok", message: "Active", lastFiredAt, failureCount };
 }
 
 /**
@@ -227,6 +227,6 @@ export async function ensureZernioWebhook(input: {
   forgetZernioWebhooks(input.token);
 
   const id = json?.webhook?._id ?? previo?._id;
-  if (!id) throw new Error("Zernio respondió sin el webhook");
+  if (!id) throw new Error("Zernio answered without the webhook");
   return { created: !previo, id };
 }

@@ -25,29 +25,29 @@ export function BotSection({
   return (
     <Section
       id="agente"
-      title="El agente"
+      title="The agent"
       hint={
         agenda
-          ? "Si contesta, qué tan rápido, cuándo pasa a un humano y cómo salen las citas."
-          : "Si contesta, qué tan rápido y cuándo pasa la conversación a un humano."
+          ? "Whether it answers, how fast, when it hands off to a human and how appointments turn out."
+          : "Whether it answers, how fast and when it hands the conversation to a human."
       }
       loading={loading}
       error={error}
       hasData={!!data}
       empty={!!data?.empty}
-      emptyText="Todavía no hay conversaciones en este periodo."
+      emptyText="No conversations in this period yet."
     >
       {data && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-4">
-            <StatCard label="Conversaciones nuevas" value={String(data.conversations)} />
+            <StatCard label="New conversations" value={String(data.conversations)} />
             <RateCard
-              label="Contestó el agente"
+              label="Agent answered"
               rate={data.aiReplyRate}
-              unit="con mensaje del cliente"
+              unit="with a customer message"
             />
             <StatCard
-              label="Primera respuesta"
+              label="First response"
               value={
                 data.firstResponseSeconds === null
                   ? "—"
@@ -55,36 +55,36 @@ export function BotSection({
               }
               hint={
                 data.firstResponseSample === 0
-                  ? "el agente aún no ha contestado a nadie"
-                  : `mediana de ${data.firstResponseSample} conversaciones`
+                  ? "the agent hasn't answered anyone yet"
+                  : `median of ${data.firstResponseSample} conversations`
               }
             />
             <RateCard
-              label="Pasaron a un humano"
+              label="Handed to a human"
               rate={data.handoffRate}
-              unit="conversaciones"
+              unit="conversations"
             />
           </div>
 
           {agenda && data.sessions && (
             <div>
-              <Subhead>Citas del periodo</Subhead>
+              <Subhead>Appointments in the period</Subhead>
               {data.sessions.booked === 0 ? (
-                <p className="text-sm text-text-3">Ninguna cita cae en este periodo.</p>
+                <p className="text-sm text-text-3">No appointments fall in this period.</p>
               ) : (
                 <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-5">
                   <StatCard
-                    label="Citas"
+                    label="Appointments"
                     value={String(data.sessions.booked)}
                     hint={pendientes(data.sessions)}
                   />
-                  <StatCard label="Realizadas" value={String(data.sessions.done)} />
-                  <StatCard label="No llegaron" value={String(data.sessions.noShow)} />
-                  <StatCard label="Canceladas" value={String(data.sessions.cancelled)} />
+                  <StatCard label="Completed" value={String(data.sessions.done)} />
+                  <StatCard label="No-shows" value={String(data.sessions.noShow)} />
+                  <StatCard label="Canceled" value={String(data.sessions.cancelled)} />
                   <RateCard
-                    label="Asistencia"
+                    label="Attendance"
                     rate={data.sessions.showRate}
-                    unit="con desenlace"
+                    unit="with an outcome"
                   />
                 </div>
               )}
@@ -93,31 +93,29 @@ export function BotSection({
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
-              <Subhead>Por qué pasó a un humano</Subhead>
+              <Subhead>Why it went to a human</Subhead>
               <BarChart
                 items={data.handoffs}
-                emptyText="Ninguna conversación del periodo pasó a un humano."
+                emptyText="No conversation in the period went to a human."
               />
             </div>
 
             <div>
-              <Subhead>Ficha del prospecto</Subhead>
+              <Subhead>Lead profile</Subhead>
               {data.fichaCoverage === null ? (
                 // `null` NO es 0 %: es que el agente de esta instancia no escribe
                 // ficha. Enseñar 0 % sería acusarlo de no hacer algo que nunca se
                 // le pidió.
                 <p className="text-sm text-text-3">
-                  Nadie está llenando la ficha de los prospectos. La escribe un cerebro
-                  externo (<code className="font-mono text-xs">PUT /api/bot/ficha</code>) o
-                  tu equipo desde el panel de la conversación.
+                  Nobody is filling in lead profiles. An external brain writes it (<code className="font-mono text-xs">PUT /api/bot/ficha</code>) or your team from the conversation panel.
                 </p>
               ) : (
                 <>
                   <p className="text-sm">
-                    <Rate rate={data.fichaCoverage} unit="contactos nuevos" />
+                    <Rate rate={data.fichaCoverage} unit="new contacts" />
                   </p>
                   <p className="mt-1 text-xs text-text-3">
-                    De los contactos que llegaron en este periodo, a cuántos les sacó datos.
+                    Of the contacts who arrived in this period, how many it got details from.
                   </p>
                 </>
               )}
@@ -133,7 +131,7 @@ export function BotSection({
 function pendientes(s: NonNullable<BotBlockDto["sessions"]>): string | undefined {
   const n = s.booked - s.done - s.noShow - s.cancelled;
   if (n <= 0) return undefined;
-  return n === 1 ? "1 sin desenlace todavía" : `${n} sin desenlace todavía`;
+  return n === 1 ? "1 without an outcome yet" : `${n} without an outcome yet`;
 }
 
 /** Segundos en algo que se lee de un vistazo. */

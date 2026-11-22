@@ -94,11 +94,11 @@ describe("024 · capacidades por canal", () => {
 
   it("los mensajes de ventana cerrada dicen el canal y el plazo", () => {
     expect(windowClosedMessage("instagram")).toContain("Instagram");
-    expect(windowClosedMessage("instagram")).toContain("7 días");
+    expect(windowClosedMessage("instagram")).toContain("7 days");
     expect(windowClosedMessage("messenger")).toContain("Messenger");
-    expect(aiWindowClosedMessage("instagram")).toContain("24 horas");
-    expect(aiWindowClosedMessage("instagram")).toContain("una persona");
+    expect(aiWindowClosedMessage("instagram")).toContain("24 hours");
+    expect(aiWindowClosedMessage("instagram")).toContain("a person");
     // WhatsApp sigue pidiendo plantilla.
-    expect(windowClosedMessage("whatsapp")).toContain("plantilla");
+    expect(windowClosedMessage("whatsapp")).toContain("template");
   });
 });

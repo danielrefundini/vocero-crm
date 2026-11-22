@@ -9,7 +9,7 @@ export type SessionContext = {
 };
 
 export class UnauthorizedError extends Error {
-  constructor(message = "No autenticado") {
+  constructor(message = "Not authenticated") {
     super(message);
     this.name = "UnauthorizedError";
   }
@@ -27,7 +27,7 @@ export async function requireSession(): Promise<SessionContext> {
   // inicial) — la membresía en BD es la fuente de verdad de org + rol.
   const membership = await resolveMembership(session.user.id);
   if (!membership) {
-    throw new UnauthorizedError("Sesión sin organización activa");
+    throw new UnauthorizedError("Session without an active organization");
   }
   return {
     userId: session.user.id,

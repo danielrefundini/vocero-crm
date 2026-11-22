@@ -13,7 +13,7 @@ import { schema } from "@/lib/db";
 describe("scoped (aislamiento por organización)", () => {
   it("organizationId vacío lanza — imposible una query sin tenant", () => {
     expect(() => scoped(schema.contact.organizationId, "")).toThrow(
-      /sin tenant/
+      /without tenant/
     );
   });
 

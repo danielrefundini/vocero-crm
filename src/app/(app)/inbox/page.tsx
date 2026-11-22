@@ -14,7 +14,7 @@ export default async function InboxPage() {
    * todavía se vería como una instancia de un solo canal, y el primer mensaje
    * repintaría la lista entera.
    */
-  const enabled = enabledChannels();
+  const enabled = (await enabledChannels());
   const channels = CHANNEL_ORDER.filter((c) => enabled.has(c));
 
   // 026 — Eliminar una conversación es de quien administra el negocio. El

@@ -78,7 +78,7 @@ export async function registrarAnuncioDeOrigen(input: {
     void guardarCreativo({ organizationId, conversationId, sourceId, imageUrl }).catch(
       (err) =>
         console.warn(
-          `[atribucion] imagen del anuncio ${sourceId} no guardada:`,
+          `[attribution] ad image ${sourceId} not saved:`,
           err instanceof Error ? err.message : err
         )
     );
@@ -190,7 +190,7 @@ export function repararImagenSiFalta(organizationId: string, contactId: string):
     });
   })().catch((err) =>
     console.warn(
-      `[atribucion] reparación de imagen del contacto ${contactId} falló:`,
+      `[attribution] image repair for contact ${contactId} failed:`,
       err instanceof Error ? err.message : err
     )
   );

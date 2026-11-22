@@ -66,7 +66,7 @@ export function EmbeddedSignup({
   useEffect(() => {
     void (async () => {
       const res = await fetch(API, { cache: "no-store" }).catch(() => null);
-      if (!res) return setError("No pudimos comprobar si la conexión con Meta está disponible.");
+      if (!res) return setError("We couldn't check whether the Meta connection is available.");
       if (res.status === 404) return setOculto(true);
       if (res.ok) setConfig((await res.json()) as Config);
     })();
@@ -104,7 +104,7 @@ export function EmbeddedSignup({
         | (ResultadoEmbebido & { error?: { message?: string } })
         | null;
       if (!res.ok || !data) {
-        return fallar(data?.error?.message ?? "No se pudo completar la conexión.");
+        return fallar(data?.error?.message ?? "Couldn't complete the connection.");
       }
       activo.current = null;
       setBusy(false);
@@ -114,8 +114,8 @@ export function EmbeddedSignup({
     } catch (e) {
       fallar(
         e instanceof Error && e.name === "TimeoutError"
-          ? "La confirmación tardó demasiado. Recarga la página para ver si quedó conectado antes de repetir."
-          : "Sin conexión con el servidor."
+          ? "The confirmation took too long. Reload the page to see whether it connected before trying again."
+          : "No connection to the server."
       );
     }
   }, [fallar]);
@@ -125,13 +125,13 @@ export function EmbeddedSignup({
       if (!activo.current || activo.current.enviando) return;
       const e = leerEventoDeAlta(ev.origin, ev.data);
       if (!e) return;
-      if (e.kind === "cancel") return fallar("La conexión se canceló en Meta. Puedes volver a intentarlo.");
+      if (e.kind === "cancel") return fallar("The connection was canceled in Meta. You can try again.");
       if (e.kind === "error") {
-        return fallar(`Meta reportó un error${e.message ? `: ${e.message}` : ""}. Puedes volver a intentarlo.`);
+        return fallar(`Meta reported an error${e.message ? `: ${e.message}` : ""}. You can try again.`);
       }
       if (e.kind === "coexistence") {
         return fallar(
-          "En Meta se eligió conectar la app de WhatsApp Business del teléfono (coexistencia), que esta versión no admite. No se guardó nada."
+          "In Meta you chose to connect the phone's WhatsApp Business app (coexistence), which this version doesn't support. Nothing was saved."
         );
       }
       activo.current.evento = { wabaId: e.wabaId, phoneNumberId: e.phoneNumberId };
@@ -159,18 +159,18 @@ export function EmbeddedSignup({
     setError("");
     setExito(null);
     reloj.current = setTimeout(
-      () => fallar("Meta no terminó la conexión. Permite las ventanas emergentes y vuelve a intentarlo."),
+      () => fallar("Meta didn't finish the connection. Allow pop-ups and try again."),
       10 * 60_000
     );
     try {
       f.login((r) => {
         if (activo.current !== p || p.enviando) return;
-        if (!r.authResponse?.code) return fallar("Meta no autorizó la conexión. Puedes volver a intentarlo.");
+        if (!r.authResponse?.code) return fallar("Meta didn't authorize the connection. You can try again.");
         p.code = r.authResponse.code;
         void enviar();
       }, opcionesDeLogin(config.configId));
     } catch {
-      fallar("No se pudo abrir Meta. Permite las ventanas emergentes y vuelve a intentarlo.");
+      fallar("Couldn't open Meta. Allow pop-ups and try again.");
     }
   }
 
@@ -184,30 +184,29 @@ export function EmbeddedSignup({
           src="https://connect.facebook.net/es_LA/sdk.js"
           strategy="afterInteractive"
           onReady={iniciarSdk}
-          onError={() => setError("No se pudo cargar Meta. Revisa el bloqueador del navegador y recarga.")}
+          onError={() => setError("Couldn't load Meta. Check your browser's blocker and reload.")}
         />
       )}
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-primary" /> Conectar con Meta
+          <ShieldCheck className="h-5 w-5 text-primary" /> Connect with Meta
         </CardTitle>
         <CardDescription>
-          La conexión oficial: autorizas tu cuenta en la ventana de Meta y el
-          CRM registra el número y el webhook sin copiar tokens.
+          {"The official connection: you authorize your account in Meta's window and the CRM registers the number and webhook without copying tokens."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 text-sm">
-        {!config && !error && <p className="text-muted-foreground">Comprobando disponibilidad…</p>}
+        {!config && !error && <p className="text-muted-foreground">Checking availability…</p>}
         {config && !config.canManage && (
-          <p className="text-muted-foreground">Solo quien administra la cuenta puede conectar WhatsApp.</p>
+          <p className="text-muted-foreground">Only the account admin can connect WhatsApp.</p>
         )}
 
         {config?.canManage && (
           <>
             <div className="max-w-sm space-y-1.5">
               <Label htmlFor="embedded-pin">
-                PIN de verificación en dos pasos{" "}
-                <span className="font-normal text-muted-foreground">(opcional)</span>
+                Two-step verification PIN{" "}
+                <span className="font-normal text-muted-foreground">(optional)</span>
               </Label>
               <Input
                 id="embedded-pin"
@@ -220,13 +219,12 @@ export function EmbeddedSignup({
                 onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
               />
               <p className="text-xs text-muted-foreground">
-                Solo si tu número ya tiene uno. Si lo dejas vacío, generamos
-                uno al registrar el número y te lo mostramos una vez.
+                Only if your number already has one. If you leave it empty, we generate one when registering the number and show it to you once.
               </p>
             </div>
 
             <Button disabled={!sdk || busy || !pinValido} onClick={lanzar}>
-              {busy ? "Completando la conexión…" : "Conectar con Meta"}
+              {busy ? "Completing the connection…" : "Connect with Meta"}
             </Button>
           </>
         )}
@@ -242,15 +240,14 @@ export function EmbeddedSignup({
             className="space-y-2 rounded-lg border border-success-soft bg-success-tint p-3 text-success-text"
           >
             <p className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Conectado {exito.displayPhoneNumber}.
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Connected {exito.displayPhoneNumber}.
             </p>
             {exito.generatedPin && (
               <p className="flex items-start gap-2">
                 <KeyRound className="mt-0.5 h-4 w-4 shrink-0" />
                 <span>
-                  PIN de verificación en dos pasos del número:{" "}
-                  <b className="font-mono tracking-widest">{exito.generatedPin}</b>. Guárdalo en tu
-                  gestor de contraseñas: no lo volveremos a mostrar.
+                  {"The number's two-step verification PIN:"}{" "}
+                  <b className="font-mono tracking-widest">{exito.generatedPin}</b>{". Save it in your password manager: we won't show it again."}
                 </span>
               </p>
             )}

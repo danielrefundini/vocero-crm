@@ -22,12 +22,12 @@ export function fichaLabel(key: string): string {
 
 /** Cómo se muestra un valor. Los booleanos en Sí/No: nadie califica en `true`. */
 export function fichaValueText(value: FichaValue): string {
-  if (typeof value === "boolean") return value ? "Sí" : "No";
+  if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "number") return String(value);
   return value ?? "";
 }
 
-const SI = new Set(["si", "sí", "true", "1"]);
+const SI = new Set(["yes", "y", "si", "sí", "true", "1"]);
 const NO = new Set(["no", "false", "0"]);
 
 /**

@@ -83,17 +83,17 @@ export async function createTemplate(
 
   const creds = await getCredentialsByOrg(organizationId);
   if (!creds) {
-    throw new TemplateError("not_connected", "Conecta tu número de WhatsApp primero");
+    throw new TemplateError("not_connected", "Connect your WhatsApp number first");
   }
   if (creds.status === "reconnect_required") {
-    throw new TemplateError("reconnect_required", "Reconecta tu número antes de crear plantillas");
+    throw new TemplateError("reconnect_required", "Reconnect your number before creating templates");
   }
 
   const name = input.name
     .toLowerCase()
     .replace(/\s+/g, "_")
     .replace(/[^a-z0-9_]/g, "");
-  if (!name) throw new TemplateError("invalid", "Nombre de plantilla inválido");
+  if (!name) throw new TemplateError("invalid", "Invalid template name");
 
   // Meta pide un ejemplo por variable: si faltan, rechaza la plantilla. Uno
   // realista («Ana», «martes 14») ayuda a que la aprueben; si el dueño no
@@ -133,15 +133,15 @@ export async function createTemplate(
     if (err instanceof MetaApiError) {
       if (err.isAuthError) {
         await markReconnectRequired(organizationId);
-        throw new TemplateError("reconnect_required", "El token expiró: reconecta el número");
+        throw new TemplateError("reconnect_required", "The token expired: reconnect the number");
       }
       if (err.status === 0 || err.status >= 500) {
-        throw new TemplateError("meta_unavailable", "Meta no está disponible ahora");
+        throw new TemplateError("meta_unavailable", "Meta isn't available right now");
       }
       if (esCuentaSinPlantillas(err) && !creds.messagingAccountId) {
         throw new TemplateError(
           "meta_error",
-          "Meta ya no crea plantillas en la cuenta de WhatsApp: ahora viven en la Cuenta de mensajes. Agrega su ID en Ajustes → WhatsApp (Business Settings › Cuentas › Cuentas de mensajes) y vuelve a intentarlo."
+          "Meta no longer creates templates on the WhatsApp account: they now live on the Messaging account. Add its ID in Settings → WhatsApp (Business Settings › Accounts › Messaging accounts) and try again."
         );
       }
       throw new TemplateError("meta_error", err.message);
@@ -297,7 +297,7 @@ const TEMPLATE_FIELDS =
 export async function syncTemplates(organizationId: string): Promise<number> {
   const creds = await getCredentialsByOrg(organizationId);
   if (!creds) {
-    throw new TemplateError("not_connected", "Conecta tu número de WhatsApp primero");
+    throw new TemplateError("not_connected", "Connect your WhatsApp number first");
   }
 
   const cuenta = cuentaDePlantillas(creds);
@@ -327,9 +327,9 @@ export async function syncTemplates(organizationId: string): Promise<number> {
     if (err instanceof MetaApiError) {
       if (err.isAuthError) {
         await markReconnectRequired(organizationId);
-        throw new TemplateError("reconnect_required", "El token expiró: reconecta el número");
+        throw new TemplateError("reconnect_required", "The token expired: reconnect the number");
       }
-      throw new TemplateError("meta_unavailable", "No se pudo consultar Meta");
+      throw new TemplateError("meta_unavailable", "Couldn't query Meta");
     }
     throw err;
   }
@@ -431,9 +431,9 @@ export async function sendTemplate(input: {
     )
     .limit(1);
   const template = templates[0];
-  if (!template) throw new TemplateError("not_found", "Plantilla no encontrada");
+  if (!template) throw new TemplateError("not_found", "Template not found");
   if (template.status !== "approved") {
-    throw new TemplateError("invalid", "Solo se pueden enviar plantillas aprobadas");
+    throw new TemplateError("invalid", "Only approved templates can be sent");
   }
   // Meta exige EXACTAMENTE un parámetro por variable del cuerpo: si sobran o
   // falta alguno responde 132000 (plantilla y parámetros no coinciden).
@@ -447,8 +447,8 @@ export async function sendTemplate(input: {
     throw new TemplateError(
       "invalid",
       variableCount === 1
-        ? "La plantilla requiere el valor de {{1}}"
-        : `La plantilla requiere ${variableCount} valores: falta {{${n}}}`
+        ? "The template requires the value of {{1}}"
+        : `The template requires ${variableCount} values: missing {{${n}}}`
     );
   }
 
@@ -468,19 +468,19 @@ export async function sendTemplate(input: {
     )
     .limit(1);
   const row = rows[0];
-  if (!row) throw new TemplateError("not_found", "Conversación no encontrada");
+  if (!row) throw new TemplateError("not_found", "Conversation not found");
   if (row.conversation.isTest) {
     // Aserción dura del sandbox (FR-031)
     throw new SendError(
       "sandbox_violation",
-      "Conversación de prueba del Laboratorio: el envío real está prohibido"
+      "Lab test conversation: real sending is prohibited"
     );
   }
 
   const creds = await getCredentialsByOrg(input.organizationId);
-  if (!creds) throw new TemplateError("not_connected", "Sin número conectado");
+  if (!creds) throw new TemplateError("not_connected", "No number connected");
   if (creds.status === "reconnect_required") {
-    throw new TemplateError("reconnect_required", "Reconecta el número");
+    throw new TemplateError("reconnect_required", "Reconnect the number");
   }
 
   // 003: destinatario = teléfono normalizado o BSUID.
@@ -493,7 +493,7 @@ export async function sendTemplate(input: {
   if (!destinatario) {
     throw new TemplateError(
       "meta_error",
-      "El contacto no tiene teléfono ni identidad de WhatsApp utilizable"
+      "The contact has no phone or usable WhatsApp identity"
     );
   }
 

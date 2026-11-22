@@ -14,7 +14,7 @@ export function scoped(
   ...conditions: (SQL | undefined)[]
 ): SQL {
   if (!organizationId) {
-    throw new Error("scoped(): organizationId vacío — query sin tenant");
+    throw new Error("scoped(): empty organizationId — query without tenant");
   }
   const base = eq(organizationColumn, organizationId);
   const rest = conditions.filter((c): c is SQL => c !== undefined);

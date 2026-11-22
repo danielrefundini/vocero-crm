@@ -22,7 +22,7 @@ export const POST = withAuth(async (session, req: Request) => {
     return apiError(
       422,
       "sin_token",
-      "Pega la llave del proveedor para traer sus modelos"
+      "Paste the provider key to fetch its models"
     );
   }
 

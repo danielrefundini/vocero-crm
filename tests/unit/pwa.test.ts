@@ -38,7 +38,7 @@ describe("el manifest", () => {
       start_url: "/inbox",
       scope: "/",
       id: "/",
-      lang: "es",
+      lang: "en",
       theme_color: NAV_INK,
       background_color: NAV_INK,
     });
@@ -134,7 +134,7 @@ describe("el service worker no guarda nada", () => {
   });
 
   it("la página sin conexión no lleva el nombre de nadie (white-label)", () => {
-    expect(codigo).toMatch(/Sin conexión/);
+    expect(codigo).toMatch(/Offline/);
     expect(codigo).not.toMatch(/vocero/i);
   });
 });
