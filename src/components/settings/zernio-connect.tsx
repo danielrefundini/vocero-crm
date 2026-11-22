@@ -71,7 +71,7 @@ export function ZernioConnect({
         error?: { message?: string; details?: { accounts?: Candidate[] } };
       } | null;
       setCandidates(data?.error?.details?.accounts ?? []);
-      setError(data?.error?.message ?? "No se pudo conectar. Intenta de nuevo.");
+      setError(data?.error?.message ?? "Couldn't connect. Try again.");
       return;
     }
     const data = (await res.json().catch(() => ({}))) as Saved;
@@ -88,7 +88,7 @@ export function ZernioConnect({
   return (
     <div className="space-y-4">
       <div className="space-y-1.5 sm:max-w-md">
-        <Label htmlFor={`${idPrefix}-token`}>API key de Zernio</Label>
+        <Label htmlFor={`${idPrefix}-token`}>Zernio API key</Label>
         <Input
           id={`${idPrefix}-token`}
           type="password"
@@ -98,14 +98,13 @@ export function ZernioConnect({
           autoComplete="off"
         />
         <p className="text-xs text-text-2">
-          Con esa llave Vocero encuentra {what} en Zernio: no hace falta copiar
-          ningún id.
+          With that key Vocero finds {what} in Zernio: no need to copy any id.
         </p>
       </div>
 
       {manual && (
         <div className="space-y-1.5 sm:max-w-md">
-          <Label htmlFor={`${idPrefix}-account`}>accountId de la cuenta en Zernio</Label>
+          <Label htmlFor={`${idPrefix}-account`}>Zernio account accountId</Label>
           <Input
             id={`${idPrefix}-account`}
             value={accountRef}
@@ -128,7 +127,7 @@ export function ZernioConnect({
 
       {candidates.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-text-2">Cuentas de este canal en esa llave:</p>
+          <p className="text-xs font-semibold text-text-2">Accounts for this channel on that key:</p>
           <div className="flex flex-wrap gap-2">
             {candidates.map((c) => (
               <button
@@ -138,7 +137,7 @@ export function ZernioConnect({
                 onClick={() => void save(c.id)}
                 className="rounded-full border border-border-strong px-3.5 py-1.5 text-[12.5px] font-semibold transition-colors hover:bg-accent disabled:opacity-50"
               >
-                Conectar {c.name}
+                Connect {c.name}
               </button>
             ))}
           </div>
@@ -147,7 +146,7 @@ export function ZernioConnect({
 
       <div className="flex flex-wrap items-center gap-3">
         <Button disabled={saving || !canSave} onClick={() => void save()}>
-          {saving ? "Probando…" : "Probar y conectar"}
+          {saving ? "Testing…" : "Test and connect"}
         </Button>
         {!manual && (
           <button
@@ -155,7 +154,7 @@ export function ZernioConnect({
             onClick={() => setManual(true)}
             className="text-xs font-semibold text-text-2 underline-offset-2 hover:underline"
           >
-            Pegar el accountId a mano
+            Paste the accountId manually
           </button>
         )}
       </div>
@@ -164,21 +163,21 @@ export function ZernioConnect({
         <div className="space-y-2 rounded-lg border border-success-soft bg-success-tint p-4 text-sm">
           <p className="flex items-center gap-2 font-medium text-success-text">
             <CheckCircle2 className="h-4 w-4 shrink-0" />
-            Conectado{saved.accountName ? `: ${saved.accountName}` : ""}
+            Connected{saved.accountName ? `: ${saved.accountName}` : ""}
           </p>
           {saved.webhook?.ok && (
             <p className="text-success-text opacity-80">
               {saved.webhook.created
-                ? "Vocero dio de alta su webhook en tu Zernio, limitado a tus cuentas conectadas."
-                : "El webhook de tu Zernio quedó actualizado y limitado a tus cuentas conectadas."}
+                ? "Vocero registered its webhook in your Zernio, limited to your connected accounts."
+                : "Your Zernio webhook was updated and limited to your connected accounts."}
             </p>
           )}
           {saved.health && saved.health.level !== "ok" && <Aviso>{saved.health.message}</Aviso>}
           {saved.webhook && !saved.webhook.ok && (
             <Aviso>
-              {saved.webhook.message ?? "No se pudo dar de alta el webhook en Zernio."}{" "}
+              {saved.webhook.message ?? "Couldn't register the webhook in Zernio."}{" "}
               <Link href="/settings/channels" className="font-semibold underline">
-                Ver el estado de los canales
+                View channel status
               </Link>
             </Aviso>
           )}

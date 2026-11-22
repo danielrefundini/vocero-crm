@@ -31,7 +31,7 @@ export async function POST(req: Request) {
 
   const organizationId = await resolveInstanceOrg();
   if (!organizationId) {
-    return apiError(409, "no_org", "La instancia aún no tiene organización");
+    return apiError(409, "no_org", "This instance doesn't have an organization yet");
   }
 
   const body = await parseBody(req, bodySchema);
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     )
     .limit(1);
   const conv = rows[0];
-  if (!conv) return apiError(404, "not_found", "Conversación no encontrada");
+  if (!conv) return apiError(404, "not_found", "Conversation not found");
 
   if (!conv.handoffAt) {
     await db

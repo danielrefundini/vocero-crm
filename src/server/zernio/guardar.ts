@@ -32,13 +32,13 @@ export async function resolveZernioAccount(
         response: apiError(
           503,
           "platform_unavailable",
-          "No se pudo contactar a Zernio; intenta de nuevo"
+          "Couldn't reach Zernio; try again"
         ),
       };
     }
     return {
       ok: false,
-      response: apiError(422, "invalid_token", "La API key de Zernio no es válida"),
+      response: apiError(422, "invalid_token", "The Zernio API key is invalid"),
     };
   }
 

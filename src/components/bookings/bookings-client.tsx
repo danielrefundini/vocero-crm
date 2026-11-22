@@ -261,7 +261,7 @@ export function BookingsClient({
     const clamped = clampListTo(from, to);
     setNotice(
       daysBetween(from, to) > MAX_RANGE_DAYS - 1
-        ? `La lista abarca hasta ${MAX_RANGE_DAYS} días: se muestra del ${spanLabel({ from, to: clamped })}.`
+        ? `The list covers up to ${MAX_RANGE_DAYS} days: showing from ${spanLabel({ from, to: clamped })}.`
         : null
     );
     setAnchor(from);
@@ -299,7 +299,7 @@ export function BookingsClient({
       const data = (await res?.json().catch(() => null)) as {
         error?: { message?: string };
       } | null;
-      return { ok: false, message: data?.error?.message ?? "No se pudo completar la acción" };
+      return { ok: false, message: data?.error?.message ?? "Couldn't complete the action" };
     }
     await reload();
     return { ok: true };
@@ -309,9 +309,9 @@ export function BookingsClient({
     return (
       <div className="flex h-full flex-col">
         <header className="border-b px-4 py-3 sm:px-6 sm:py-4">
-          <h2 className="text-[17px] font-bold tracking-tight">Citas</h2>
+          <h2 className="text-[17px] font-bold tracking-tight">Appointments</h2>
         </header>
-        <p className="p-6 text-sm text-text-3">Cargando…</p>
+        <p className="p-6 text-sm text-text-3">Loading…</p>
       </div>
     );
   }
@@ -357,20 +357,19 @@ export function BookingsClient({
             <div className="space-y-1 px-4 pb-2 sm:px-6">
               {loadError && (
                 <p role="alert" className="text-sm text-danger-text">
-                  No se pudieron cargar las citas.{" "}
+                  {"Couldn't load the appointments."}{" "}
                   <button
                     type="button"
                     onClick={() => void reload()}
                     className="font-semibold underline"
                   >
-                    Reintentar
+                    Retry
                   </button>
                 </p>
               )}
               {loaded?.truncated && (
                 <p className="text-sm text-warning-text">
-                  Este rango tiene demasiadas citas para mostrarlas todas: acórtalo para verlas
-                  completas.
+                  This range has too many appointments to show them all: shorten it to see them all.
                 </p>
               )}
               {notice && <p className="text-sm text-text-2">{notice}</p>}
@@ -471,18 +470,18 @@ function StatusBar({
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-2 text-xs text-text-3 sm:px-6">
       <span>
         <strong className="font-semibold text-text-2">{counts.sessions}</strong>{" "}
-        {counts.sessions === 1 ? "cita" : "citas"}
+        {counts.sessions === 1 ? "appointment" : "appointments"}
         {counts.blocks > 0 && (
           <>
             {" · "}
             <strong className="font-semibold text-text-2">{counts.blocks}</strong>{" "}
-            {counts.blocks === 1 ? "bloqueo" : "bloqueos"}
+            {counts.blocks === 1 ? "block" : "blocks"}
           </>
         )}
       </span>
       <span className="hidden xl:inline">
-        Hora del negocio ({timezone})
-        {counts.google && " · Los cambios hechos en Google Calendar no se importan"}
+        Business time ({timezone})
+        {counts.google && " · Changes made in Google Calendar aren't imported"}
       </span>
       <Legend />
       <div className="ml-auto flex flex-wrap items-center gap-x-4 gap-y-1.5">
@@ -491,20 +490,20 @@ function StatusBar({
             <Switch
               size="sm"
               checked={showTests}
-              label="Mostrar pruebas del Laboratorio"
+              label="Show Lab tests"
               onCheckedChange={onShowTests}
             />
-            <span>Mostrar pruebas{counts.tests > 0 ? ` (${counts.tests})` : ""}</span>
+            <span>Show tests{counts.tests > 0 ? ` (${counts.tests})` : ""}</span>
           </div>
         )}
         <div className="flex items-center gap-2">
           <Switch
             size="sm"
             checked={showCancelled}
-            label="Mostrar canceladas"
+            label="Show canceled"
             onCheckedChange={onShowCancelled}
           />
-          <span>Mostrar canceladas{counts.cancelled > 0 ? ` (${counts.cancelled})` : ""}</span>
+          <span>Show canceled{counts.cancelled > 0 ? ` (${counts.cancelled})` : ""}</span>
         </div>
       </div>
     </div>
@@ -514,11 +513,11 @@ function StatusBar({
 /** Qué significa cada color: sin esto, el ámbar de «no asistió» es adivinanza. */
 function Legend() {
   const items = [
-    { label: "Agendada", dot: "rounded-full bg-brand" },
-    { label: "Realizada", dot: "rounded-full bg-success" },
-    { label: "No asistió", dot: "rounded-full bg-warning" },
+    { label: "Booked", dot: "rounded-full bg-brand" },
+    { label: "Completed", dot: "rounded-full bg-success" },
+    { label: "No-show", dot: "rounded-full bg-warning" },
     // El rayado no se lee en un punto de 10 px: un cuadrito con borde sí.
-    { label: "Bloqueo", dot: "booking-hatch rounded-[3px] border border-text-3" },
+    { label: "Block", dot: "booking-hatch rounded-[3px] border border-text-3" },
   ];
   return (
     <span className="hidden items-center gap-3 lg:flex">

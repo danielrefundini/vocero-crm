@@ -24,6 +24,6 @@ describe("el juez ve el traspaso", () => {
   });
 
   it("y el juez sabe que un traspaso ahí es un escalado", () => {
-    expect(system).toMatch(/SISTEMA.*Un traspaso registrado ahí ES un escalado/s);
+    expect(system).toMatch(/SISTEMA.*A handoff recorded there IS an escalation/s);
   });
 });

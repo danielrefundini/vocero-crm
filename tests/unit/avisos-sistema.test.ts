@@ -45,7 +45,7 @@ describe("056 — qué dice", () => {
     expect(cuerpoAviso({ type: "image", text: null, media: { kind: "image", caption: "Así lo quiero" } })).toBe(
       "Así lo quiero"
     );
-    expect(cuerpoAviso({ type: "location", text: null })).toBe("Ubicación");
+    expect(cuerpoAviso({ type: "location", text: null })).toBe("Location");
   });
 
   it("lleva a su conversación, y solo a rutas de la Bandeja", () => {

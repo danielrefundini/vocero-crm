@@ -15,34 +15,34 @@ describe("054 — cambios de etapa", () => {
     });
 
   it("dice a dónde pasó y quién lo movió", () => {
-    expect(ev()).toBe("Pasó a Interesado · por Ana");
+    expect(ev()).toBe("Moved to Interesado · by Ana");
   });
 
   it("el nacimiento del lead dice que entró al embudo", () => {
     expect(ev({ fromStageName: null, toStageName: "Nuevo", actorNombre: null, source: "sistema" })).toBe(
-      "Entró al embudo en Nuevo"
+      "Entered the funnel at Nuevo"
     );
   });
 
   it("el agente se nombra; el sistema no", () => {
-    expect(ev({ actorNombre: null, source: "bot" })).toBe("Pasó a Interesado · por el agente");
-    expect(ev({ actorNombre: null, source: "sistema" })).toBe("Pasó a Interesado");
+    expect(ev({ actorNombre: null, source: "bot" })).toBe("Moved to Interesado · by the agent");
+    expect(ev({ actorNombre: null, source: "sistema" })).toBe("Moved to Interesado");
   });
 
   it("pasar a perdido lleva el motivo", () => {
     expect(ev({ toStageName: "Perdido", lossReason: "precio" })).toBe(
-      "Pasó a Perdido · Le pareció caro · por Ana"
+      "Moved to Perdido · Too expensive · by Ana"
     );
-    expect(ev({ toStageName: "Perdido", lossReason: "inventado" })).toBe("Pasó a Perdido · por Ana");
+    expect(ev({ toStageName: "Perdido", lossReason: "inventado" })).toBe("Moved to Perdido · by Ana");
   });
 });
 
 describe("054 — traspaso a una persona", () => {
   it("con las palabras del panel del contacto", () => {
-    expect(textoTraspaso("cliente")).toBe("La IA se pausó: el cliente pidió un humano");
-    expect(textoTraspaso("hostilidad")).toBe("La IA se pausó: el cliente se puso agresivo y el agente se retiró");
-    expect(textoTraspaso(null)).toBe("La IA se pausó");
-    expect(textoTraspaso("desconocido")).toBe("La IA se pausó");
+    expect(textoTraspaso("cliente")).toBe("AI paused: the customer asked for a human");
+    expect(textoTraspaso("hostilidad")).toBe("AI paused: the customer got aggressive and the agent stepped back");
+    expect(textoTraspaso(null)).toBe("AI paused");
+    expect(textoTraspaso("desconocido")).toBe("AI paused");
   });
 });
 

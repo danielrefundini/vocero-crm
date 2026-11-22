@@ -17,14 +17,14 @@ export function validarImagenAdjunta(
   files: readonly File[],
   origen: OrigenImagen
 ): { ok: true; file: File } | { ok: false; error: string } {
-  const verbo = origen === "paste" ? "Pega" : "Arrastra";
-  if (files.length !== 1) return { ok: false, error: `${verbo} una imagen a la vez.` };
+  const verbo = origen === "paste" ? "Paste" : "Drag";
+  if (files.length !== 1) return { ok: false, error: `${verbo} one image at a time.` };
   const file = files[0]!;
   if (!IMAGEN_ADJUNTA.mimes.test(file.type)) {
-    return { ok: false, error: `${verbo} una imagen JPEG, PNG o WebP.` };
+    return { ok: false, error: `${verbo} a JPEG, PNG or WebP image.` };
   }
   if (file.size > IMAGEN_ADJUNTA.maxBytes) {
-    return { ok: false, error: "La imagen pasa del límite de 5 MB de WhatsApp." };
+    return { ok: false, error: "The image exceeds WhatsApp's 5 MB limit." };
   }
   return { ok: true, file };
 }

@@ -24,10 +24,10 @@ export const GET = withAuth(async () => {
   const url = webhookUrl("wa");
   return Response.json({
     url,
-    instagramUrl: isChannelEnabled("instagram") ? webhookUrl("ig") : null,
-    messengerUrl: isChannelEnabled("messenger") ? webhookUrl("messenger") : null,
+    instagramUrl: (await isChannelEnabled("instagram")) ? webhookUrl("ig") : null,
+    messengerUrl: (await isChannelEnabled("messenger")) ? webhookUrl("messenger") : null,
     // 022: la URL que se da de alta en Zernio para los mensajes de TikTok.
-    tiktokUrl: isChannelEnabled("tiktok") ? webhookUrl("tiktok") : null,
+    tiktokUrl: (await isChannelEnabled("tiktok")) ? webhookUrl("tiktok") : null,
     verifyToken: env.META_WEBHOOK_VERIFY_TOKEN,
     isHttps: url.startsWith("https://"),
     signatureLayer: Boolean(env.META_APP_SECRET),
@@ -54,14 +54,14 @@ export const POST = withAuth(async (session, req: Request) => {
     // Sin cuerpo: el registro de siempre.
   }
   if (recuperar && !canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo quien administra puede recuperar el webhook");
+    return apiError(403, "forbidden", "Only an admin can recover the webhook");
   }
   const creds = await getCredentialsByOrg(session.organizationId);
   if (!creds) {
     return apiError(
       409,
       "sin_conexion",
-      "Primero guarda la conexión de WhatsApp."
+      "Save the WhatsApp connection first."
     );
   }
 

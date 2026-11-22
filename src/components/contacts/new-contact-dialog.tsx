@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 const SOURCES: { value: SourceValue; label: string }[] = [
-  { value: "referido", label: "Referido" },
-  { value: "organico", label: "Contenido orgánico" },
-  { value: "conocido", label: "Conocido" },
-  { value: "anuncio", label: "Anuncio" },
-  { value: "otro", label: "Otro" },
+  { value: "referido", label: "Referral" },
+  { value: "organico", label: "Organic content" },
+  { value: "conocido", label: "Acquaintance" },
+  { value: "anuncio", label: "Ad" },
+  { value: "otro", label: "Other" },
 ];
 
 /**
@@ -70,7 +70,7 @@ export function NewContactDialog({
     setSaving(false);
 
     if (!res) {
-      setError("No se pudo guardar. Revisa tu conexión.");
+      setError("Couldn't save. Check your connection.");
       return;
     }
     const data = (await res.json().catch(() => null)) as {
@@ -83,7 +83,7 @@ export function NewContactDialog({
       return;
     }
     if (!res.ok) {
-      setError(data?.error?.message ?? "No se pudo guardar el contacto");
+      setError(data?.error?.message ?? "Couldn't save the contact");
       return;
     }
     onCreated();
@@ -100,51 +100,48 @@ export function NewContactDialog({
     >
       <div
         role="dialog"
-        aria-label="Nuevo contacto"
+        aria-label="New contact"
         className="w-full max-w-md rounded-lg border bg-popover p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="mb-1 font-semibold">Nuevo contacto</h3>
+        <h3 className="mb-1 font-semibold">New contact</h3>
         <p className="mb-4 text-xs text-text-3">
-          Para prospectos que no llegaron por WhatsApp: referidos, gente que te
-          escribió por otra red, conocidos.
+          {"For leads who didn't come through WhatsApp: referrals, people who messaged you on another network, acquaintances."}
         </p>
 
         <div className="space-y-3">
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="nc-name">
-              Nombre
+              Name
             </label>
             <Input
               id="nc-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ferretería La Central"
+              placeholder="Main Street Hardware"
             />
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="nc-phone">
-              Teléfono con código de país
+              Phone with country code
             </label>
             <Input
               id="nc-phone"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="52 555 000 1234"
+              placeholder="1 202 555 0123"
             />
             <p className="text-[11px] text-text-3">
-              Escríbelo con espacios si quieres, pero{" "}
-              <strong>incluye el código de país</strong> (52 para México). Sin
-              él, WhatsApp no lo reconoce como la misma persona que te escriba
-              después.
+              Type it with spaces if you like, but{" "}
+              <strong>include the country code</strong> {"(1 for the US). Without it, WhatsApp won't recognize it as the same person who messages you later."}
             </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="nc-source">
-                ¿De dónde salió?
+                Where did they come from?
               </label>
               <select
                 id="nc-source"
@@ -161,7 +158,7 @@ export function NewContactDialog({
             </div>
             <div className="space-y-1.5">
               <label className="text-sm font-medium" htmlFor="nc-stage">
-                Etapa inicial
+                Initial stage
               </label>
               <select
                 id="nc-stage"
@@ -180,14 +177,14 @@ export function NewContactDialog({
 
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="nc-notes">
-              Notas (opcional)
+              Notes (optional)
             </label>
             <Textarea
               id="nc-notes"
               rows={3}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Me lo pasó Juan; tiene taller de motos…"
+              placeholder="John referred them; they run a motorcycle shop…"
             />
           </div>
         </div>
@@ -195,8 +192,7 @@ export function NewContactDialog({
         {duplicado && (
           <div className="mt-3 rounded-md border border-warning-soft bg-warning-tint px-3 py-2.5">
             <p className="text-[13px] text-warning-text">
-              Ese teléfono ya es de <strong>{duplicado.name}</strong>. No se creó
-              un duplicado.
+              That phone already belongs to <strong>{duplicado.name}</strong>. No duplicate was created.
             </p>
             <Button
               size="sm"
@@ -204,27 +200,26 @@ export function NewContactDialog({
               className="mt-2"
               onClick={() => onOpenExisting(duplicado.id)}
             >
-              Abrir su conversación
+              Open their conversation
             </Button>
           </div>
         )}
         {error && <p className="mt-3 text-xs text-danger-text">{error}</p>}
         {stages.length === 0 && (
           <p className="mt-3 text-xs text-warning-text">
-            Tu embudo no tiene etapas abiertas. Crea una en el Pipeline antes de
-            capturar contactos.
+            Your funnel has no open stages. Create one in the Pipeline before adding contacts.
           </p>
         )}
 
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
-            Cancelar
+            Cancel
           </Button>
           <Button
             disabled={!listo || saving || stages.length === 0}
             onClick={() => void guardar()}
           >
-            {saving ? "Guardando…" : "Crear contacto"}
+            {saving ? "Saving…" : "Create contact"}
           </Button>
         </div>
       </div>

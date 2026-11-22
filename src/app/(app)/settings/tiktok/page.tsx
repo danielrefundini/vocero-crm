@@ -4,8 +4,8 @@ import { isChannelEnabled } from "@/server/channels/enabled";
 
 export const dynamic = "force-dynamic";
 
-export default function TiktokSettingsPage() {
+export default async function TiktokSettingsPage() {
   // Sin el canal encendido esta pantalla no existe en esta instancia (ADR-001).
-  if (!isChannelEnabled("tiktok")) notFound();
+  if (!(await isChannelEnabled("tiktok"))) notFound();
   return <TiktokClient />;
 }

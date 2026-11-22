@@ -26,7 +26,7 @@ import {
 
 /** Solo `[\w.-]+` por segmento: la llave del objeto es la misma ruta relativa. */
 function comprobarSegmento(s: string): void {
-  if (!/^[\w.-]+$/.test(s)) throw new Error(`segmento de ruta inválido: ${s}`);
+  if (!/^[\w.-]+$/.test(s)) throw new Error(`invalid path segment: ${s}`);
 }
 
 /** La llave del objeto y, a la vez, la ruta relativa que se guarda en la BD. */
@@ -117,7 +117,7 @@ export async function guardarMedia(
       // el operador creería que su instancia ya usa el bucket.
       if (!avisoSinConfig) {
         avisoSinConfig = true;
-        console.warn("[medios] MEDIA_STORE=bucket pero el bucket no está bien configurado: se escribe en disco");
+        console.warn("[media] MEDIA_STORE=bucket but the bucket isn't configured correctly: writing to disk");
       }
     } else {
       try {
@@ -130,7 +130,7 @@ export async function guardarMedia(
       } catch (err) {
         // D4: el conector falla, el adjunto no se pierde.
         console.warn(
-          `[medios] el bucket no aceptó ${llave} (${err instanceof Error ? err.message.slice(0, 120) : "error"}): se guarda en disco`
+          `[media] the bucket didn't accept ${llave} (${err instanceof Error ? err.message.slice(0, 120) : "error"}): saving to disk`
         );
       }
     }
@@ -184,7 +184,7 @@ export async function borrarMedia(organizationId: string, assetId: string): Prom
   const cfg = configDelBucket();
   if (cfg) {
     await borrarObjeto(cfg, llave).catch((err) => {
-      console.warn(`[medios] no se pudo borrar ${llave} del bucket: ${err instanceof Error ? err.message.slice(0, 120) : "error"}`);
+      console.warn(`[media] couldn't delete ${llave} from the bucket: ${err instanceof Error ? err.message.slice(0, 120) : "error"}`);
     });
   }
 }

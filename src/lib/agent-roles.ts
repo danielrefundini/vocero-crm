@@ -33,40 +33,40 @@ export type Herramienta = {
 export const HERRAMIENTAS: readonly Herramienta[] = [
   {
     clave: "ficha",
-    etiqueta: "Llenar la ficha",
+    etiqueta: "Fill in the profile",
     descripcion:
-      "Anota lo que aprende del cliente en su ficha del CRM.",
+      "Writes down what it learns about the customer in their CRM profile.",
   },
   {
     // 038 — Solo hacia adelante y entre etapas abiertas: ganar o perder un
     // trato lo decide una persona.
     clave: "etapa",
-    etiqueta: "Mover de etapa",
+    etiqueta: "Move stage",
     descripcion:
-      "Avanza al lead en el pipeline cuando la conversación lo amerita. Nunca lo da por ganado ni por perdido.",
+      "Moves the lead forward in the pipeline when the conversation warrants it. It never marks it as won or lost.",
   },
   {
     clave: "agendar",
-    etiqueta: "Agendar citas",
-    descripcion: "Ofrece horarios reales de la agenda y reserva el que elija el cliente.",
+    etiqueta: "Book appointments",
+    descripcion: "Offers real times from the calendar and books the one the customer picks.",
     agenda: true,
   },
   {
     clave: "reprogramar",
-    etiqueta: "Reprogramar citas",
-    descripcion: "Mueve una cita ya reservada a otro horario ofrecido.",
+    etiqueta: "Reschedule appointments",
+    descripcion: "Moves an already-booked appointment to another offered time.",
     agenda: true,
   },
   {
     clave: "salida",
-    etiqueta: "Salida digna",
-    descripcion: "Despide con amabilidad a quien no califica, con recursos si los hay.",
+    etiqueta: "Graceful exit",
+    descripcion: "Kindly says goodbye to people who don't qualify, with resources if there are any.",
   },
   {
     clave: "escalar",
-    etiqueta: "Pasar a una persona",
+    etiqueta: "Hand off to a person",
     descripcion:
-      "Cuando el cliente lo pide, ante hostilidad o lo que no sabe. Siempre encendida.",
+      "When the customer asks, when facing hostility, or for what it doesn't know. Always on.",
     fija: true,
   },
 ];
@@ -109,18 +109,18 @@ export type Rol = {
 export const ROLES: Record<ClaveRol, Rol> = {
   calificador: {
     clave: "calificador",
-    etiqueta: "Calificador",
+    etiqueta: "Qualifier",
     descripcion:
-      "Atiende a quien escribe, entiende qué necesita, lo califica y agenda con el equipo cuando corresponde.",
+      "Serves whoever writes in, understands what they need, qualifies them and books with the team when appropriate.",
     instrucciones: [
-      "Atiendes a las personas que le escriben al negocio. Tu trabajo:",
-      "1. Entender qué necesita cada persona, con una pregunta a la vez.",
-      "2. Responder con lo que dice el conocimiento del negocio; si algo no está ahí, no lo inventes: ofrece pasarle la duda al equipo.",
-      "3. Calificarla: anota en la ficha lo que vas sabiendo (qué busca, para cuándo, presupuesto si lo dice).",
-      "4. Si califica, ofrécele una cita con el equipo. Si no, despídela con amabilidad y, si hay recursos, compártelos.",
+      "You serve the people who message the business. Your job:",
+      "1. Understand what each person needs, one question at a time.",
+      "2. Answer with what the business knowledge says; if something isn't there, don't make it up: offer to pass the question to the team.",
+      "3. Qualify them: note in the profile what you learn (what they're looking for, by when, budget if they say).",
+      "4. If they qualify, offer them an appointment with the team. If not, say goodbye kindly and, if there are resources, share them.",
     ].join("\n"),
     reglasDeEscalado:
-      "Pasa la conversación a una persona si el cliente lo pide, si se pone hostil, si es una queja o un problema con una compra, o si pregunta algo que el conocimiento no cubre y le importa.",
+      "Hand the conversation to a person if the customer asks, if they get hostile, if it's a complaint or a problem with a purchase, or if they ask something the knowledge doesn't cover and it matters to them.",
     herramientas: CLAVES_HERRAMIENTA,
     personas: [
       "comprador_decidido",

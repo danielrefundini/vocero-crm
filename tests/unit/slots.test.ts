@@ -226,30 +226,30 @@ describe("dayLabelInTz — el día EN PALABRAS", () => {
 
   it("marca 'hoy' cuando el slot cae en el día en curso del negocio", () => {
     const label = dayLabelInTz("2026-08-05T20:00:00.000Z", MX, now);
-    expect(label).toMatch(/^hoy /);
-    expect(label).toContain("miércoles");
+    expect(label).toMatch(/^today /);
+    expect(label).toContain("Wednesday");
     expect(label).toContain("5");
-    expect(label).toContain("agosto");
+    expect(label).toContain("August");
   });
 
   it("marca 'mañana' en el día siguiente", () => {
     const label = dayLabelInTz("2026-08-06T16:00:00.000Z", MX, now);
-    expect(label).toMatch(/^mañana /);
-    expect(label).toContain("jueves");
+    expect(label).toMatch(/^tomorrow /);
+    expect(label).toContain("Thursday");
   });
 
   it("un día más lejano va sin prefijo, pero SIEMPRE con el día nombrado", () => {
     const label = dayLabelInTz("2026-08-10T16:00:00.000Z", MX, now);
-    expect(label).not.toMatch(/^(hoy|mañana) /);
-    expect(label).toContain("lunes");
+    expect(label).not.toMatch(/^(today|tomorrow) /);
+    expect(label).toContain("Monday");
     expect(label).toContain("10");
   });
 
   it("'hoy' se decide en la zona del negocio, no en la del servidor", () => {
     // 03:00Z del 6 sigue siendo 5 de agosto en México.
     const instant = "2026-08-06T03:00:00.000Z";
-    expect(dayLabelInTz(instant, MX, now)).toMatch(/^hoy /);
-    expect(dayLabelInTz(instant, MADRID, now)).toMatch(/^mañana /);
+    expect(dayLabelInTz(instant, MX, now)).toMatch(/^today /);
+    expect(dayLabelInTz(instant, MADRID, now)).toMatch(/^tomorrow /);
   });
 });
 

@@ -33,10 +33,10 @@ export async function POST(req: Request) {
     .from(schema.message)
     .where(eq(schema.message.waMessageId, body.data.waMessageId))
     .limit(1);
-  if (!rows[0]) return apiError(404, "not_found", "Mensaje no encontrado");
+  if (!rows[0]) return apiError(404, "not_found", "Message not found");
 
   const creds = await getCredentialsByOrg(rows[0].organizationId);
-  if (!creds) return apiError(409, "not_connected", "Sin número conectado");
+  if (!creds) return apiError(409, "not_connected", "No number connected");
 
   const payload = buildStatusPayload({
     wabaId: creds.wabaId,

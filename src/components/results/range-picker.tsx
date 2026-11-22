@@ -29,7 +29,7 @@ export function RangePicker({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="flex flex-wrap gap-1" role="group" aria-label="Periodo">
+      <div className="flex flex-wrap gap-1" role="group" aria-label="Period">
         {atajos.map((a) => (
           <button
             key={a.label}
@@ -55,19 +55,19 @@ export function RangePicker({
           max={value.to}
           onChange={(e) => e.target.value && onChange({ ...value, from: e.target.value })}
           className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
-          aria-label="Desde"
+          aria-label="From"
         />
-        <span aria-hidden>a</span>
+        <span aria-hidden>to</span>
         <input
           type="date"
           value={value.to}
           min={value.from}
           onChange={(e) => e.target.value && onChange({ ...value, to: e.target.value })}
           className="h-8 rounded-md border border-input bg-background px-2 text-xs text-foreground"
-          aria-label="Hasta"
+          aria-label="To"
         />
       </div>
-      <span className="text-[11px] text-text-3">Días de {timezone}</span>
+      <span className="text-[11px] text-text-3">Days of {timezone}</span>
     </div>
   );
 }
@@ -85,11 +85,11 @@ export function shortcuts(hoy: string): { label: string; range: Range }[] {
   const iniMesPasado = `${finMesPasado.slice(0, 8)}01`;
 
   return [
-    { label: "7 días", range: { from: menos(6), to: hoy } },
-    { label: "30 días", range: { from: menos(29), to: hoy } },
-    { label: "Este mes", range: { from: primeroDeMes, to: hoy } },
-    { label: "Mes pasado", range: { from: iniMesPasado, to: finMesPasado } },
-    { label: "90 días", range: { from: menos(89), to: hoy } },
+    { label: "7 days", range: { from: menos(6), to: hoy } },
+    { label: "30 days", range: { from: menos(29), to: hoy } },
+    { label: "This month", range: { from: primeroDeMes, to: hoy } },
+    { label: "Last month", range: { from: iniMesPasado, to: finMesPasado } },
+    { label: "90 days", range: { from: menos(89), to: hoy } },
   ];
 }
 

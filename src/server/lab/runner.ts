@@ -55,7 +55,7 @@ export async function startRun(organizationId: string): Promise<string> {
   } catch (err) {
     // Violación del índice parcial UNIQUE → ya hay una corrida activa.
     if (isUniqueViolation(err)) {
-      throw new RunConflictError("Ya hay una corrida en curso");
+      throw new RunConflictError("A run is already in progress");
     }
     throw err;
   }
@@ -80,7 +80,7 @@ export async function startRun(organizationId: string): Promise<string> {
 
   // Fire-and-forget in-process: el POST regresa ya; el progreso va por SSE.
   void executeRun(runId, organizationId).catch(async (err) => {
-    console.error("[lab] corrida falló:", err);
+    console.error("[lab] run failed:", err);
     await failRun(runId, organizationId, String(err));
   });
 
@@ -100,7 +100,7 @@ async function executeRun(
 ): Promise<void> {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(
-      () => reject(new Error("timeout de 10 minutos superado")),
+      () => reject(new Error("10-minute timeout exceeded")),
       RUN_TIMEOUT_MS
     )
   );
@@ -136,10 +136,10 @@ async function runAllCases(
   const profile = profileRows[0];
   const behaviorText = profile
     ? [
-        `Nombre: ${profile.name}`,
-        profile.tone ? `Tono: ${profile.tone}` : null,
-        profile.instructions ? `Instrucciones: ${profile.instructions}` : null,
-        profile.escalationRules ? `Escalado: ${profile.escalationRules}` : null,
+        `Name: ${profile.name}`,
+        profile.tone ? `Tone: ${profile.tone}` : null,
+        profile.instructions ? `Instructions: ${profile.instructions}` : null,
+        profile.escalationRules ? `Escalation: ${profile.escalationRules}` : null,
       ]
         .filter(Boolean)
         .join("\n")
@@ -211,7 +211,7 @@ async function runAllCases(
 
   if (fallas.length === total) {
     // Nadie contestó: no es un score de cero, es que no había a quién probar.
-    await failRun(runId, organizationId, `el agente no contestó: ${fallas[0]}`);
+    await failRun(runId, organizationId, `the agent didn't answer: ${fallas[0]}`);
     return;
   }
 
@@ -305,7 +305,7 @@ async function runConversation(
     ? [
         {
           role: "sistema" as const,
-          text: `La conversación pasó a una persona (motivo: ${final.handoffReason ?? "sin motivo"}).`,
+          text: `The conversation was handed to a person (reason: ${final.handoffReason ?? "no reason"}).`,
         },
       ]
     : [];
@@ -389,7 +389,7 @@ async function turnoPorDespacho(
       .orderBy(desc(schema.dispatch.createdAt))
       .limit(1);
     if (despacho?.status === "caducado_a_humano") {
-      return `el cerebro no aceptó el despacho (${despacho.lastError ?? "sin detalle"})`;
+      return `the brain didn't accept the dispatch (${despacho.lastError ?? "no detail"})`;
     }
     if (conv?.handoffAt) return null; // traspasó sin despedirse: es su respuesta
     if (despacho?.status === "entregado") {
@@ -399,7 +399,7 @@ async function turnoPorDespacho(
       if (Date.now() - entregadoEn >= SILENCIO_MS) return null;
     }
   }
-  return `el cerebro no recibió el despacho en ${TURNO_TIMEOUT_MS / 1000} s`;
+  return `the brain didn't receive the dispatch within ${TURNO_TIMEOUT_MS / 1000} s`;
 }
 
 /** 033 — Que el cerebro olvide la conversación de prueba al terminar el caso. */
@@ -432,7 +432,7 @@ async function olvidar(
     );
   } catch (err) {
     // Best-effort: la regla del `conversation.id` nuevo cubre un aviso perdido.
-    console.error("[lab] no se pudo avisar el olvido:", err);
+    console.error("[lab] couldn't send the forget notice:", err);
   }
 }
 

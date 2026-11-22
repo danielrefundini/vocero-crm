@@ -29,7 +29,7 @@ export async function testConnection(
         ok: false,
         code: "meta_error",
         message:
-          "Meta no devolvió el número: verifica que el Phone Number ID sea correcto",
+          "Meta didn't return the number: check that the Phone Number ID is correct",
       };
     }
     return {
@@ -44,14 +44,14 @@ export async function testConnection(
           ok: false,
           code: "invalid_token",
           message:
-            "El token no es válido o expiró. Verifica que corresponde a este número (modo directo: token de usuario del sistema; modo agencia: token entregado por tu backend).",
+            "The token is invalid or expired. Check that it belongs to this number (direct mode: system user token; agency mode: token provided by your backend).",
         };
       }
       if (err.status === 0 || err.status >= 500) {
         return {
           ok: false,
           code: "meta_unavailable",
-          message: "Meta no está disponible en este momento; intenta de nuevo",
+          message: "Meta isn't available right now; try again",
         };
       }
       return { ok: false, code: "meta_error", message: err.message };
@@ -180,7 +180,7 @@ export async function registerWebhookForNumber(opts: {
   if (override && !sameWebhookPath(override, ownPath) && !opts.forzar) {
     const host = hostOf(override);
     console.log(
-      `[connect] la WABA ${wabaId} enruta sus webhooks a un override (${host}): se respeta y no se registra el del número`
+      `[connect] WABA ${wabaId} routes its webhooks to an override (${host}): respected, the number's webhook isn't registered`
     );
     await unregisterWebhookForNumber({ phoneNumberId, token, webhookPath: ownPath });
     return { ok: true, skipped: "waba_override", host };
@@ -189,7 +189,7 @@ export async function registerWebhookForNumber(opts: {
   if (!override || (opts.forzar && !sameWebhookPath(override, ownPath))) {
     if (override) {
       console.log(
-        `[connect] recuperar el webhook: se quita el override de la WABA ${wabaId} (${hostOf(override)})`
+        `[connect] recovering the webhook: removing the override from WABA ${wabaId} (${hostOf(override)})`
       );
     }
     try {
@@ -199,7 +199,7 @@ export async function registerWebhookForNumber(opts: {
       // ya partidas: lo que hace llegar los mensajes es la Cuenta de
       // mensajes. Se decide abajo, con su resultado a la vista.
       if (!esCuentaPartida(err)) {
-        return registrationError(err, "No se pudo suscribir la app a la cuenta de WhatsApp");
+        return registrationError(err, "Couldn't subscribe the app to the WhatsApp account");
       }
       cuentaPartida = true;
     }
@@ -225,12 +225,12 @@ export async function registerWebhookForNumber(opts: {
         ok: false,
         code: "meta_error",
         message:
-          "Meta ya no acepta suscribir la app en la cuenta de WhatsApp (#100/2388339, el split de 2026): escribe el ID de la Cuenta de mensajes y vuelve a registrar el webhook.",
+          "Meta no longer accepts subscribing the app on the WhatsApp account (#100/2388339, the 2026 split): enter the Messaging account ID and register the webhook again.",
       };
     }
     if (!messagingAccount.ok) return messagingAccount;
     console.log(
-      `[connect] la cuenta de WhatsApp ${wabaId} respondió 2388339; la de mensajes quedó suscrita y se sigue`
+      `[connect] WhatsApp account ${wabaId} answered 2388339; the messaging account was subscribed and we continue`
     );
   }
 
@@ -246,7 +246,7 @@ export async function registerWebhookForNumber(opts: {
       },
     });
   } catch (err) {
-    return registrationError(err, "Meta no aceptó la dirección del webhook");
+    return registrationError(err, "Meta didn't accept the webhook address");
   }
 
   try {
@@ -259,7 +259,7 @@ export async function registerWebhookForNumber(opts: {
         ok: false,
         code: "meta_error",
         message:
-          "Meta aceptó el webhook pero no lo confirma en el número. Vuelve a intentarlo en unos minutos.",
+          "Meta accepted the webhook but doesn't confirm it on the number. Try again in a few minutes.",
       };
     }
     return {
@@ -268,7 +268,7 @@ export async function registerWebhookForNumber(opts: {
       ...(messagingAccount ? { messagingAccount } : {}),
     };
   } catch (err) {
-    return registrationError(err, "No se pudo confirmar el webhook en Meta");
+    return registrationError(err, "Couldn't confirm the webhook in Meta");
   }
 }
 
@@ -304,8 +304,8 @@ export async function unregisterWebhookForNumber(opts: {
     });
   } catch (err) {
     console.warn(
-      "[connect] no se pudo quitar el webhook del número al desconectar:",
-      err instanceof MetaApiError ? `${err.status} ${err.code ?? ""}` : "sin respuesta"
+      "[connect] couldn't remove the number's webhook when disconnecting:",
+      err instanceof MetaApiError ? `${err.status} ${err.code ?? ""}` : "no response"
     );
   }
 }
@@ -333,7 +333,7 @@ async function registerWebhookForMessagingAccount(opts: {
   if (actual && !opts.forzar) {
     const host = hostOf(actual);
     console.log(
-      `[connect] la cuenta de mensajes ${messagingAccountId} enruta a un override (${host}): se respeta`
+      `[connect] messaging account ${messagingAccountId} routes to an override (${host}): respected`
     );
     return { ok: true, skipped: "override_ajeno", host };
   }
@@ -345,7 +345,7 @@ async function registerWebhookForMessagingAccount(opts: {
       body: { override_callback_uri: webhookUrl, verify_token: verifyToken },
     });
   } catch (err) {
-    return messagingAccountError(err, "No se pudo suscribir la app a la Cuenta de mensajes");
+    return messagingAccountError(err, "Couldn't subscribe the app to the Messaging account");
   }
 
   try {
@@ -358,12 +358,12 @@ async function registerWebhookForMessagingAccount(opts: {
         ok: false,
         code: "meta_error",
         message:
-          "Meta aceptó el webhook en la Cuenta de mensajes pero no lo confirma. Vuelve a intentarlo en unos minutos.",
+          "Meta accepted the webhook on the Messaging account but doesn't confirm it. Try again in a few minutes.",
       };
     }
     return { ok: true };
   } catch (err) {
-    return messagingAccountError(err, "No se pudo confirmar el webhook en la Cuenta de mensajes");
+    return messagingAccountError(err, "Couldn't confirm the webhook on the Messaging account");
   }
 }
 
@@ -391,8 +391,8 @@ export async function unregisterWebhookForMessagingAccount(opts: {
     });
   } catch (err) {
     console.warn(
-      "[connect] no se pudo quitar el webhook de la cuenta de mensajes al desconectar:",
-      err instanceof MetaApiError ? `${err.status} ${err.code ?? ""}` : "sin respuesta"
+      "[connect] couldn't remove the webhook from the messaging account when disconnecting:",
+      err instanceof MetaApiError ? `${err.status} ${err.code ?? ""}` : "no response"
     );
   }
 }
@@ -459,7 +459,7 @@ async function wabaOverride(
     );
   } catch (err) {
     console.warn(
-      "[connect] no se pudo consultar subscribed_apps; se suscribe igual (best-effort):",
+      "[connect] couldn't query subscribed_apps; subscribing anyway (best-effort):",
       err instanceof Error ? err.message : err
     );
     return undefined;
@@ -472,14 +472,14 @@ function registrationError(err: unknown, context: string): WebhookRegistration {
     return {
       ok: false,
       code: "invalid_token",
-      message: `${context}: el token no es válido o expiró.`,
+      message: `${context}: the token is invalid or expired.`,
     };
   }
   if (err.status === 0 || err.status >= 500) {
     return {
       ok: false,
       code: "meta_unavailable",
-      message: `${context}: Meta no está disponible en este momento; intenta de nuevo.`,
+      message: `${context}: Meta isn't available right now; try again.`,
     };
   }
   // 200 y 10 son los de permisos: el token puede enviar mensajes pero no
@@ -488,7 +488,7 @@ function registrationError(err: unknown, context: string): WebhookRegistration {
     return {
       ok: false,
       code: "missing_permission",
-      message: `${context}: el token no tiene el permiso whatsapp_business_management sobre esta cuenta.`,
+      message: `${context}: the token doesn't have the whatsapp_business_management permission on this account.`,
     };
   }
   return { ok: false, code: "meta_error", message: `${context}: ${err.message}` };
@@ -506,7 +506,7 @@ function messagingAccountError(
   if (res.ok || res.code !== "missing_permission") return res.ok ? { ok: true } : res;
   return {
     ...res,
-    message: `${context}: el usuario del sistema no tiene asignada la Cuenta de mensajes (Usuarios del sistema › Asignar activos › Messaging accounts). El mismo token sirve en cuanto se asigna.`,
+    message: `${context}: the system user isn't assigned the Messaging account (System users › Assign assets › Messaging accounts). The same token works as soon as it's assigned.`,
   };
 }
 
@@ -529,8 +529,8 @@ function pathOf(url: string): string {
 
 function hostOf(uri: string): string {
   try {
-    return new URL(uri).host || "host desconocido";
+    return new URL(uri).host || "unknown host";
   } catch {
-    return "URL no válida";
+    return "Invalid URL";
   }
 }

@@ -55,7 +55,7 @@ export function BlockDialog({
     // sobre un datetime-local bloqueaba la hora del reloj de quien miraba).
     const startUtc = blockStartUtc(day, time, timezone);
     if (!startUtc) {
-      setError("Esa hora no existe en la zona del negocio");
+      setError("That time doesn't exist in the business time zone");
       return;
     }
     setBusy(true);
@@ -73,7 +73,7 @@ export function BlockDialog({
     setBusy(false);
     if (res?.status !== 201) {
       const data = (await res?.json().catch(() => null)) as { error?: { message?: string } } | null;
-      setError(data?.error?.message ?? "No se pudo bloquear ese horario");
+      setError(data?.error?.message ?? "Couldn't block that time");
       return;
     }
     onCreated(day);
@@ -94,20 +94,20 @@ export function BlockDialog({
       >
         <div>
           <h3 id="bloquear-titulo" className="text-[16px] font-bold">
-            Bloquear horario
+            Block time
           </h3>
           <p className="mt-1 text-sm text-text-3">
-            Para compromisos que viven fuera del CRM: ese tiempo deja de ofrecerse.
+            For commitments that live outside the CRM: that time stops being offered.
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label htmlFor="bloqueo-dia">Día</Label>
+            <Label htmlFor="bloqueo-dia">Day</Label>
             <Input id="bloqueo-dia" type="date" required value={day} onChange={(e) => setDay(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="bloqueo-hora">Hora</Label>
+            <Label htmlFor="bloqueo-hora">Time</Label>
             <Input
               id="bloqueo-hora"
               type="time"
@@ -120,7 +120,7 @@ export function BlockDialog({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="bloqueo-duracion">Duración</Label>
+          <Label htmlFor="bloqueo-duracion">Duration</Label>
           <select
             id="bloqueo-duracion"
             value={minutes}
@@ -136,17 +136,17 @@ export function BlockDialog({
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="bloqueo-nota">Motivo (opcional)</Label>
+          <Label htmlFor="bloqueo-nota">Reason (optional)</Label>
           <Input
             id="bloqueo-nota"
             value={notes}
             maxLength={120}
-            placeholder="Comida con proveedor"
+            placeholder="Lunch with a supplier"
             onChange={(e) => setNotes(e.target.value)}
           />
         </div>
 
-        <p className="text-xs text-text-3">Hora de la zona del negocio ({timezone}).</p>
+        <p className="text-xs text-text-3">Business time zone ({timezone}).</p>
 
         {error && (
           <p role="alert" className="text-sm text-danger-text">
@@ -156,10 +156,10 @@ export function BlockDialog({
 
         <div className="flex justify-end gap-2">
           <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancelar
+            Cancel
           </Button>
           <Button type="submit" disabled={busy || !day || !time}>
-            {busy ? "Bloqueando…" : "Bloquear"}
+            {busy ? "Blocking…" : "Block"}
           </Button>
         </div>
       </form>

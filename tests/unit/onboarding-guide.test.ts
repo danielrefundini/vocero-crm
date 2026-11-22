@@ -46,7 +46,7 @@ describe("guía de inicio", () => {
       "/settings/ai",
       "/settings/whatsapp",
       GUIA_DEL_PAR,
-      "/settings/calendar",
+      "/guides/calendar",
     ]);
     expect(guide).toMatchObject({ complete: true, enabled: false, brainConnected: true });
   });

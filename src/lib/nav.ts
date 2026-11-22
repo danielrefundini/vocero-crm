@@ -39,7 +39,7 @@ export type NavGroup = {
 /** La única entrada que va abajo, separada del resto. */
 export const SETTINGS_ITEM: NavItem = {
   href: "/settings",
-  label: "Ajustes",
+  label: "Settings",
   icon: Settings,
 };
 
@@ -57,29 +57,29 @@ export function appNavGroups({
   role?: string | null;
 }): NavGroup[] {
   const trabajo: NavItem[] = [
-    { href: "/inbox", label: "Bandeja", icon: Inbox, badge: true },
+    { href: "/inbox", label: "Inbox", icon: Inbox, badge: true },
     { href: "/pipeline", label: "Pipeline", icon: Kanban },
-    { href: "/contacts", label: "Contactos", icon: Users },
+    { href: "/contacts", label: "Contacts", icon: Users },
   ];
   // Citas va después de Contactos: es el paso siguiente de un trato, no una
   // sección aparte.
-  if (agenda) trabajo.push({ href: "/bookings", label: "Citas", icon: CalendarDays });
+  if (agenda) trabajo.push({ href: "/bookings", label: "Appointments", icon: CalendarDays });
 
   const agente: NavItem[] = [];
   // Un miembro del equipo no puede hacer ninguno de los pasos de la guía.
   if (canConfigure(role)) {
-    agente.push({ href: "/onboarding", label: "Guía de inicio", icon: ListChecks });
+    agente.push({ href: "/onboarding", label: "Getting started", icon: ListChecks });
   }
   agente.push(
-    { href: "/agent", label: "Agente", icon: Sparkles },
-    { href: "/lab", label: "Laboratorio", icon: FlaskConical }
+    { href: "/agent", label: "Agent", icon: Sparkles },
+    { href: "/lab", label: "Lab", icon: FlaskConical }
   );
 
   return [
-    { title: "Trabajo", items: trabajo },
-    { title: "Agente", items: agente },
+    { title: "Work", items: trabajo },
+    { title: "Agent", items: agente },
     // 019 — Se mide al final: primero se atiende y se organiza.
-    { items: [{ href: "/results", label: "Resultados", icon: ChartColumn }] },
+    { items: [{ href: "/results", label: "Results", icon: ChartColumn }] },
   ];
 }
 
@@ -105,6 +105,8 @@ export function settingsSections({
   instagram = false,
   messenger = false,
   tiktok = false,
+  telegram = false,
+  website = false,
 }: {
   agenda?: boolean;
   /** 016 — "Anuncios" existe solo con la bandera ATRIBUCION. */
@@ -115,37 +117,42 @@ export function settingsSections({
   messenger?: boolean;
   /** 022 — "TikTok", igual: solo con el canal en CHANNELS. */
   tiktok?: boolean;
+  /** "Telegram", only with the channel in CHANNELS. */
+  telegram?: boolean;
+  /** "Website form", only with WEBSITE_FORMS=on. */
+  website?: boolean;
 }): SettingsSection[] {
   const canales: SettingsLink[] = [];
   // 023 — "Estado" reúne todos los canales; con WhatsApp solo no aporta nada
   // que su pantalla no diga, así que no existe (ADR-001).
-  if (instagram || messenger || tiktok) {
-    canales.push({ href: "/settings/channels", label: "Estado" });
-  }
+  // Always there: besides the status, it holds the on/off switches.
+  canales.push({ href: "/settings/channels", label: "On / off & status" });
   canales.push({ href: "/settings/whatsapp", label: "WhatsApp" });
   if (instagram) canales.push({ href: "/settings/instagram", label: "Instagram" });
   if (messenger) canales.push({ href: "/settings/messenger", label: "Messenger" });
   if (tiktok) canales.push({ href: "/settings/tiktok", label: "TikTok" });
+  if (telegram) canales.push({ href: "/settings/telegram", label: "Telegram" });
+  if (website) canales.push({ href: "/settings/website", label: "Website form" });
 
   // #85 — el proveedor de IA se configura aquí; el entorno queda de respaldo.
-  const agente: SettingsLink[] = [{ href: "/settings/ai", label: "IA" }];
-  if (agenda) agente.push({ href: "/settings/calendar", label: "Agenda" });
+  const agente: SettingsLink[] = [{ href: "/settings/ai", label: "AI" }];
+  if (agenda) agente.push({ href: "/settings/calendar", label: "Scheduling" });
 
   const negocio: SettingsLink[] = [
-    { href: "/settings/branding", label: "Marca" },
+    { href: "/settings/branding", label: "Branding" },
     // 062 — Tema, letra, tamaño y densidad (cada quien la suya).
-    { href: "/settings/appearance", label: "Apariencia" },
-    { href: "/settings/templates", label: "Plantillas" },
+    { href: "/settings/appearance", label: "Appearance" },
+    { href: "/settings/templates", label: "Templates" },
     // 049 — lo que el equipo inserta con «/atajo» en la Bandeja.
-    { href: "/settings/quick-replies", label: "Respuestas rápidas" },
-    { href: "/settings/team", label: "Equipo" },
+    { href: "/settings/quick-replies", label: "Quick replies" },
+    { href: "/settings/team", label: "Team" },
   ];
-  if (atribucion) negocio.push({ href: "/settings/ads", label: "Anuncios" });
+  if (atribucion) negocio.push({ href: "/settings/ads", label: "Ads" });
 
   return [
-    { title: "Canales", links: canales },
-    { title: "Agente", links: agente },
-    { title: "Negocio", links: negocio },
+    { title: "Channels", links: canales },
+    { title: "Agent", links: agente },
+    { title: "Business", links: negocio },
   ];
 }
 

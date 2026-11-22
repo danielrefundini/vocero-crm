@@ -129,7 +129,7 @@ export const contact = pgTable(
      * 014: canal por el que vive este contacto. Aditivo y con default: toda
      * fila existente sigue significando exactamente lo mismo.
      */
-    channel: text("channel", { enum: ["whatsapp", "instagram", "messenger", "tiktok"] })
+    channel: text("channel", { enum: ["whatsapp", "instagram", "messenger", "tiktok", "telegram", "website"] })
       .notNull()
       .default("whatsapp"),
     /**
@@ -364,7 +364,7 @@ export const conversation = pgTable(
      * 014: canal de la conversacion. Denormalizado del contacto a proposito:
      * el ruteo de salida y el filtro de la bandeja lo leen en cada mensaje.
      */
-    channel: text("channel", { enum: ["whatsapp", "instagram", "messenger", "tiktok"] })
+    channel: text("channel", { enum: ["whatsapp", "instagram", "messenger", "tiktok", "telegram", "website"] })
       .notNull()
       .default("whatsapp"),
     /**
@@ -678,6 +678,40 @@ export const tiktokCredentials = pgTable(
   (t) => [
     uniqueIndex("tiktok_credentials_org_uq").on(t.organizationId),
     uniqueIndex("tiktok_credentials_account_ref_uq").on(t.accountRef),
+  ]
+);
+
+/**
+ * Telegram channel credentials: one bot per organization, through the
+ * official Bot API. The bot token and the webhook secret (Telegram sends it
+ * back in `X-Telegram-Bot-Api-Secret-Token`) are encrypted at rest.
+ */
+export const telegramCredentials = pgTable(
+  "telegram_credentials",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    /** Numeric bot id (the part of the token before `:`): routes the webhook. */
+    botId: text("bot_id").notNull(),
+    botUsername: text("bot_username"),
+    botName: text("bot_name"),
+    tokenCipher: text("token_cipher").notNull(),
+    tokenIv: text("token_iv").notNull(),
+    tokenTag: text("token_tag").notNull(),
+    webhookSecretCipher: text("webhook_secret_cipher").notNull(),
+    webhookSecretIv: text("webhook_secret_iv").notNull(),
+    webhookSecretTag: text("webhook_secret_tag").notNull(),
+    status: text("status", { enum: ["connected", "reconnect_required"] })
+      .notNull()
+      .default("connected"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("telegram_credentials_org_uq").on(t.organizationId),
+    uniqueIndex("telegram_credentials_bot_id_uq").on(t.botId),
   ]
 );
 
@@ -1309,7 +1343,7 @@ export const webhookEvent = pgTable(
       .references(() => organization.id, { onDelete: "cascade" }),
     /** Quién lo procesa: el adaptador del canal y la fuente. */
     fuente: text("fuente", {
-      enum: ["whatsapp", "meta_instagram", "meta_messenger", "zernio"],
+      enum: ["whatsapp", "meta_instagram", "meta_messenger", "zernio", "telegram", "website"],
     }).notNull(),
     payload: jsonb("payload").notNull(),
     /** SHA-256 del cuerpo crudo: la misma entrega dos veces es una fila. */
@@ -1401,3 +1435,18 @@ export const conversationNote = pgTable(
     index("conversation_note_conv_idx").on(t.organizationId, t.conversationId, t.createdAt),
   ]
 );
+
+/* ============================================================
+ * Instance settings (no organization: one instance = one business)
+ * ============================================================ */
+
+/**
+ * Settings that belong to the whole instance and used to live only in
+ * environment variables. Today: `channels`, the channels the owner turned on
+ * from Settings → Channels → On / off. Without a row, the env vars decide.
+ */
+export const instanceSetting = pgTable("instance_setting", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

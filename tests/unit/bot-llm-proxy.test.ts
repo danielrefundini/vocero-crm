@@ -128,7 +128,7 @@ describe("/api/bot/llm — el reenvío", () => {
     });
     const res = await peticion({ authorization: `Bearer ${LLAVE_BOT}` });
     expect(res.status).toBe(402);
-    expect((await res.json()).error.message).toMatch(/pausada/);
+    expect((await res.json()).error.message).toMatch(/paused/);
   });
 
   it("si el proveedor no contesta → 504 proveedor_sin_respuesta y NO pausa", async () => {

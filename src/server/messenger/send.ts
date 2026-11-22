@@ -79,7 +79,7 @@ async function sendViaMeta(input: {
   const { pageId } = input.credentials;
   if (!pageId) {
     throw new MetaApiError(
-      "La conexión de Messenger no tiene ID de página para enviar",
+      "The Messenger connection has no page ID to send",
       { status: 400 }
     );
   }
@@ -97,7 +97,7 @@ async function sendViaMeta(input: {
   });
   const id = res.message_id ?? res.messages?.[0]?.id;
   if (!id) {
-    throw new MetaApiError("Meta no devolvió ID de mensaje", { status: 502 });
+    throw new MetaApiError("Meta didn't return a message ID", { status: 502 });
   }
   return { platformMessageId: String(id) };
 }

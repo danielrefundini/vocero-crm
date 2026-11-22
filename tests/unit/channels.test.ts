@@ -21,14 +21,14 @@ describe("CHANNELS: qué bandejas enciende la instancia (ADR-001)", () => {
   });
 
   it("un canal que no existe se ignora, no tumba el arranque", () => {
-    const on = parseChannels("telegram,instagram,,");
+    const on = parseChannels("signal,instagram,,");
     expect([...on].sort()).toEqual(["instagram", "whatsapp"]);
   });
 
   it("isChannel es la única lista: no hay uniones sueltas por ahí", () => {
     expect(isChannel("whatsapp")).toBe(true);
     expect(isChannel("instagram")).toBe(true);
-    expect(isChannel("telegram")).toBe(false);
+    expect(isChannel("signal")).toBe(false);
     expect(isChannel("")).toBe(false);
   });
 });
@@ -41,7 +41,7 @@ describe("capacidades por canal", () => {
   });
 
   it("un canal desconocido cae en WhatsApp en vez de reventar", () => {
-    const caps = capabilitiesFor("telegram" as never);
+    const caps = capabilitiesFor("signal" as never);
     expect(caps.label).toBe(CHANNEL_LABEL.whatsapp);
   });
 
@@ -73,6 +73,6 @@ describe("distintivo de bandeja", () => {
   });
 
   it("un canal desconocido no pinta nada en vez de tumbar la lista", () => {
-    expect(channelMark("telegram" as never)).toBeNull();
+    expect(channelMark("signal" as never)).toBeNull();
   });
 });

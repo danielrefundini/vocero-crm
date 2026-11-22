@@ -62,19 +62,19 @@ export async function forwardImage(input: {
     )
     .limit(1);
   const source = rows[0];
-  if (!source) throw new ForwardImageError(404, "not_found", "Imagen no encontrada");
+  if (!source) throw new ForwardImageError(404, "not_found", "Image not found");
   if (source.conversation.isTest) {
-    throw new SendError("sandbox_violation", "No se reenvían imágenes del Laboratorio");
+    throw new SendError("sandbox_violation", "Lab images aren't forwarded");
   }
   if (source.message.conversationId === input.conversationId) {
-    throw new ForwardImageError(422, "invalid", "Elige otra conversación para reenviar la imagen");
+    throw new ForwardImageError(422, "invalid", "Pick another conversation to forward the image");
   }
 
   const asset = source.asset;
   if (asset.kind !== "image" || !asset.mimeType || !IMAGEN_ADJUNTA.mimes.test(asset.mimeType)) {
-    throw new ForwardImageError(422, "invalid", "Este mensaje no trae una imagen que se pueda reenviar");
+    throw new ForwardImageError(422, "invalid", "This message doesn't have an image that can be forwarded");
   }
-  const data = await leerParaReenviar(input.organizationId, asset, "La imagen");
+  const data = await leerParaReenviar(input.organizationId, asset, "The image");
 
   return sendMediaMessage({
     organizationId: input.organizationId,
@@ -98,12 +98,12 @@ export async function leerParaReenviar(
   if (asset.fetchStatus !== "available") {
     const ready = await ensureAssetAvailable(organizationId, asset.id);
     if (!ready) {
-      throw new ForwardImageError(410, "gone", `${queEs} ya no está disponible para reenviar`);
+      throw new ForwardImageError(410, "gone", `${queEs} is no longer available to forward`);
     }
   }
   const leido = await leerAdjunto(organizationId, asset);
   if (!leido) {
-    throw new ForwardImageError(410, "gone", "El archivo ya no está disponible para reenviar");
+    throw new ForwardImageError(410, "gone", "The file is no longer available to forward");
   }
   return leido.data;
 }

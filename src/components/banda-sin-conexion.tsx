@@ -45,8 +45,8 @@ export function BandaSinConexion() {
       <WifiOff className="h-4 w-4 shrink-0" strokeWidth={1.8} aria-hidden />
       <span className="min-w-0 flex-1">
         {enLinea
-          ? "Sin conexión en tiempo real. Reintentando…"
-          : "Sin internet. Los mensajes nuevos aparecerán al volver la red."}
+          ? "No real-time connection. Retrying…"
+          : "No internet. New messages will appear when the network is back."}
       </span>
       {enLinea && (
         <button
@@ -54,7 +54,7 @@ export function BandaSinConexion() {
           onClick={reintentarConexiones}
           className="rounded-md px-2 py-0.5 font-semibold underline-offset-2 hover:underline"
         >
-          Reintentar ahora
+          Retry now
         </button>
       )}
     </div>

@@ -4,8 +4,8 @@ import { isChannelEnabled } from "@/server/channels/enabled";
 
 export const dynamic = "force-dynamic";
 
-export default function MessengerSettingsPage() {
+export default async function MessengerSettingsPage() {
   // Sin el canal encendido esta pantalla no existe en esta instancia (ADR-001).
-  if (!isChannelEnabled("messenger")) notFound();
+  if (!(await isChannelEnabled("messenger"))) notFound();
   return <MessengerClient />;
 }

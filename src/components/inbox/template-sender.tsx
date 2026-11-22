@@ -45,17 +45,17 @@ export function TemplateSender({
   }, []);
 
   if (templates === null) {
-    return <p className="text-xs text-muted-foreground">Cargando plantillas…</p>;
+    return <p className="text-xs text-muted-foreground">Loading templates…</p>;
   }
 
   if (templates.length === 0) {
     return (
       <p className="text-sm text-muted-foreground">
-        Aún no hay plantillas aprobadas. Créalas en{" "}
+        No approved templates yet. Create them in{" "}
         <a href="/settings/templates" className="text-primary hover:underline">
-          Configuración → Plantillas
+          Settings → Templates
         </a>{" "}
-        y espera la aprobación de Meta.
+        {"and wait for Meta's approval."}
       </p>
     );
   }
@@ -87,7 +87,7 @@ export function TemplateSender({
       const data = (await res.json().catch(() => null)) as {
         error?: { message?: string };
       } | null;
-      setError(data?.error?.message ?? "No se pudo enviar la plantilla");
+      setError(data?.error?.message ?? "Couldn't send the template");
       return;
     }
     setSelectedId("");
@@ -98,7 +98,7 @@ export function TemplateSender({
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label htmlFor="template-select">Plantilla aprobada</Label>
+        <Label htmlFor="template-select">Approved template</Label>
         <select
           id="template-select"
           value={selectedId}
@@ -108,7 +108,7 @@ export function TemplateSender({
           }}
           className="flex h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
-          <option value="">Elige una plantilla…</option>
+          <option value="">Pick a template…</option>
           {templates.map((t) => (
             <option key={t.id} value={t.id}>
               {t.name} ({templateLanguageName(t.language)})
@@ -124,7 +124,7 @@ export function TemplateSender({
       {values.map((value, i) => (
         <div key={i} className="space-y-1.5">
           <Label htmlFor={`template-variable-${i + 1}`}>
-            Valor de {`{{${i + 1}}}`}
+            Value of {`{{${i + 1}}}`}
           </Label>
           <Input
             id={`template-variable-${i + 1}`}
@@ -138,7 +138,7 @@ export function TemplateSender({
               })
             }
             placeholder={
-              i === 0 ? "p. ej. el nombre del cliente" : "p. ej. 12 de agosto"
+              i === 0 ? "e.g. the customer's name" : "e.g. August 12"
             }
           />
         </div>
@@ -148,7 +148,7 @@ export function TemplateSender({
         onClick={() => void send()}
         disabled={!selected || sending || missingValue}
       >
-        {sending ? "Enviando…" : "Enviar plantilla"}
+        {sending ? "Sending…" : "Send template"}
       </Button>
     </div>
   );

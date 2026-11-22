@@ -1,0 +1,12 @@
+# Only the source goes to Vercel; it installs and builds there.
+node_modules
+.next
+.env
+.env.*
+!.env.example
+.dev-media
+tests
+specs
+*.tsbuildinfo
+.claude
+.playwright-mcp

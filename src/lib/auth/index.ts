@@ -44,6 +44,10 @@ function createAuth() {
   const env = getEnv();
   return betterAuth({
     baseURL: env.APP_BASE_URL,
+    trustedOrigins: (env.AUTH_TRUSTED_ORIGINS ?? "")
+      .split(",")
+      .map((o) => o.trim().replace(/\/$/, ""))
+      .filter(Boolean),
     secret: env.BETTER_AUTH_SECRET,
     database: drizzleAdapter(getDb(), {
       provider: "pg",
@@ -71,7 +75,7 @@ function createAuth() {
           const result = checkRateLimit(`${ctx.path}:${ip}`, AUTH_RATE_LIMIT);
           if (!result.allowed) {
             throw new APIError("TOO_MANY_REQUESTS", {
-              message: "Demasiados intentos; espera unos minutos",
+              message: "Too many attempts; wait a few minutes",
             });
           }
         }
@@ -80,7 +84,7 @@ function createAuth() {
           if (!isInternalSignup() && !(await isPublicSignupAllowed())) {
             throw new APIError("FORBIDDEN", {
               message:
-                "El registro está cerrado: esta instancia ya tiene su organización",
+                "Sign-up is closed: this instance already has its organization",
             });
           }
         }

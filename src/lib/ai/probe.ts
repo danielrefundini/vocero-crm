@@ -53,7 +53,7 @@ export async function probeProvider(input: {
       ok: false,
       code: "bad_url",
       httpStatus: null,
-      message: "La base URL no es una dirección http(s) válida",
+      message: "The base URL isn't a valid http(s) address",
     };
   }
 
@@ -73,7 +73,7 @@ export async function probeProvider(input: {
       },
       body: JSON.stringify({
         model: input.model,
-        messages: [{ role: "user", content: "Responde solo: ok" }],
+        messages: [{ role: "user", content: "Reply only: ok" }],
         max_tokens: 5,
       }),
       signal: controller.signal,
@@ -88,7 +88,7 @@ export async function probeProvider(input: {
           code: "provider_error",
           httpStatus: res.status,
           message:
-            "El proveedor contestó, pero no con el formato de la API de OpenAI (sin `choices`)",
+            "The provider answered, but not in the OpenAI API format (no `choices`)",
         };
       }
       return { ok: true, latencyMs: Date.now() - inicio };
@@ -101,14 +101,14 @@ export async function probeProvider(input: {
           ok: false,
           code: "timeout",
           httpStatus: null,
-          message: "El proveedor no contestó a tiempo",
+          message: "The provider didn't answer in time",
         }
       : {
           ok: false,
           code: "unreachable",
           httpStatus: null,
           message:
-            "No se pudo conectar con el proveedor: revisa la base URL y la red del servidor",
+            "Couldn't connect to the provider: check the base URL and the server's network",
         };
   } finally {
     clearTimeout(timer);
@@ -126,7 +126,7 @@ export function clasificarFallo(
       ok: false,
       code: "invalid_token",
       httpStatus: status,
-      message: `El proveedor rechazó la llave (${status})${detalle}`,
+      message: `The provider rejected the key (${status})${detalle}`,
     };
   }
   if (status === 402) {
@@ -134,7 +134,7 @@ export function clasificarFallo(
       ok: false,
       code: "no_credit",
       httpStatus: status,
-      message: `La cuenta no tiene saldo (402)${detalle}`,
+      message: `The account has no credit (402)${detalle}`,
     };
   }
   if (status === 404 || (status === 400 && /model/i.test(body))) {
@@ -142,7 +142,7 @@ export function clasificarFallo(
       ok: false,
       code: "model_not_found",
       httpStatus: status,
-      message: `El proveedor no reconoce ese modelo (${status})${detalle}`,
+      message: `The provider doesn't recognize that model (${status})${detalle}`,
     };
   }
   if (status === 429) {
@@ -150,14 +150,14 @@ export function clasificarFallo(
       ok: false,
       code: "rate_limited",
       httpStatus: status,
-      message: `El proveedor pide esperar (429): la llave sirve, vuelve a probar en un momento${detalle}`,
+      message: `The provider asks to wait (429): the key works, try again in a moment${detalle}`,
     };
   }
   return {
     ok: false,
     code: "provider_error",
     httpStatus: status,
-    message: `El proveedor respondió ${status}${detalle}`,
+    message: `The provider answered ${status}${detalle}`,
   };
 }
 
@@ -213,7 +213,7 @@ export async function listModels(input: {
       ok: false,
       code: "bad_url",
       httpStatus: null,
-      message: "La base URL no es una dirección http(s) válida",
+      message: "The base URL isn't a valid http(s) address",
     };
   }
 
@@ -236,7 +236,7 @@ export async function listModels(input: {
         ok: false,
         code: "invalid_token",
         httpStatus: res.status,
-        message: `El proveedor rechazó la llave (${res.status})`,
+        message: `The provider rejected the key (${res.status})`,
       };
     }
     if (res.status === 404 || res.status === 405 || res.status === 501) {
@@ -247,7 +247,7 @@ export async function listModels(input: {
         ok: false,
         code: "provider_error",
         httpStatus: res.status,
-        message: `El proveedor respondió ${res.status} al pedir la lista de modelos`,
+        message: `The provider answered ${res.status} when requesting the model list`,
       };
     }
     const json = (await res.json().catch(() => null)) as {
@@ -274,14 +274,14 @@ export async function listModels(input: {
           ok: false,
           code: "timeout",
           httpStatus: null,
-          message: "El proveedor no contestó a tiempo",
+          message: "The provider didn't answer in time",
         }
       : {
           ok: false,
           code: "unreachable",
           httpStatus: null,
           message:
-            "No se pudo conectar con el proveedor: revisa la base URL y la red del servidor",
+            "Couldn't connect to the provider: check the base URL and the server's network",
         };
   } finally {
     clearTimeout(timer);
@@ -294,6 +294,6 @@ function noSoportado(status: number): Extract<ModelsResult, { ok: false }> {
     code: "unsupported",
     httpStatus: status,
     message:
-      "Este proveedor no publica su lista de modelos: escribe el nombre del modelo a mano",
+      "This provider doesn't publish its model list: type the model name manually",
   };
 }

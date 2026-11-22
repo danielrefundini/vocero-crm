@@ -35,7 +35,7 @@ export class ProviderHttpError extends Error {
     readonly status: number,
     body: string
   ) {
-    super(`proveedor respondió ${status}: ${truncate(body)}`);
+    super(`provider answered ${status}: ${truncate(body)}`);
     this.name = "ProviderHttpError";
   }
 }
@@ -69,7 +69,7 @@ export async function chatJson<T>(
     return {
       ok: false,
       error: "not_configured",
-      detail: "Sin modelo configurado (Ajustes → IA u OPENROUTER_MODEL)",
+      detail: "No model configured (Settings → AI or OPENROUTER_MODEL)",
     };
   }
 
@@ -83,7 +83,7 @@ export async function chatJson<T>(
             {
               role: "system",
               content:
-                "STRICT: tu respuesta anterior no fue JSON válido según el esquema. Responde ÚNICAMENTE el objeto JSON, sin explicaciones ni markdown.",
+                "STRICT: your previous response was not valid JSON according to the schema. Respond ONLY with the JSON object, no explanations or markdown.",
             },
           ];
     try {
@@ -95,12 +95,12 @@ export async function chatJson<T>(
       );
       const extracted = extractJson(raw);
       if (extracted === null) {
-        lastDetail = `sin JSON extraíble (raw=${truncate(raw)})`;
+        lastDetail = `no extractable JSON (raw=${truncate(raw)})`;
         continue;
       }
       const parsed = schema.safeParse(extracted);
       if (!parsed.success) {
-        lastDetail = `no cumple el esquema: ${parsed.error.issues
+        lastDetail = `doesn't match the schema: ${parsed.error.issues
           .map((i) => i.path.join(".") + " " + i.message)
           .join("; ")} (raw=${truncate(raw)})`;
         continue;
@@ -138,7 +138,7 @@ export async function chatJson<T>(
 
   return {
     ok: false,
-    error: lastDetail.includes("esquema") || lastDetail.includes("JSON")
+    error: lastDetail.includes("schema") || lastDetail.includes("JSON")
       ? "invalid_output"
       : "provider_error",
     detail: lastDetail,
@@ -148,11 +148,11 @@ export async function chatJson<T>(
 function detalleNoConfigurado(estado: Exclude<EstadoIa, { activa: true }>): string {
   switch (estado.motivo) {
     case "sin_configurar":
-      return "Sin proveedor de IA: configúralo en Ajustes → IA (u OPENROUTER_API_TOKEN en el entorno)";
+      return "No AI provider: set it up in Settings → AI (or OPENROUTER_API_TOKEN in the environment)";
     case "token_invalido":
-      return `La llave de IA (…${estado.last4}) está pausada: el proveedor la rechazó`;
+      return `The AI key (…${estado.last4}) is paused: the provider rejected it`;
     case "sin_saldo":
-      return `La llave de IA (…${estado.last4}) está pausada: la cuenta no tiene saldo`;
+      return `The AI key (…${estado.last4}) is paused: the account has no credit`;
   }
 }
 
@@ -184,7 +184,7 @@ async function callProvider(
     };
     const content = json.choices?.[0]?.message?.content;
     if (typeof content !== "string" || content.length === 0) {
-      throw new Error("respuesta del proveedor sin contenido");
+      throw new Error("provider response with no content");
     }
     return content;
   } finally {

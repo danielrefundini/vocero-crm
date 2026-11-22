@@ -40,9 +40,9 @@ export type ConnectorMeta = {
 
 export const CONNECTOR_META: Record<ConnectorId, ConnectorMeta> = {
   "enlace-fijo": {
-    label: "Enlace fijo",
+    label: "Fixed link",
     description:
-      "Tu sala de siempre: pegas la URL una vez y cada cita la reparte. Sin conectar nada.",
+      "Your usual room: paste the URL once and every appointment shares it. Nothing to connect.",
     perBookingLink: false,
     updatesMeeting: false,
     writesCalendarEvent: false,
@@ -51,7 +51,7 @@ export const CONNECTOR_META: Record<ConnectorId, ConnectorMeta> = {
   zoom: {
     label: "Zoom",
     description:
-      "Cada cita crea su reunión de Zoom. Reprogramar la mueve; cancelar la borra.",
+      "Each appointment creates its Zoom meeting. Rescheduling moves it; canceling deletes it.",
     perBookingLink: true,
     updatesMeeting: true,
     // Zoom sincroniza con el calendario del dueño por su cuenta, si él lo
@@ -62,7 +62,7 @@ export const CONNECTOR_META: Record<ConnectorId, ConnectorMeta> = {
   google: {
     label: "Google Calendar + Meet",
     description:
-      "Cada cita crea un evento en tu calendario con su enlace de Meet.",
+      "Each appointment creates an event in your calendar with its Meet link.",
     perBookingLink: true,
     updatesMeeting: true,
     writesCalendarEvent: true,

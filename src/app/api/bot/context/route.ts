@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 
   const organizationId = await resolveInstanceOrg();
   if (!organizationId) {
-    return apiError(409, "no_org", "La instancia aún no tiene organización");
+    return apiError(409, "no_org", "This instance doesn't have an organization yet");
   }
 
   const url = new URL(req.url);
@@ -50,7 +50,7 @@ export async function GET(req: Request) {
     url.searchParams.get("identity") ?? url.searchParams.get("waIdentity");
   const conversationId = url.searchParams.get("conversationId");
   if (!waIdentity && !conversationId) {
-    return apiError(422, "invalid", "Falta identity (o waIdentity) o conversationId");
+    return apiError(422, "invalid", "identity (or waIdentity) or conversationId is missing");
   }
 
   const db = getDb();
@@ -99,7 +99,7 @@ export async function GET(req: Request) {
   }
 
   if (!contact || !conversation) {
-    return apiError(404, "not_found", "Conversación no encontrada");
+    return apiError(404, "not_found", "Conversation not found");
   }
 
   const [leadRows, booking, anuncio] = await Promise.all([

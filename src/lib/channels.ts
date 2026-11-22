@@ -9,7 +9,7 @@
  * mintiendo.
  */
 
-export type Channel = "whatsapp" | "instagram" | "messenger" | "tiktok";
+export type Channel = "whatsapp" | "instagram" | "messenger" | "tiktok" | "telegram" | "website";
 
 /**
  * Orden en que los canales se presentan al operador. WhatsApp primero: es el
@@ -20,6 +20,8 @@ export const CHANNEL_ORDER: readonly Channel[] = [
   "instagram",
   "messenger",
   "tiktok",
+  "telegram",
+  "website",
 ];
 
 /** Nombre visible del canal, para la interfaz y para los errores del operador. */
@@ -31,6 +33,10 @@ export const CHANNEL_LABEL: Record<Channel, string> = {
   messenger: "Messenger",
   // 022: los mensajes directos de una cuenta TikTok Business, por Zernio.
   tiktok: "TikTok",
+  // A Telegram bot, through the official Bot API (no third party).
+  telegram: "Telegram",
+  // Website form submissions (Formspree or a direct post). Receive-only.
+  website: "Website",
 };
 
 /**
@@ -38,12 +44,12 @@ export const CHANNEL_LABEL: Record<Channel, string> = {
  * decir «WhatsApp» le contaría al operador la mitad de lo que hace su CRM.
  */
 export function navKicker(channels: readonly Channel[]): string {
-  return channels.length > 1 ? "CRM · Multicanal" : "CRM · WhatsApp";
+  return channels.length > 1 ? "CRM · Multichannel" : "CRM · WhatsApp";
 }
 
 /** 028 — Lo mismo para el título de la pestaña y la pantalla de entrada. */
 export function productName(channels: readonly Channel[]): string {
-  return channels.length > 1 ? "CRM multicanal" : "CRM de WhatsApp";
+  return channels.length > 1 ? "Multichannel CRM" : "WhatsApp CRM";
 }
 
 export function isChannel(value: string): value is Channel {

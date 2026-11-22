@@ -78,7 +78,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
   // sigue contento: aquí jamás se escribe `stageId`.
   if (!body.data.stageId) {
     if (Object.keys(extra).length === 0) {
-      return apiError(422, "nothing_to_update", "No hay nada que actualizar");
+      return apiError(422, "nothing_to_update", "Nothing to update");
     }
     const db = getDb();
     const updated = await db
@@ -92,7 +92,7 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
         )
       )
       .returning();
-    if (!updated[0]) return apiError(404, "not_found", "Lead no encontrado");
+    if (!updated[0]) return apiError(404, "not_found", "Lead not found");
     return Response.json({ lead: updated[0] });
   }
 
@@ -110,17 +110,17 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
 
   if (!res.ok) {
     if (res.reason === "lead_not_found") {
-      return apiError(404, "not_found", "Lead no encontrado");
+      return apiError(404, "not_found", "Lead not found");
     }
     if (res.reason === "stage_not_found") {
-      return apiError(422, "invalid_stage", "Etapa inexistente");
+      return apiError(422, "invalid_stage", "Stage doesn't exist");
     }
     // El tablero abre su diálogo con este código: perder un trato sin decir
     // por qué deja el embudo sin la mitad que importa.
     return apiError(
       422,
       "loss_reason_required",
-      "Falta el motivo de la pérdida"
+      "The loss reason is missing"
     );
   }
 

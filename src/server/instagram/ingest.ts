@@ -38,8 +38,8 @@ export async function processZernioEvent(payload: unknown): Promise<void> {
   const creds = await getInstagramCredentialsByAccountRef(accountRef);
   if (!creds) {
     console.warn(
-      `[ig] evento para accountId desconocido (${accountRef}): ` +
-        "guarda la conexion en Configuracion -> Instagram para recibir mensajes"
+      `[ig] event for unknown accountId (${accountRef}): ` +
+        "save the connection in Settings -> Instagram to receive messages"
     );
     return;
   }
@@ -48,14 +48,14 @@ export async function processZernioEvent(payload: unknown): Promise<void> {
     // payload con su forma no puede ser legitimo aunque llegue por la URL
     // correcta. Sin esto, la unica barrera de la forma ajena es la URL.
     console.warn(
-      `[ig] payload de Zernio en una instancia configurada como '${creds.source}': descartado`
+      `[ig] Zernio payload on an instance configured as '${creds.source}': discarded`
     );
     return;
   }
 
   const igsid = evt.message?.sender?.id;
   if (!igsid) {
-    console.warn(`[ig] evento ${evt.id ?? "?"} sin sender.id: descartado`);
+    console.warn(`[ig] event ${evt.id ?? "?"} with no sender.id: discarded`);
     return;
   }
 
@@ -64,7 +64,7 @@ export async function processZernioEvent(payload: unknown): Promise<void> {
   // que se mantiene entre reentregas, que es lo que hay que colapsar.
   const zernioMessageId = evt.message?.id;
   if (!zernioMessageId) {
-    console.warn(`[ig] evento ${evt.id ?? "?"} sin id de mensaje: descartado`);
+    console.warn(`[ig] event ${evt.id ?? "?"} with no message id: discarded`);
     return;
   }
 
@@ -122,8 +122,8 @@ export async function processMetaInstagramPayload(
     const creds = await getInstagramCredentialsByIgUserId(igUserId);
     if (!creds) {
       console.warn(
-        `[ig] evento para IG_ID desconocido (${igUserId}): ` +
-          "guarda la conexion en Configuracion -> Instagram para recibir mensajes"
+        `[ig] event for unknown IG_ID (${igUserId}): ` +
+          "save the connection in Settings -> Instagram to receive messages"
       );
       continue;
     }
@@ -132,7 +132,7 @@ export async function processMetaInstagramPayload(
       // de Meta. Cierra la inyeccion en instancias que solo usan Zernio, donde
       // META_APP_SECRET no existe y la firma no se puede verificar.
       console.warn(
-        `[ig] payload de Meta en una instancia configurada como '${creds.source}': descartado`
+        `[ig] Meta payload on an instance configured as '${creds.source}': discarded`
       );
       continue;
     }

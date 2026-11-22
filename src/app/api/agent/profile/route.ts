@@ -23,7 +23,7 @@ export const GET = withAuth(async (session) => {
     .where(scoped(schema.agentProfile.organizationId, session.organizationId))
     .limit(1);
   const p = rows[0];
-  if (!p) return apiError(404, "not_found", "Perfil del agente no encontrado");
+  if (!p) return apiError(404, "not_found", "Agent profile not found");
   const estado = await estadoIaDe(session.organizationId);
   return Response.json({
     profile: {
@@ -83,7 +83,7 @@ export const PUT = withAuth(async (session, req: Request) => {
     })
     .where(scoped(schema.agentProfile.organizationId, session.organizationId))
     .returning();
-  if (!updated[0]) return apiError(404, "not_found", "Perfil no encontrado");
+  if (!updated[0]) return apiError(404, "not_found", "Profile not found");
   return Response.json({ ok: true });
 });
 
@@ -92,14 +92,14 @@ async function problemaDelCerebro(): Promise<string | null> {
   const despacho = leerConfigDespacho();
   if (!despacho.active) {
     return despacho.problem === "sin_llave"
-      ? "Falta BOT_API_KEY: sin ella el CRM no puede despacharle a tu agente."
+      ? "BOT_API_KEY is missing: without it the CRM can't dispatch to your agent."
       : despacho.problem === "url"
-        ? "BRAIN_DISPATCH_URL no es una dirección válida."
-        : "No hay un agente conectado. Conéctalo (BRAIN_DISPATCH_URL) y vuelve a encenderlo.";
+        ? "BRAIN_DISPATCH_URL is not a valid address."
+        : "No agent is connected. Connect it (BRAIN_DISPATCH_URL) and turn it on again.";
   }
   const salud = await getBrainHealth(urlSaludCerebro() ?? undefined);
   if (salud && !salud.reachable) {
-    return `Tu agente (${despacho.host}) no contesta. Revisa que esté corriendo y vuelve a intentar.`;
+    return `Your agent (${despacho.host}) isn't responding. Check that it's running and try again.`;
   }
   return null;
 }

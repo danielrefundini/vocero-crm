@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
  */
 export const GET = withAuth(async (session) => {
   if (!canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo el propietario configura la instancia");
+    return apiError(403, "forbidden", "Only the owner configures the instance");
   }
   const status = await onboardingStatus(session.organizationId);
   return Response.json(

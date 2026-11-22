@@ -60,13 +60,13 @@ export async function GET(req: Request) {
 
   const organizationId = await resolveInstanceOrg();
   if (!organizationId) {
-    return apiError(409, "no_org", "La instancia aún no tiene organización");
+    return apiError(409, "no_org", "This instance doesn't have an organization yet");
   }
 
   const url = new URL(req.url);
   const conversationId = url.searchParams.get("conversationId");
   if (!conversationId) {
-    return apiError(422, "invalid_body", "Falta conversationId");
+    return apiError(422, "invalid_body", "conversationId is missing");
   }
   // `date` es opcional; vacío cuenta como ausente. Mal formada o inexistente
   // en el calendario (2026-02-31) → 422, nunca un 500 ni el reparto callado.
@@ -75,7 +75,7 @@ export async function GET(req: Request) {
     return apiError(
       422,
       "invalid_body",
-      "date debe ser una fecha real en formato YYYY-MM-DD"
+      "date must be a real date in YYYY-MM-DD format"
     );
   }
 
@@ -91,7 +91,7 @@ export async function GET(req: Request) {
       )
     )
     .limit(1);
-  if (!rows[0]) return apiError(404, "not_found", "Conversación no encontrada");
+  if (!rows[0]) return apiError(404, "not_found", "Conversation not found");
 
   const limit = clamp(url.searchParams.get("limit"), LIMITS.limit);
   const perDay = clamp(url.searchParams.get("perDay"), LIMITS.perDay);

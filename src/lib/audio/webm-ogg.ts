@@ -60,11 +60,11 @@ type Pista = {
 function leerVint(buf: Uint8Array, pos: number, conMarcador: boolean) {
   const primero = buf[pos];
   if (primero === undefined || primero === 0) {
-    throw new WebmOggError("WebM corrupto: número de longitud inválido");
+    throw new WebmOggError("Corrupt WebM: invalid length number");
   }
   let largo = 1;
   while (largo <= 8 && !(primero & (0x80 >> (largo - 1)))) largo++;
-  if (pos + largo > buf.length) throw new WebmOggError("WebM truncado");
+  if (pos + largo > buf.length) throw new WebmOggError("Truncated WebM");
   let valor = conMarcador ? primero : primero & (0xff >> largo);
   let todoUnos = (primero & (0xff >> largo)) === 0xff >> largo;
   for (let i = 1; i < largo; i++) {
@@ -121,13 +121,13 @@ export function extraerOpusDeWebm(webm: Uint8Array): { pista: Pista; paquetes: U
       continue;
     }
     if (tam.desconocido) {
-      throw new WebmOggError("WebM con un elemento de tamaño desconocido inesperado");
+      throw new WebmOggError("WebM with an unexpected unknown-size element");
     }
     const fin = inicio + tam.valor;
     if (fin > webm.length) {
       // Una grabación cortada a media escritura: lo leído hasta aquí sirve.
       if (id.valor === ID.SimpleBlock || id.valor === ID.Block) break;
-      throw new WebmOggError("WebM truncado");
+      throw new WebmOggError("Truncated WebM");
     }
     const datos = webm.subarray(inicio, fin);
 
@@ -155,9 +155,9 @@ export function extraerOpusDeWebm(webm: Uint8Array): { pista: Pista; paquetes: U
     pos = fin;
   }
 
-  if (!vioEbml) throw new WebmOggError("El archivo no es WebM");
+  if (!vioEbml) throw new WebmOggError("The file isn't WebM");
   const pista = pistas.find((p) => p.codec === "A_OPUS");
-  if (!pista) throw new WebmOggError("El WebM no trae audio Opus");
+  if (!pista) throw new WebmOggError("The WebM has no Opus audio");
 
   const paquetes: Uint8Array[] = [];
   for (const b of bloques) {
@@ -167,12 +167,12 @@ export function extraerOpusDeWebm(webm: Uint8Array): { pista: Pista; paquetes: U
     const flags = b[pistaDelBloque.largo + 2] ?? 0;
     if (flags & 0x06) {
       // MediaRecorder no usa lacing; otro grabador podría. Mejor decirlo.
-      throw new WebmOggError("WebM con lacing: no se puede convertir sin recodificar");
+      throw new WebmOggError("WebM with lacing: can't convert without re-encoding");
     }
     const paquete = b.subarray(cabecera);
     if (paquete.length > 0) paquetes.push(paquete);
   }
-  if (paquetes.length === 0) throw new WebmOggError("La grabación está vacía");
+  if (paquetes.length === 0) throw new WebmOggError("The recording is empty");
   return { pista, paquetes };
 }
 
@@ -289,7 +289,7 @@ export function empaquetarOgg(
       granulo += muestrasDePaquete(p);
       i++;
     }
-    if (grupo.length === 0) throw new WebmOggError("Paquete Opus demasiado grande");
+    if (grupo.length === 0) throw new WebmOggError("Opus packet too large");
     const ultima = i >= paquetes.length;
     paginas.push(
       pagina(grupo, { tipo: ultima ? 0x04 : 0, granulo, serie, secuencia: secuencia++ })

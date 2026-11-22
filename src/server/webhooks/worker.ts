@@ -88,7 +88,7 @@ export async function procesarEvento(id: string): Promise<void> {
     if (fila) await intentar(fila);
   } catch (err) {
     // La base falló al reclamar: el evento sigue pendiente y lo toma el barrido.
-    console.error(`[webhooks] no se pudo procesar ${id} ahora; queda para el barrido:`, mensaje(err));
+    console.error(`[webhooks] couldn't process ${id} now; left for the sweep:`, mensaje(err));
   }
 }
 
@@ -103,11 +103,11 @@ export async function barrido(ahora: Date = new Date()): Promise<number> {
     if (ahora.getTime() - e.ultimaPurga >= PURGA_CADA_MS) {
       e.ultimaPurga = ahora.getTime();
       const borrados = await purgar(ahora);
-      if (borrados > 0) console.log(`[webhooks] ${borrados} evento(s) viejo(s) borrado(s)`);
+      if (borrados > 0) console.log(`[webhooks] ${borrados} old event(s) deleted`);
     }
     return filas.length;
   } catch (err) {
-    console.error("[webhooks] el barrido falló:", mensaje(err));
+    console.error("[webhooks] the sweep failed:", mensaje(err));
     return 0;
   } finally {
     e.corriendo = false;
@@ -121,12 +121,12 @@ async function intentar(fila: FilaEvento): Promise<void> {
     const cuando = await reintentarOAgotar(fila, err);
     if (cuando) {
       console.warn(
-        `[webhooks] ${fila.id} falló (intento ${fila.attempts}); se reintenta a las ${cuando.toISOString()}: ${mensaje(err)}`
+        `[webhooks] ${fila.id} failed (attempt ${fila.attempts}); retrying at ${cuando.toISOString()}: ${mensaje(err)}`
       );
       programarBarrido(cuando);
     } else {
       console.error(
-        `[webhooks] ${fila.id} agotado tras ${fila.attempts} intentos: ${mensaje(err)}. Se puede reintentar en Configuración → WhatsApp.`
+        `[webhooks] ${fila.id} exhausted after ${fila.attempts} attempts: ${mensaje(err)}. It can be retried in Settings → WhatsApp.`
       );
     }
     return;

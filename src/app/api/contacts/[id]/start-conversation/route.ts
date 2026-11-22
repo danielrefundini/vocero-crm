@@ -33,9 +33,9 @@ const bodySchema = z.object({
 export const POST = withAuth(async (session, req: Request, ctx: Params) => {
   const { id } = await ctx.params;
   const contact = await getContactById(session.organizationId, id);
-  if (!contact) return apiError(404, "not_found", "Contacto no encontrado");
+  if (!contact) return apiError(404, "not_found", "Contact not found");
   if (!contact.phone && !contact.waIdentity) {
-    return apiError(422, "no_identity", "Este contacto no tiene a dónde escribir");
+    return apiError(422, "no_identity", "This contact has nowhere to be messaged");
   }
 
   const body = await parseBody(req, bodySchema);
@@ -61,7 +61,7 @@ export const POST = withAuth(async (session, req: Request, ctx: Params) => {
     return apiError(
       409,
       "window_open",
-      "Esta persona te escribió hace menos de 24 h: puedes responderle directo desde la Bandeja, sin plantilla"
+      "This person messaged you less than 24 h ago: you can reply directly from the Inbox, no template needed"
     );
   }
 

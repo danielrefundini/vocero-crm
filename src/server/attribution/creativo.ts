@@ -308,7 +308,7 @@ async function descargarYGuardar(
   const descarga = await descargarConReintento(input.imageUrl);
   if (!descarga.ok) {
     console.warn(
-      `[atribucion] la imagen del anuncio ${sourceId} no se copió (${descarga.falla})`
+      `[attribution] the ad image ${sourceId} wasn't copied (${descarga.falla})`
     );
     return null;
   }
@@ -354,7 +354,7 @@ async function descargarYGuardar(
       .where(eq(schema.mediaAsset.id, assetId))
       .catch(() => {});
     console.warn(
-      `[atribucion] no se pudo guardar la imagen del anuncio ${sourceId}:`,
+      `[attribution] couldn't save the ad image ${sourceId}:`,
       err instanceof Error ? err.message : err
     );
     return null;

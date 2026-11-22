@@ -1,12 +1,11 @@
-import { notFound } from "next/navigation";
 import { ChannelsClient } from "@/components/settings/channels-client";
-import { isChannelEnabled } from "@/server/channels/enabled";
-import { ZERNIO_CHANNELS } from "@/server/zernio/conexiones";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * Settings → Channels → Status. Always there now: it also holds the switches
+ * that turn each channel on or off, so it can't depend on one being on.
+ */
 export default function ChannelsSettingsPage() {
-  // Con WhatsApp solo esta pantalla no existe en esta instancia (ADR-001).
-  if (!ZERNIO_CHANNELS.some((c) => isChannelEnabled(c))) notFound();
   return <ChannelsClient />;
 }

@@ -4,11 +4,11 @@ import { newId } from "@/lib/db/ids";
 
 /** Etapas sembradas del pipeline (US2). */
 const SEED_STAGES: { name: string; kind: "open" | "won" | "lost" }[] = [
-  { name: "Nuevo", kind: "open" },
-  { name: "En conversación", kind: "open" },
-  { name: "Interesado", kind: "open" },
-  { name: "Cliente", kind: "won" },
-  { name: "Perdido", kind: "lost" },
+  { name: "New", kind: "open" },
+  { name: "In conversation", kind: "open" },
+  { name: "Interested", kind: "open" },
+  { name: "Customer", kind: "won" },
+  { name: "Lost", kind: "lost" },
 ];
 
 /**
@@ -33,7 +33,7 @@ export async function onUserCreated(userId: string, userName: string) {
     const orgId = newId("organization");
     await tx.insert(schema.organization).values({
       id: orgId,
-      name: userName ? `Negocio de ${userName}` : "Mi negocio",
+      name: userName ? `Business of ${userName}` : "My business",
       slug: "principal",
     });
     await tx.insert(schema.member).values({

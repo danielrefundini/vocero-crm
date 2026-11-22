@@ -90,8 +90,8 @@ export async function sendBusinessMessagingEvent(input: {
   // con un 400 opaco, así que se falla aquí y con el motivo escrito.
   if (!isMetaBusinessMessagingEvent(input.event.eventName)) {
     throw new Error(
-      `"${input.event.eventName}" no está en el catálogo de eventos ` +
-        `business_messaging de Meta (${META_BUSINESS_MESSAGING_EVENTS.join(", ")})`
+      `"${input.event.eventName}" isn't in Meta's ` +
+        `business_messaging event catalog (${META_BUSINESS_MESSAGING_EVENTS.join(", ")})`
     );
   }
 
@@ -109,8 +109,8 @@ export async function sendBusinessMessagingEvent(input: {
     // 200 con cero recibidos: Meta lo descartó. Se falla para que la fila quede
     // `failed` con el motivo, en vez de un `sent` que miente.
     throw new Error(
-      `Meta respondió 200 pero events_received=${eventsReceived} ` +
-        `(evento descartado; fbtrace_id: ${res?.fbtrace_id ?? "n/d"})`
+      `Meta answered 200 but events_received=${eventsReceived} ` +
+        `(event discarded; fbtrace_id: ${res?.fbtrace_id ?? "n/d"})`
     );
   }
 

@@ -21,7 +21,7 @@ export const GET = withAuth(async (session) => {
 /** Crear: solo quien configura. */
 export const POST = withAuth(async (session, req: Request) => {
   if (!canConfigure(session.role)) {
-    return apiError(403, "forbidden", "Solo quien administra crea respuestas rápidas");
+    return apiError(403, "forbidden", "Only an admin can create quick replies");
   }
   const body = await parseBody(req, respuestaSchema);
   if (!body.ok) return body.response;

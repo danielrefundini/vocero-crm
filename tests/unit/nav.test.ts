@@ -18,21 +18,21 @@ const labels = (groups: { items: { label: string }[] }[]) =>
 describe("barra lateral agrupada", () => {
   it("con todo apagado y como miembro: Trabajo, Agente y Resultados", () => {
     const groups = appNavGroups({ role: "member" });
-    expect(groups.map((g) => g.title)).toEqual(["Trabajo", "Agente", undefined]);
+    expect(groups.map((g) => g.title)).toEqual(["Work", "Agent", undefined]);
     expect(labels(groups)).toEqual([
-      ["Bandeja", "Pipeline", "Contactos"],
-      ["Agente", "Laboratorio"],
-      ["Resultados"],
+      ["Inbox", "Pipeline", "Contacts"],
+      ["Agent", "Lab"],
+      ["Results"],
     ]);
   });
 
   it("AGENDA añade Citas al final de Trabajo", () => {
     const [trabajo] = appNavGroups({ agenda: true, role: "member" });
     expect(trabajo!.items.map((i) => i.label)).toEqual([
-      "Bandeja",
+      "Inbox",
       "Pipeline",
-      "Contactos",
-      "Citas",
+      "Contacts",
+      "Appointments",
     ]);
     expect(trabajo!.items.at(-1)!.href).toBe("/bookings");
   });
@@ -40,7 +40,7 @@ describe("barra lateral agrupada", () => {
   it("la guía de inicio abre el grupo Agente solo para quien configura", () => {
     for (const role of ["owner", "admin"]) {
       const agente = appNavGroups({ role })[1]!;
-      expect(agente.items[0]).toMatchObject({ href: "/onboarding", label: "Guía de inicio" });
+      expect(agente.items[0]).toMatchObject({ href: "/onboarding", label: "Getting started" });
     }
     for (const role of ["member", null, undefined]) {
       const agente = appNavGroups({ role })[1]!;
@@ -72,38 +72,38 @@ describe("ajustes en tres secciones", () => {
 
   it("con todo apagado: Canales, Agente y Negocio con lo mínimo", () => {
     const sections = settingsSections({});
-    expect(sections.map((s) => s.title)).toEqual(["Canales", "Agente", "Negocio"]);
+    expect(sections.map((s) => s.title)).toEqual(["Channels", "Agent", "Business"]);
     expect(links(sections)).toEqual({
-      Canales: ["WhatsApp"],
-      Agente: ["IA"],
-      Negocio: ["Marca", "Apariencia", "Plantillas", "Respuestas rápidas", "Equipo"],
+      Channels: ["On / off & status", "WhatsApp"],
+      Agent: ["AI"],
+      Business: ["Branding", "Appearance", "Templates", "Quick replies", "Team"],
     });
   });
 
   it("cada bandera añade su enlace en su sección y en ninguna otra", () => {
-    // 023: con un canal social, "Estado" abre la sección.
+    // 023: con un canal social, "On / off & status" abre la sección.
     expect(links(settingsSections({ messenger: true }))).toEqual({
-      Canales: ["Estado", "WhatsApp", "Messenger"],
-      Agente: ["IA"],
-      Negocio: ["Marca", "Apariencia", "Plantillas", "Respuestas rápidas", "Equipo"],
+      Channels: ["On / off & status", "WhatsApp", "Messenger"],
+      Agent: ["AI"],
+      Business: ["Branding", "Appearance", "Templates", "Quick replies", "Team"],
     });
-    expect(links(settingsSections({ instagram: true })).Canales).toEqual([
-      "Estado",
+    expect(links(settingsSections({ instagram: true })).Channels).toEqual([
+      "On / off & status",
       "WhatsApp",
       "Instagram",
     ]);
     expect(
-      links(settingsSections({ instagram: true, messenger: true, tiktok: true })).Canales
-    ).toEqual(["Estado", "WhatsApp", "Instagram", "Messenger", "TikTok"]);
+      links(settingsSections({ instagram: true, messenger: true, tiktok: true })).Channels
+    ).toEqual(["On / off & status", "WhatsApp", "Instagram", "Messenger", "TikTok"]);
     expect(links(settingsSections({ agenda: true }))).toEqual({
-      Canales: ["WhatsApp"],
-      Agente: ["IA", "Agenda"],
-      Negocio: ["Marca", "Apariencia", "Plantillas", "Respuestas rápidas", "Equipo"],
+      Channels: ["On / off & status", "WhatsApp"],
+      Agent: ["AI", "Scheduling"],
+      Business: ["Branding", "Appearance", "Templates", "Quick replies", "Team"],
     });
     expect(links(settingsSections({ atribucion: true }))).toEqual({
-      Canales: ["WhatsApp"],
-      Agente: ["IA"],
-      Negocio: ["Marca", "Apariencia", "Plantillas", "Respuestas rápidas", "Equipo", "Anuncios"],
+      Channels: ["On / off & status", "WhatsApp"],
+      Agent: ["AI"],
+      Business: ["Branding", "Appearance", "Templates", "Quick replies", "Team", "Ads"],
     });
   });
 

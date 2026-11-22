@@ -314,7 +314,7 @@ describe("registro del webhook en la Cuenta de mensajes", () => {
     cuentaPartida();
     const sinCuenta = await registerWebhookForNumber({ ...opts, messagingAccountId: null });
     expect(sinCuenta).toMatchObject({ ok: false, code: "meta_error" });
-    expect(!sinCuenta.ok && sinCuenta.message).toContain("Cuenta de mensajes");
+    expect(!sinCuenta.ok && sinCuenta.message).toContain("Messaging account");
   });
 
   it("otro error de la cuenta de WhatsApp sigue siendo fatal aunque haya cuenta de mensajes", async () => {
@@ -394,8 +394,8 @@ describe("crear plantillas", () => {
     const err = await createTemplate("org_1", nueva).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(TemplateError);
     expect((err as TemplateError).code).toBe("meta_error");
-    expect((err as TemplateError).message).toContain("Cuenta de mensajes");
-    expect((err as TemplateError).message).toContain("Ajustes → WhatsApp");
+    expect((err as TemplateError).message).toContain("Messaging account");
+    expect((err as TemplateError).message).toContain("Settings → WhatsApp");
     expect(db.insertados).toHaveLength(0);
   });
 

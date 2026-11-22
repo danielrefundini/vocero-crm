@@ -31,7 +31,7 @@ export async function recibirEvento(
         try {
           await procesarFuente(fuente, payload);
         } catch (err) {
-          console.error(`[${etiqueta}] error procesando un evento sin organización:`, resumen(err));
+          console.error(`[${etiqueta}] error processing an event without an organization:`, resumen(err));
         }
       });
       return Response.json({ received: true });
@@ -39,7 +39,7 @@ export async function recibirEvento(
     evento = await guardarEvento({ organizationId, fuente, payload, rawBody });
   } catch (err) {
     console.error(
-      `[${etiqueta}] no se pudo guardar el evento; se responde 503 para que la fuente reintente:`,
+      `[${etiqueta}] couldn't save the event; answering 503 so the source retries:`,
       resumen(err)
     );
     return Response.json({ received: false }, { status: 503 });

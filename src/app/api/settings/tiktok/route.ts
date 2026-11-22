@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 /** 022 — Estado de la conexión de TikTok (la llave nunca sale entera). */
 export const GET = withAuth(async (session) => {
-  if (!isChannelEnabled("tiktok")) return channelDisabledResponse();
+  if (!(await isChannelEnabled("tiktok"))) return channelDisabledResponse();
   const creds = await getTiktokCredentialsByOrg(session.organizationId);
   if (!creds) return Response.json({ connection: null });
   return Response.json({
@@ -50,9 +50,9 @@ const putSchema = z.object({
  * propietario de la organización puede hacerlo.
  */
 export const PUT = withAuth(async (session, req: Request) => {
-  if (!isChannelEnabled("tiktok")) return channelDisabledResponse();
+  if (!(await isChannelEnabled("tiktok"))) return channelDisabledResponse();
   if (session.role !== "owner") {
-    return apiError(403, "forbidden", "Solo el propietario puede conectar TikTok");
+    return apiError(403, "forbidden", "Only the owner can connect TikTok");
   }
   const body = await parseBody(req, putSchema);
   if (!body.ok) return body.response;

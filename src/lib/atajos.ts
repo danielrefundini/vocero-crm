@@ -13,14 +13,14 @@ type Tecla = {
 };
 
 /** Para la ayuda (D2): qué hace cada atajo y dónde sirve. */
-export const ATAJOS: { teclas: string[]; que: string; donde: "Cualquier pantalla" | "Bandeja" }[] = [
-  { teclas: ["Ctrl", "K"], que: "Buscar una pantalla o una conversación", donde: "Cualquier pantalla" },
-  { teclas: ["?"], que: "Ver estos atajos", donde: "Cualquier pantalla" },
-  { teclas: ["Alt", "J"], que: "Siguiente conversación de la lista", donde: "Bandeja" },
-  { teclas: ["Alt", "K"], que: "Conversación anterior", donde: "Bandeja" },
-  { teclas: ["/"], que: "Ir al buscador de la Bandeja", donde: "Bandeja" },
-  { teclas: ["Alt", "R"], que: "Escribir una respuesta", donde: "Bandeja" },
-  { teclas: ["Alt", "N"], que: "Escribir una nota interna", donde: "Bandeja" },
+export const ATAJOS: { teclas: string[]; que: string; donde: "Any screen" | "Inbox" }[] = [
+  { teclas: ["Ctrl", "K"], que: "Search for a screen or a conversation", donde: "Any screen" },
+  { teclas: ["?"], que: "See these shortcuts", donde: "Any screen" },
+  { teclas: ["Alt", "J"], que: "Next conversation in the list", donde: "Inbox" },
+  { teclas: ["Alt", "K"], que: "Previous conversation", donde: "Inbox" },
+  { teclas: ["/"], que: "Go to the Inbox search", donde: "Inbox" },
+  { teclas: ["Alt", "R"], que: "Write a reply", donde: "Inbox" },
+  { teclas: ["Alt", "N"], que: "Write an internal note", donde: "Inbox" },
 ];
 
 /** D4 — Un campo donde se escribe: ahí «?» y «/» son letras, no atajos. */

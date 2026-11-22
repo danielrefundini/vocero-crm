@@ -225,8 +225,8 @@ async function ingestAll(
 
     if (!creds) {
       console.warn(
-        `[messenger] evento para una cuenta desconocida (${evt.routeKey}): ` +
-          "guarda la conexión en Configuración → Messenger para recibir mensajes"
+        `[messenger] event for an unknown account (${evt.routeKey}): ` +
+          "save the connection in Settings → Messenger to receive messages"
       );
       continue;
     }
@@ -235,8 +235,8 @@ async function ingestAll(
       // payload con su forma no puede ser legítimo aunque llegue por la URL
       // correcta. Sin esto, la única barrera de la forma ajena es la URL.
       console.warn(
-        `[messenger] payload de ${source} en una instancia configurada como ` +
-          `'${creds.source}': descartado`
+        `[messenger] payload from ${source} on an instance configured as ` +
+          `'${creds.source}': discarded`
       );
       continue;
     }

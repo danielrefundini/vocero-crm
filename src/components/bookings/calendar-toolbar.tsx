@@ -14,14 +14,14 @@ import { cn } from "@/lib/utils";
  */
 
 const VIEW_LABEL: Record<CalendarView, string> = {
-  dia: "Día",
-  semana: "Semana",
-  mes: "Mes",
-  lista: "Lista",
+  dia: "Day",
+  semana: "Week",
+  mes: "Month",
+  lista: "List",
 };
 
 const PERIOD: Record<CalendarView, string> = {
-  dia: "día",
+  dia: "day",
   semana: "semana",
   mes: "mes",
   lista: "rango",
@@ -56,11 +56,11 @@ export function CalendarToolbar({
 
   return (
     <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b px-4 py-3 sm:px-6">
-      <h2 className="mr-1 text-[17px] font-bold tracking-tight">Citas</h2>
+      <h2 className="mr-1 text-[17px] font-bold tracking-tight">Appointments</h2>
 
       <div className="flex items-center gap-1">
         <Button variant="outline" size="sm" onClick={onToday}>
-          Hoy
+          Today
         </Button>
         <NavButton label={`${PERIOD[view]} anterior`} onClick={() => onShift(-1)}>
           <ChevronLeft className="h-4 w-4" />
@@ -73,7 +73,7 @@ export function CalendarToolbar({
       {view === "lista" ? (
         <div className="flex flex-wrap items-center gap-1.5 text-sm">
           <label className="sr-only" htmlFor="lista-desde">
-            Desde
+            From
           </label>
           <input
             id="lista-desde"
@@ -82,9 +82,9 @@ export function CalendarToolbar({
             onChange={(e) => e.target.value && onListRange(e.target.value, listTo)}
             className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:border-brand focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-soft"
           />
-          <span className="text-text-3">al</span>
+          <span className="text-text-3">to</span>
           <label className="sr-only" htmlFor="lista-hasta">
-            Hasta
+            To
           </label>
           <input
             id="lista-hasta"
@@ -92,7 +92,7 @@ export function CalendarToolbar({
             value={listTo}
             min={anchor}
             onChange={(e) => e.target.value && onListRange(anchor, e.target.value)}
-            title={`Hasta ${MAX_RANGE_DAYS} días`}
+            title={`Up to ${MAX_RANGE_DAYS} days`}
             className="h-8 rounded-md border border-input bg-background px-2 text-sm focus-visible:border-brand focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-soft"
           />
         </div>
@@ -110,7 +110,7 @@ export function CalendarToolbar({
               }
             }}
             className="flex items-center gap-1 rounded-md px-1.5 py-1 text-[17px] font-semibold tracking-tight hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-soft"
-            aria-label={`${label}. Elegir otra fecha`}
+            aria-label={`${label}. Pick another date`}
           >
             {label}
             <ChevronDown className="h-4 w-4 text-text-3" />
@@ -130,11 +130,11 @@ export function CalendarToolbar({
       )}
 
       {loading && (
-        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-border-strong border-t-brand" aria-label="Cargando" />
+        <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-border-strong border-t-brand" aria-label="Loading" />
       )}
 
       <div className="ml-auto flex items-center gap-2">
-        <div role="group" aria-label="Vista" className="inline-flex rounded-full border bg-secondary p-0.5">
+        <div role="group" aria-label="View" className="inline-flex rounded-full border bg-secondary p-0.5">
           {(Object.keys(VIEW_LABEL) as CalendarView[]).map((v) => (
             <button
               key={v}
@@ -150,9 +150,9 @@ export function CalendarToolbar({
             </button>
           ))}
         </div>
-        <Button size="sm" onClick={onBlock} aria-label="Bloquear horario">
+        <Button size="sm" onClick={onBlock} aria-label="Block time">
           <Plus className="h-4 w-4" />
-          <span className="hidden sm:inline">Bloquear horario</span>
+          <span className="hidden sm:inline">Block time</span>
         </Button>
       </div>
     </header>

@@ -29,8 +29,8 @@ export function HygieneSection({
   return (
     <Section
       id="higiene"
-      title="Qué se está cayendo"
-      hint="No depende del periodo: es lo que está pasando ahora mismo."
+      title="What's slipping"
+      hint="Doesn't depend on the period: it's what's happening right now."
       loading={loading}
       error={error}
       hasData={!!data}
@@ -39,24 +39,24 @@ export function HygieneSection({
         (data.clean ? (
           <p className="flex items-center justify-center gap-2 py-6 text-sm text-success-text">
             <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden />
-            Nada pendiente: ni silencios, ni mensajes fallidos, ni ventanas por cerrarse.
+            Nothing pending: no silences, no failed messages, no windows about to close.
           </p>
         ) : (
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="min-w-0">
               <Subhead>
-                En silencio más de una semana
+                Silent for more than a week
                 {data.silentCount > 0 && (
                   <span className="ml-1.5 font-normal text-text-3">({data.silentCount})</span>
                 )}
               </Subhead>
               {data.silentAmountCents > 0 && (
                 <p className="-mt-1 mb-2 text-xs text-text-3">
-                  {money(data.silentAmountCents)} en tratos que se enfrían
+                  {money(data.silentAmountCents)} in deals going cold
                 </p>
               )}
               {data.silentCount === 0 ? (
-                <p className="text-sm text-text-3">Nadie lleva más de una semana callado.</p>
+                <p className="text-sm text-text-3">Nobody has been silent for more than a week.</p>
               ) : (
                 <>
                   <ul className="space-y-1.5 text-sm">
@@ -69,7 +69,7 @@ export function HygieneSection({
                           {l.name}
                         </Link>
                         <span className="shrink-0 text-xs text-text-3 tabular-nums">
-                          {l.days} días
+                          {l.days} days
                           {l.amountCents ? ` · ${money(l.amountCents)}` : ""}
                         </span>
                       </li>
@@ -77,7 +77,7 @@ export function HygieneSection({
                   </ul>
                   {data.silentCount > enLista && (
                     <p className="mt-2 text-xs text-text-3">
-                      y {data.silentCount - enLista} más.
+                      and {data.silentCount - enLista} more.
                     </p>
                   )}
                 </>
@@ -85,9 +85,9 @@ export function HygieneSection({
             </div>
 
             <div className="min-w-0">
-              <Subhead>Mensajes que no llegaron (30 días)</Subhead>
+              <Subhead>{"Messages that didn't arrive (30 days)"}</Subhead>
               {data.failedMessages.length === 0 ? (
-                <p className="text-sm text-text-3">Ningún envío fallido.</p>
+                <p className="text-sm text-text-3">No failed sends.</p>
               ) : (
                 <ul className="space-y-1.5 text-sm">
                   {data.failedMessages.map((m) => (
@@ -105,9 +105,9 @@ export function HygieneSection({
             </div>
 
             <div className="min-w-0">
-              <Subhead>Ventanas de 24 h por cerrarse</Subhead>
+              <Subhead>24 h windows about to close</Subhead>
               {data.closingWindows.length === 0 ? (
-                <p className="text-sm text-text-3">Ninguna conversación esperando respuesta.</p>
+                <p className="text-sm text-text-3">No conversation waiting for a reply.</p>
               ) : (
                 <ul className="space-y-1.5 text-sm">
                   {data.closingWindows.map((c) => (
@@ -122,7 +122,7 @@ export function HygieneSection({
                         {c.name}
                       </Link>
                       <span className="shrink-0 text-xs text-warning-text tabular-nums">
-                        quedan {c.hoursLeft} h
+                        left {c.hoursLeft} h
                       </span>
                     </li>
                   ))}

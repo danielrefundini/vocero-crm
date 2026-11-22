@@ -39,12 +39,12 @@ describe("041 — catálogo de emojis", () => {
 describe("041 — búsqueda", () => {
   it("no distingue acentos ni mayúsculas", () => {
     expect(emojiSearchText("Corazón ROJO")).toBe("corazon rojo");
-    expect(labels(filterEmojis("corazon rojo", "all"))).toEqual(["Corazón rojo"]);
-    expect(labels(filterEmojis("  CORAZÓN EN LLAMAS ", "all"))).toEqual(["Corazón en llamas"]);
+    expect(labels(filterEmojis("red heart", "all"))).toEqual(["Red heart"]);
+    expect(labels(filterEmojis("  HEART ON FIRE ", "all"))).toEqual(["Heart on fire"]);
   });
 
   it("busca en todo el catálogo aunque haya una categoría elegida", () => {
-    const found = filterEmojis("sonrisa", "food");
+    const found = filterEmojis("smile", "food");
     expect(found.length).toBeGreaterThan(0);
     expect(found.every((e) => e.category === "faces")).toBe(true);
   });
@@ -55,7 +55,7 @@ describe("041 — búsqueda", () => {
   });
 
   it("encuentra por el propio emoji pegado en la búsqueda", () => {
-    expect(labels(filterEmojis("👍", "all"))).toEqual(["Pulgar arriba"]);
+    expect(labels(filterEmojis("👍", "all"))).toEqual(["Thumbs up"]);
   });
 
   it("sin coincidencias devuelve una lista vacía", () => {

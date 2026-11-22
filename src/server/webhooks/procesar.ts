@@ -4,6 +4,8 @@ import { processTemplateStatusValue } from "@/server/whatsapp/template-events";
 import { processMetaInstagramPayload } from "@/server/instagram/ingest";
 import { processMetaPagePayload } from "@/server/messenger/ingest";
 import { processZernioPayload } from "@/server/zernio/dispatch";
+import { processTelegramPayload } from "@/server/telegram/ingest";
+import { processWebsitePayload } from "@/server/website/form";
 import { lanzarFalloDePrueba } from "@/server/dev/webhook-fallo";
 import type { FuenteWebhook } from "./eventos";
 
@@ -31,6 +33,10 @@ export async function procesarFuente(
       return processMetaPagePayload(payload);
     case "zernio":
       return processZernioPayload(payload);
+    case "telegram":
+      return processTelegramPayload(payload);
+    case "website":
+      return processWebsitePayload(payload);
   }
 }
 

@@ -92,7 +92,7 @@ export type FlagEnv = {
  * iguales respondan igual.
  */
 export function healthFeatures(env: FlagEnv = process.env): HealthFeatures {
-  const channels = parseChannels(env.CHANNELS);
+  const channels = parseChannels(env.CHANNELS, env.TELEGRAM, env.WEBSITE_FORMS);
   return {
     agenda: parseAgendaFlag(env.AGENDA),
     channels: CHANNEL_ORDER.filter((c) => channels.has(c)),
@@ -109,7 +109,7 @@ export async function checkHealth(): Promise<HealthResult> {
       status: 503,
       body: {
         ok: false,
-        error: { code: "db_unavailable", message: "Base de datos no disponible" },
+        error: { code: "db_unavailable", message: "Database unavailable" },
       },
     };
   }

@@ -29,9 +29,9 @@ export const QUALIFIED_EVENT = "QualifiedLead";
 export const PURCHASE_EVENT = "Purchase";
 
 const NO_CLID_REASON =
-  "sin ctwa_clid: la conversación no vino de un anuncio de WhatsApp";
+  "no ctwa_clid: the conversation didn't come from a WhatsApp ad";
 const NOT_CONFIGURED_REASON =
-  "atribución no configurada: falta el dataset de Meta o la conexión de WhatsApp";
+  "attribution not configured: the Meta dataset or the WhatsApp connection is missing";
 
 type EmitOutcome = "sent" | "failed" | "skipped" | "dedup" | "error";
 
@@ -122,14 +122,14 @@ export async function emitConversion(
         })
         .where(eq(schema.conversionEvent.id, event.id));
       console.warn(
-        `[capi] fallo al reportar ${eventName} de ${conversationId}: ${err}`
+        `[capi] failed to report ${eventName} de ${conversationId}: ${err}`
       );
       return "failed";
     }
   } catch (err) {
     // Best-effort absoluto: ni siquiera un fallo de la base puede tumbar a
     // quien nos llamó (mover un lead de etapa).
-    console.warn(`[capi] emitConversion(${eventName}) falló: ${err}`);
+    console.warn(`[capi] emitConversion(${eventName}) failed: ${err}`);
     return "error";
   }
 }
@@ -234,7 +234,7 @@ export async function reportStageChange(input: {
       { lead_stage: "qualified" }
     );
   } catch (err) {
-    console.warn(`[capi] reportStageChange(${input.leadId}) falló: ${err}`);
+    console.warn(`[capi] reportStageChange(${input.leadId}) failed: ${err}`);
   }
 }
 

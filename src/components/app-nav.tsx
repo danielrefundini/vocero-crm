@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AlertTriangle, Bell, BellOff, LogOut, X } from "lucide-react";
-import { BrandTile } from "@/components/brand-mark";
 import { BotonInstalar } from "@/components/pwa";
 import { BotonActivarAvisos } from "@/components/activar-avisos";
 import { limpiarBorradores } from "@/lib/borradores";
@@ -41,7 +40,7 @@ import {
   urlDeConversacion,
 } from "@/lib/avisos-sistema";
 import { appIconHref } from "@/lib/pwa";
-import { BrandLogo } from "@/components/brand-mark";
+import { BrandLogo, BrandTile } from "@/components/brand-mark";
 import {
   BUILD_COMMIT,
   UNVERIFIED_COMMIT_NOTE,
@@ -66,6 +65,8 @@ export function navItemClass(active: boolean) {
       : "text-text-2 hover:bg-accent hover:text-foreground"
   );
 }
+
+const NAV_COMPACT_KEY = "vocero:nav-compact";
 
 export function AppNav({
   branding,
@@ -96,7 +97,7 @@ export function AppNav({
    * todavía debe ver la entrada igual.
    */
   agenda?: boolean;
-  /** Solo aplica por debajo de `lg`: en escritorio el lateral es fijo. */
+  /** Only below `lg`: on desktop the sidebar is always open. */
   open?: boolean;
   onClose?: () => void;
 }) {
@@ -106,6 +107,23 @@ export function AppNav({
   // 045 — Chats con algo sin leer: es lo que WhatsApp cuenta en la pestaña.
   const [chats, setChats] = useState(0);
   const [sonido, setSonido] = useState(true);
+  // Desktop only: collapsed = icons only. Remembered per browser.
+  const [compacto, setCompacto] = useState(false);
+  useEffect(() => {
+    try {
+      setCompacto(localStorage.getItem(NAV_COMPACT_KEY) === "1");
+    } catch {}
+  }, []);
+  const alternarCompacto = () => {
+    setCompacto((v) => {
+      try {
+        localStorage.setItem(NAV_COMPACT_KEY, v ? "0" : "1");
+      } catch {}
+      return !v;
+    });
+  };
+  /** Hidden on desktop while collapsed; phones always show the full drawer. */
+  const sinCompacto = compacto ? "lg:hidden" : "";
 
   const contar = useCallback((lista: ConversacionDeLista[]) => {
     setUnread(lista.reduce((a, c) => a + c.unreadCount, 0));
@@ -199,17 +217,18 @@ export function AppNav({
       <Link
         key={item.href}
         href={item.href}
-        className={navItemClass(active)}
+        className={cn(navItemClass(active), "relative", compacto && "lg:justify-center lg:px-0")}
         aria-current={active ? "page" : undefined}
+        title={compacto ? item.label : undefined}
       >
         <item.icon
           className={cn("h-5 w-5 shrink-0", active ? "text-brand" : "text-text-3")}
           strokeWidth={1.8}
           aria-hidden
         />
-        <span className="flex-1">{item.label}</span>
+        <span className={cn("flex-1", sinCompacto)}>{item.label}</span>
         {item.badge && unread > 0 && (
-          <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1.5 text-[10.5px] font-bold text-brand-fg">
+          <span className={cn(compacto && "lg:absolute lg:right-0 lg:top-0", "flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1.5 text-[10.5px] font-bold text-brand-fg")}>
             {unread}
           </span>
         )}
@@ -232,9 +251,9 @@ export function AppNav({
         setSonido(v);
         guardarSonido(v);
       }}
-      aria-label={sonido ? "Sonido de mensajes: activado" : "Sonido de mensajes: silenciado"}
+      aria-label={sonido ? "Message sound: on" : "Message sound: muted"}
       aria-pressed={sonido}
-      title={sonido ? "Silenciar el sonido de mensajes nuevos" : "Activar el sonido de mensajes nuevos"}
+      title={sonido ? "Mute the new-message sound" : "Turn on the new-message sound"}
       className="rounded p-1 text-text-3 transition-colors hover:text-foreground"
     >
       {sonido ? (
@@ -259,19 +278,6 @@ export function AppNav({
 
   return (
     <>
-    <Riel
-      branding={branding}
-      groups={groups}
-      pathname={pathname}
-      unread={unread}
-      userName={userName}
-      role={role}
-      apariencia={apariencia}
-      campana={campana}
-      version={versionTexto}
-      versionTitulo={versionTitulo}
-      onSalir={() => void salir()}
-    />
     <aside
       // Móvil: cajón que se desliza desde la izquierda (siempre montado, así
       // la transición corre en ambos sentidos). Escritorio: columna fija.
@@ -283,37 +289,53 @@ export function AppNav({
         // nombre del usuario, el nombre white-label en BrandLogo) hereda el
         // color YA CALCULADO en <body> con el tema de la página, no el de
         // `.nav-dark` — y un texto oscuro sobre este fondo oscuro se pierde.
-        // 061 — Solo el teléfono: en escritorio el menú es el riel de iconos
-        // (abajo). Ya no lleva la barra azul marino: los neutros del tema.
-        "fixed inset-y-0 left-0 z-50 flex w-[17rem] shrink-0 flex-col overflow-y-auto rounded-r-[var(--radio-tarjeta)] bg-background px-3 pb-3.5 pt-4 text-foreground transition-[transform,visibility] duration-200 lg:hidden",
+        // Phones: a drawer behind the header's menu button. Desktop (lg+): the
+        // full labeled sidebar, always open, as a card like the other panes.
+        "fixed inset-y-0 left-0 z-50 flex w-[17rem] shrink-0 flex-col overflow-y-auto rounded-r-[var(--radio-tarjeta)] bg-background px-3 pb-3.5 pt-4 text-foreground transition-[transform,visibility] duration-200",
+        "lg:tarjeta lg:relative lg:inset-auto lg:z-auto lg:visible lg:translate-x-0 lg:shadow-none lg:transition-[width]",
+        compacto ? "lg:w-[76px] lg:px-2" : "lg:w-60",
         open ? "visible translate-x-0 shadow-pop" : "invisible -translate-x-full"
       )}
     >
       {/* Marca: el logo de Vocero o, white-label, la inicial y el nombre */}
-      <div className="mb-5 flex items-start gap-1.5 px-2 pt-0.5">
+      <div className={cn("mb-5 flex items-start gap-1.5 px-2 pt-0.5", compacto && "lg:justify-center lg:px-0")}>
         {/* En móvil el cajón necesita su propio cierre: el velo no siempre es
             alcanzable con el pulgar. */}
         <button
           onClick={onClose}
-          aria-label="Cerrar el menú"
+          aria-label="Close the menu"
           className="-ml-1 mt-0.5 rounded-md p-1.5 text-text-3 hover:bg-accent hover:text-foreground lg:hidden"
         >
           <X className="h-[18px] w-[18px]" strokeWidth={1.8} />
         </button>
-        <div className="min-w-0">
-          <BrandLogo branding={branding} />
-          <span className="kicker mt-2 block">{kicker}</span>
+        {/* The logo is the expand/collapse toggle on desktop. On phones it's
+            just the logo: the drawer is always full there. */}
+        <div className={cn("min-w-0 flex-1", compacto && "lg:flex-none")}>
+          <button
+            type="button"
+            onClick={alternarCompacto}
+            aria-label={compacto ? "Expand the menu" : "Collapse the menu"}
+            aria-expanded={!compacto}
+            title={compacto ? "Expand the menu" : "Collapse the menu"}
+            className="pointer-events-none -m-1 block max-w-full rounded-[11px] p-1 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:pointer-events-auto lg:hover:bg-accent"
+          >
+            <BrandLogo branding={branding} className={sinCompacto} />
+            {compacto && (
+              <BrandTile branding={branding} className="hidden h-[30px] w-[30px] rounded-[9px] text-[15px] lg:flex" />
+            )}
+          </button>
+          <span className={cn("kicker mt-2 block", sinCompacto)}>{kicker}</span>
         </div>
       </div>
 
       {/* Grupos con encabezado pequeño, sin letras ni colapsables: se leen
           de arriba abajo como una lista de lo que hay. Un grupo sin título
           (Resultados) es una entrada suelta separada por el espacio. */}
-      <nav className="flex flex-col gap-4" aria-label="Secciones">
+      <nav className="flex flex-col gap-4" aria-label="Sections">
         {groups.map((group, i) => (
           <div key={group.title ?? i} className="flex flex-col gap-0.5">
             {group.title && (
-              <span className="kicker mb-1 block px-2.5" aria-hidden>
+              <span className={cn("kicker mb-1 block px-2.5", sinCompacto)} aria-hidden>
                 {group.title}
               </span>
             )}
@@ -326,28 +348,28 @@ export function AppNav({
 
       {/* 048 — Solo cuando el navegador ofrece instalar la app: una fila
           propia y no un icono más en el pie, que ya va lleno. */}
-      <BotonActivarAvisos className={navItemClass(false)} />
-      <BotonInstalar className={navItemClass(false)} />
+      <BotonActivarAvisos className={cn(navItemClass(false), sinCompacto)} />
+      <BotonInstalar className={cn(navItemClass(false), sinCompacto)} />
 
       {/* Ajustes va abajo, solo: no es trabajo del día. */}
       {renderItem(SETTINGS_ITEM)}
 
-      <div className="mt-1 flex items-center gap-2.5 rounded-sm px-2.5 py-2 hover:bg-accent">
+      <div className={cn("mt-1 flex items-center gap-2.5 rounded-sm px-2.5 py-2 hover:bg-accent", compacto && "lg:flex-col lg:px-0")}>
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-soft text-xs font-bold text-brand-text">
           {initials(userName)}
         </span>
-        <span className="min-w-0 flex-1">
+        <span className={cn("min-w-0 flex-1", sinCompacto)}>
           <span className="block truncate text-[13px] font-semibold">{userName}</span>
           <span className="block truncate text-[11px] text-text-3">
-            {role === "owner" ? "Propietario" : "Equipo"} · En línea
+            {role === "owner" ? "Owner" : "Team"} · Online
           </span>
         </span>
-        <span className="flex shrink-0 items-center">
+        <span className={cn("flex shrink-0 items-center", compacto && "lg:flex-col lg:gap-1")}>
           {campana}
           <ThemeToggle initial={apariencia} />
           <button
-            aria-label="Cerrar sesión"
-            title="Cerrar sesión"
+            aria-label="Sign out"
+            title="Sign out"
             className="rounded p-1 text-text-3 hover:text-foreground"
             onClick={() => void salir()}
           >
@@ -370,155 +392,12 @@ export function AppNav({
           advertencia: basta 3:1 para un gráfico) y el texto va en `text-2`,
           que pasa AA sobre la barra en cualquier tema. */}
       <p
-        className="mt-2 px-2.5 font-mono text-[10.5px] tracking-[0.06em] text-text-2"
-        title={versionTitle(branding.name, version)}
+        className={cn("mt-2 px-2.5 font-mono text-[10.5px] tracking-[0.06em] text-text-2", sinCompacto)}
+        title={versionTitulo}
       >
         {versionTexto}
       </p>
     </aside>
     </>
-  );
-}
-
-/**
- * 061 · D2 — El riel de iconos del escritorio: la marca arriba, las mismas
- * entradas del menú (según rol y banderas) como botones redondos, y abajo la
- * campana, Ajustes y la cuenta. La activa va rellena con la tinta del tema.
- */
-function Riel({
-  branding,
-  groups,
-  pathname,
-  unread,
-  userName,
-  role,
-  apariencia,
-  campana,
-  version,
-  versionTitulo,
-  onSalir,
-}: {
-  branding: Branding;
-  groups: ReturnType<typeof appNavGroups>;
-  pathname: string;
-  unread: number;
-  userName: string;
-  role: string;
-  apariencia: Apariencia;
-  campana: React.ReactNode;
-  version: React.ReactNode;
-  versionTitulo: string;
-  onSalir: () => void;
-}) {
-  const [cuenta, setCuenta] = useState(false);
-  const cuentaRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!cuenta) return;
-    const fuera = (e: MouseEvent) => {
-      if (!cuentaRef.current?.contains(e.target as Node)) setCuenta(false);
-    };
-    const escape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setCuenta(false);
-    };
-    document.addEventListener("mousedown", fuera);
-    document.addEventListener("keydown", escape);
-    return () => {
-      document.removeEventListener("mousedown", fuera);
-      document.removeEventListener("keydown", escape);
-    };
-  }, [cuenta]);
-
-  const boton = (item: NavItem) => {
-    const active = isNavActive(pathname, item.href);
-    return (
-      <Link
-        key={item.href}
-        href={item.href}
-        aria-label={item.label}
-        title={item.label}
-        aria-current={active ? "page" : undefined}
-        className={cn(
-          "relative flex h-11 w-11 items-center justify-center rounded-full border transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-          active
-            ? "border-transparent bg-riel-activo text-riel-activo-texto"
-            : "border-border-strong text-text-2 hover:bg-accent hover:text-foreground"
-        )}
-      >
-        <item.icon className="h-[19px] w-[19px]" strokeWidth={1.8} aria-hidden />
-        {item.badge && unread > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-brand-fg">
-            {unread > 99 ? "99+" : unread}
-          </span>
-        )}
-      </Link>
-    );
-  };
-
-  return (
-    <nav
-      aria-label="Secciones"
-      className="tarjeta hidden w-[76px] shrink-0 flex-col items-center py-4 lg:flex"
-    >
-      <Link href="/inbox" aria-label={branding.name} title={branding.name} className="rounded-[14px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <BrandTile branding={branding} className="h-11 w-11 rounded-[14px] text-[18px]" />
-      </Link>
-      <div className="mt-7 flex min-h-0 flex-1 flex-col items-center gap-2.5 overflow-y-auto">
-        {groups.map((g, i) => (
-          <div key={g.title ?? i} className="flex flex-col items-center gap-2.5">
-            {i > 0 && <span className="my-0.5 h-px w-6 bg-border" aria-hidden />}
-            {g.items.map(boton)}
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 flex flex-col items-center gap-2.5">
-        <span className="flex h-11 w-11 items-center justify-center">{campana}</span>
-        {boton(SETTINGS_ITEM)}
-        <div ref={cuentaRef} className="relative">
-          <button
-            type="button"
-            onClick={() => setCuenta((v) => !v)}
-            aria-label="Tu cuenta"
-            aria-expanded={cuenta}
-            aria-haspopup="dialog"
-            title={userName}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-riel-activo text-[13px] font-bold text-riel-activo-texto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {initials(userName)}
-          </button>
-          {cuenta && (
-            <div
-              role="dialog"
-              aria-label="Tu cuenta"
-              className="absolute bottom-0 left-full z-50 ml-3 w-64 space-y-1 rounded-2xl border bg-popover p-2 text-popover-foreground shadow-pop"
-            >
-              <div className="px-2.5 pb-1.5 pt-1">
-                <p className="truncate text-[14px] font-semibold">{userName}</p>
-                <p className="text-[12px] text-text-3">
-                  {role === "owner" ? "Propietario" : "Equipo"} · En línea
-                </p>
-              </div>
-              <div className="flex items-center justify-between rounded-lg px-2.5 py-1.5 text-[13.5px] text-text-2">
-                Tema
-                <ThemeToggle initial={apariencia} />
-              </div>
-              <BotonActivarAvisos className={navItemClass(false)} />
-              <BotonInstalar className={navItemClass(false)} />
-              <button
-                type="button"
-                onClick={onSalir}
-                className={cn(navItemClass(false), "w-full")}
-              >
-                <LogOut className="h-5 w-5 shrink-0 text-text-3" strokeWidth={1.8} aria-hidden />
-                Cerrar sesión
-              </button>
-              <p className="px-2.5 pb-1 pt-1.5 font-mono text-[10.5px] tracking-[0.06em] text-text-2" title={versionTitulo}>
-                {version}
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
-    </nav>
   );
 }

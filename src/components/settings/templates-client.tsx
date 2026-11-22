@@ -42,20 +42,20 @@ const STATUS_BADGE: Record<
   TemplateDto["status"],
   { label: string; variant: "secondary" | "warning" | "success" | "destructive"; hint: string }
 > = {
-  draft: { label: "Borrador", variant: "secondary", hint: "Guardada, todavía sin enviar a Meta." },
-  pending: { label: "En revisión", variant: "warning", hint: "Meta la está revisando. Suele tardar de unos minutos a 24 horas." },
-  approved: { label: "Aprobada", variant: "success", hint: "Lista para usar desde la Bandeja o desde Contactos." },
-  rejected: { label: "Rechazada", variant: "destructive", hint: "Corrígela y créala de nuevo con otro nombre." },
+  draft: { label: "Draft", variant: "secondary", hint: "Saved, not yet sent to Meta." },
+  pending: { label: "In review", variant: "warning", hint: "Meta is reviewing it. It usually takes from a few minutes to 24 hours." },
+  approved: { label: "Approved", variant: "success", hint: "Ready to use from the Inbox or from Contacts." },
+  rejected: { label: "Rejected", variant: "destructive", hint: "Fix it and create it again with another name." },
 };
 
 const CATEGORY: Record<Category, { label: string; description: string }> = {
   UTILITY: {
-    label: "Utilidad",
-    description: "Seguimiento de algo que el cliente pidió: una cita, una cotización, un pedido.",
+    label: "Utility",
+    description: "Follow-up on something the customer asked for: an appointment, a quote, an order.",
   },
   MARKETING: {
     label: "Marketing",
-    description: "Promociones, ofertas, invitaciones o volver a contactar a quien no compró.",
+    description: "Promotions, offers, invitations or re-engaging someone who didn't buy.",
   },
 };
 
@@ -68,25 +68,25 @@ const STARTERS: {
   examples: string[];
 }[] = [
   {
-    title: "Seguimiento de cotización",
+    title: "Quote follow-up",
     name: "seguimiento_cotizacion",
     category: "UTILITY",
-    body: "Hola {{1}}, te escribo para dar seguimiento a la cotización que te enviamos. ¿Tienes alguna duda o quieres que la revisemos juntos?",
+    body: "Hi {{1}}, I'm following up on the quote we sent you. Do you have any questions, or would you like to go over it together?",
     examples: ["Ana"],
   },
   {
-    title: "Recordatorio de cita",
+    title: "Appointment reminder",
     name: "recordatorio_cita",
     category: "UTILITY",
-    body: "Hola {{1}}, te recordamos tu cita del {{2}} a las {{3}}. Si necesitas cambiarla, responde a este mensaje.",
-    examples: ["Ana", "martes 14 de octubre", "10:30"],
+    body: "Hi {{1}}, this is a reminder of your appointment on {{2}} at {{3}}. If you need to change it, reply to this message.",
+    examples: ["Ana", "Tuesday, October 14", "10:30"],
   },
   {
-    title: "Retomar la conversación",
+    title: "Resume the conversation",
     name: "retomar_conversacion",
     category: "MARKETING",
-    body: "Hola {{1}}, ¿sigues interesado en {{2}}? Esta semana tenemos lugares disponibles. Responde a este mensaje y te ayudamos.",
-    examples: ["Ana", "la limpieza dental"],
+    body: "Hi {{1}}, are you still interested in {{2}}? We have openings this week. Reply to this message and we'll help you.",
+    examples: ["Ana", "the dental cleaning"],
   },
 ];
 
@@ -137,8 +137,8 @@ export function TemplatesClient() {
         if (!silent) {
           setSyncMsg(
             data.updated > 0
-              ? `${data.updated} plantilla(s) actualizada(s)`
-              : "Todo al día"
+              ? `${data.updated} template(s) updated`
+              : "All up to date"
           );
         }
         if (!silent || data.updated > 0) void refetch();
@@ -147,7 +147,7 @@ export function TemplatesClient() {
         const data = (await res?.json().catch(() => null)) as {
           error?: { message?: string };
         } | null;
-        setSyncMsg(data?.error?.message ?? "No se pudo sincronizar");
+        setSyncMsg(data?.error?.message ?? "Couldn't sync");
       }
     },
     [refetch]
@@ -166,7 +166,7 @@ export function TemplatesClient() {
       <section className="space-y-3" aria-labelledby="tpl-list-title">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h3 id="tpl-list-title" className="text-base font-semibold">
-            Tus plantillas
+            Your templates
           </h3>
           <div className="flex items-center gap-2">
             <Button
@@ -174,15 +174,15 @@ export function TemplatesClient() {
               size="sm"
               disabled={syncing}
               onClick={() => void sync()}
-              title="Consulta a Meta el estado de revisión"
+              title="Ask Meta for the review status"
             >
               <RefreshCw className={`h-4 w-4 ${syncing ? "animate-spin" : ""}`} />
-              Actualizar estado
+              Refresh status
             </Button>
             {!creating && (
               <Button size="sm" onClick={() => setCreating(true)}>
                 <Plus className="h-4 w-4" />
-                Nueva plantilla
+                New template
               </Button>
             )}
           </div>
@@ -200,14 +200,14 @@ export function TemplatesClient() {
         )}
 
         {templates === null ? (
-          <p className="text-sm text-muted-foreground">Cargando plantillas…</p>
+          <p className="text-sm text-muted-foreground">Loading templates…</p>
         ) : empty ? (
           !creating && (
             <EmptyState
               icon={FileText}
               className="rounded-lg border border-dashed"
-              title="Todavía no tienes plantillas"
-              description="Crea la primera para poder escribirle a un cliente cuando pasen las 24 horas. Puedes empezar con un ejemplo."
+              title="You don't have templates yet"
+              description="Create the first one so you can message a customer after 24 hours. You can start from an example."
               action={
                 <Button size="sm" onClick={() => setCreating(true)}>
                   <Plus className="h-4 w-4" />
@@ -240,7 +240,7 @@ export function TemplatesClient() {
                   )}
                 >
                   {t.status === "rejected" && t.rejectionReason
-                    ? `Motivo del rechazo: ${t.rejectionReason}. ${STATUS_BADGE.rejected.hint}`
+                    ? `Rejection reason: ${t.rejectionReason}. ${STATUS_BADGE.rejected.hint}`
                     : STATUS_BADGE[t.status].hint}
                 </p>
               </li>
@@ -263,18 +263,18 @@ function HowItWorks({ defaultOpen }: { defaultOpen: boolean }) {
   const steps = [
     {
       icon: Plus,
-      title: "Créala aquí",
-      text: "Escribe el mensaje y marca con {{1}}, {{2}}… lo que cambia en cada envío, como el nombre o la fecha.",
+      title: "Create it here",
+      text: "Write the message and mark with {{1}}, {{2}}… what changes in each send, like the name or the date.",
     },
     {
       icon: Clock3,
-      title: "Meta la revisa",
-      text: "Tarda de unos minutos a 24 horas. El estado cambia solo a «Aprobada» o «Rechazada», con el motivo.",
+      title: "Meta reviews it",
+      text: "It takes from a few minutes to 24 hours. The status changes on its own to «Approved» or «Rejected», with the reason.",
     },
     {
       icon: Send,
-      title: "Úsala",
-      text: "En la Bandeja, cuando la ventana de 24 h está cerrada, elígela, llena las variables y envía. Para escribirle primero a alguien, usa «Escribir primero» en Contactos.",
+      title: "Use it",
+      text: "In the Inbox, when the 24 h window is closed, pick it, fill in the variables and send. To message someone first, use «Message first» in Contacts.",
     },
   ];
 
@@ -288,9 +288,9 @@ function HowItWorks({ defaultOpen }: { defaultOpen: boolean }) {
       >
         <Sparkles className="h-5 w-5 shrink-0 text-primary" />
         <span className="flex-1">
-          <span className="block text-sm font-semibold">¿Para qué sirven las plantillas?</span>
+          <span className="block text-sm font-semibold">What are templates for?</span>
           <span className="block text-xs text-muted-foreground">
-            Son el único mensaje que WhatsApp te deja enviar pasadas 24 horas.
+            {"They're the only message WhatsApp lets you send after 24 hours."}
           </span>
         </span>
         <ChevronDown className={cn("h-4 w-4 shrink-0 transition-transform", open && "rotate-180")} />
@@ -298,10 +298,7 @@ function HowItWorks({ defaultOpen }: { defaultOpen: boolean }) {
       {open && (
         <div className="space-y-4 border-t p-4 text-sm">
           <p className="text-muted-foreground">
-            WhatsApp solo te deja escribir con libertad durante las 24 horas
-            que siguen al último mensaje de tu cliente. Pasado ese tiempo —o
-            para escribirle a alguien que nunca te ha escrito— necesitas un
-            mensaje que Meta haya aprobado antes: una plantilla.
+            {"WhatsApp only lets you write freely during the 24 hours after your customer's last message. After that —or to message someone who has never written to you— you need a message Meta approved beforehand: a template."}
           </p>
           <ol className="grid gap-3 sm:grid-cols-3">
             {steps.map((s, i) => (
@@ -317,21 +314,21 @@ function HowItWorks({ defaultOpen }: { defaultOpen: boolean }) {
             ))}
           </ol>
           <details className="rounded-md bg-subtle p-3">
-            <summary className="cursor-pointer font-medium">Consejos para que Meta la apruebe</summary>
+            <summary className="cursor-pointer font-medium">Tips for getting Meta to approve it</summary>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
-              <li>No empieces ni termines el mensaje con una variable, y no pongas dos variables juntas.</li>
-              <li>Di quién escribe y por qué: «Hola {"{{1}}"}, soy Ana de Clínica Sol…».</li>
-              <li>Escribe ejemplos reales para cada variable: es lo que ve quien la revisa.</li>
-              <li>Utilidad es solo para dar seguimiento a algo que el cliente pidió. Si el mensaje promociona algo, Meta la cambia a Marketing, que cuesta más por conversación.</li>
-              <li>El idioma que elijas debe ser el del texto.</li>
+              <li>{"Don't start or end the message with a variable, and don't put two variables together."}</li>
+              <li>{"Say who's writing and why: «Hi"} {"{{1}}"}, this is Ana from Sun Clinic…».</li>
+              <li>{"Write real examples for each variable: it's what the reviewer sees."}</li>
+              <li>Utility is only for following up on something the customer asked for. If the message promotes something, Meta switches it to Marketing, which costs more per conversation.</li>
+              <li>The language you pick must match the text.</li>
             </ul>
           </details>
           <p className="flex flex-wrap gap-4 text-xs">
             <Link className="inline-flex items-center gap-1 underline" href="/inbox">
-              <Inbox className="h-3.5 w-3.5" /> Ir a la Bandeja
+              <Inbox className="h-3.5 w-3.5" /> Go to the Inbox
             </Link>
             <Link className="inline-flex items-center gap-1 underline" href="/contacts">
-              <Send className="h-3.5 w-3.5" /> Ir a Contactos
+              <Send className="h-3.5 w-3.5" /> Go to Contacts
             </Link>
           </p>
         </div>
@@ -405,7 +402,7 @@ function CreateForm({
       const data = (await res?.json().catch(() => null)) as {
         error?: { message?: string };
       } | null;
-      setError(data?.error?.message ?? "No se pudo crear la plantilla");
+      setError(data?.error?.message ?? "Couldn't create the template");
       return;
     }
     onCreated();
@@ -414,15 +411,14 @@ function CreateForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Nueva plantilla</CardTitle>
+        <CardTitle>New template</CardTitle>
         <CardDescription>
-          Se envía a revisión de Meta al crearla. Mientras la revisan puedes
-          seguir usando el CRM.
+          {"It's sent to Meta for review when created. While it's under review you can keep using the CRM."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Empieza con un ejemplo (opcional)</p>
+          <p className="text-xs font-medium text-muted-foreground">Start from an example (optional)</p>
           <div className="flex flex-wrap gap-2">
             {STARTERS.map((s) => (
               <Button key={s.name} type="button" variant="outline" size="sm" onClick={() => applyStarter(s)}>
@@ -434,20 +430,20 @@ function CreateForm({
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="tpl-name">Nombre interno</Label>
+            <Label htmlFor="tpl-name">Internal name</Label>
             <Input
               id="tpl-name"
-              placeholder="seguimiento_cotizacion"
+              placeholder="quote_follow_up"
               value={name}
               onChange={(e) => setName(normalizeName(e.target.value))}
               maxLength={60}
             />
             <p className="text-xs text-muted-foreground">
-              Solo minúsculas, números y guion bajo. Tus clientes no lo ven.
+              {"Only lowercase letters, numbers and underscores. Your customers don't see it."}
             </p>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="tpl-lang">Idioma del mensaje</Label>
+            <Label htmlFor="tpl-lang">Message language</Label>
             <select
               id="tpl-lang"
               value={language}
@@ -468,7 +464,7 @@ function CreateForm({
         </div>
 
         <fieldset className="space-y-1.5">
-          <legend className="text-sm font-medium">¿Para qué es?</legend>
+          <legend className="text-sm font-medium">What is it for?</legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {(Object.keys(CATEGORY) as Category[]).map((c) => (
               <label
@@ -495,16 +491,16 @@ function CreateForm({
 
         <div className="space-y-1.5">
           <div className="flex items-end justify-between gap-2">
-            <Label htmlFor="tpl-body">Mensaje</Label>
+            <Label htmlFor="tpl-body">Message</Label>
             <Button type="button" variant="ghost" size="sm" onClick={insertVariable}>
               <Plus className="h-3.5 w-3.5" />
-              Insertar variable {`{{${countVariables(body) + 1}}}`}
+              Insert variable {`{{${countVariables(body) + 1}}}`}
             </Button>
           </div>
           <Textarea
             id="tpl-body"
             rows={4}
-            placeholder="Hola {{1}}, te confirmo tu sesión el {{2}} a las {{3}}. Si necesitas moverla, responde a este mensaje."
+            placeholder="Hi {{1}}, confirming your session on {{2}} at {{3}}. If you need to move it, reply to this message."
             value={body}
             onChange={(e) => setBody(e.target.value)}
           />
@@ -512,8 +508,7 @@ function CreateForm({
             <p className="text-xs text-destructive">{bodyError}</p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Las variables se llenan al enviar: {"{{1}}"} puede ser el nombre
-              del cliente, {"{{2}}"} una fecha…
+              Variables are filled in when sending: {"{{1}}"} {"could be the customer's name,"} {"{{2}}"} a date…
             </p>
           )}
           {warnings.map((w) => (
@@ -526,9 +521,9 @@ function CreateForm({
 
         {variableCount > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Ejemplo de cada variable</p>
+            <p className="text-sm font-medium">Example for each variable</p>
             <p className="text-xs text-muted-foreground">
-              Meta los usa para revisar la plantilla. No se envían a tus clientes.
+              {"Meta uses them to review the template. They aren't sent to your customers."}
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
               {Array.from({ length: variableCount }, (_, i) => (
@@ -538,7 +533,7 @@ function CreateForm({
                   </Label>
                   <Input
                     id={`tpl-example-${i + 1}`}
-                    placeholder={i === 0 ? "Ana" : "p. ej. martes 14"}
+                    placeholder={i === 0 ? "Ana" : "e.g. Tuesday 14"}
                     value={examples[i] ?? ""}
                     onChange={(e) => {
                       const next = [...examples];
@@ -555,7 +550,7 @@ function CreateForm({
 
         {body.trim() && !bodyError && (
           <div className="space-y-1.5">
-            <p className="text-sm font-medium">Así lo verá tu cliente</p>
+            <p className="text-sm font-medium">This is how your customer will see it</p>
             <div className="rounded-lg bg-chat p-4">
               <div className="ml-auto max-w-[85%] rounded-lg border border-bubble-out-border bg-bubble-out px-3 py-2 text-sm text-bubble-out-text shadow-sm">
                 <p className="whitespace-pre-wrap">{preview}</p>
@@ -571,15 +566,15 @@ function CreateForm({
             disabled={saving || !name.trim() || !body.trim() || bodyError !== null}
             onClick={() => void create()}
           >
-            {saving ? "Enviando a Meta…" : "Crear y enviar a revisión"}
+            {saving ? "Sending to Meta…" : "Create and send for review"}
           </Button>
           <Button variant="outline" disabled={saving} onClick={onCancel}>
-            Cancelar
+            Cancel
           </Button>
         </div>
         <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
           <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-          Cuando Meta la apruebe aparecerá en la Bandeja, lista para enviar.
+          When Meta approves it, it will appear in the Inbox, ready to send.
         </p>
       </CardContent>
     </Card>

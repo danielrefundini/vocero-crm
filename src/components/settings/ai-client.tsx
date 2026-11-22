@@ -143,7 +143,7 @@ export function AiClient() {
     if (!res?.ok) {
       setMensaje({
         kind: "error",
-        text: await leerError(res, "No se pudo probar la conexión"),
+        text: await leerError(res, "Couldn't test the connection"),
       });
       return;
     }
@@ -156,8 +156,8 @@ export function AiClient() {
     setMensaje({
       kind: "ok",
       text: data.reactivada
-        ? `Conexión correcta (${data.latencyMs} ms). Tu llave vuelve a estar activa.`
-        : `Conexión correcta (${data.latencyMs} ms)${token.trim() ? ". Pulsa Guardar para dejarla configurada." : "."}`,
+        ? `Connection OK (${data.latencyMs} ms). Your key is active again.`
+        : `Connection OK (${data.latencyMs} ms)${token.trim() ? ". Press Save to keep it configured." : "."}`,
     });
   }
 
@@ -173,7 +173,7 @@ export function AiClient() {
     if (!res?.ok) {
       setMensaje({
         kind: "error",
-        text: await leerError(res, "No se pudo traer la lista de modelos"),
+        text: await leerError(res, "Couldn't fetch the model list"),
       });
       return;
     }
@@ -186,14 +186,14 @@ export function AiClient() {
       setModelos(null);
       setMensaje({
         kind: "info",
-        text: data.mensaje ?? "Este proveedor no publica su lista de modelos.",
+        text: data.mensaje ?? "This provider doesn't publish its model list.",
       });
       return;
     }
     setModelos(data.modelos);
     setMensaje({
       kind: "info",
-      text: `${data.modelos.length} modelos disponibles: escribe para filtrar en el campo Modelo.`,
+      text: `${data.modelos.length} models available: type in the Model field to filter.`,
     });
   }
 
@@ -210,7 +210,7 @@ export function AiClient() {
     if (!res?.ok) {
       setMensaje({
         kind: "error",
-        text: await leerError(res, "No se pudo guardar. Revisa los datos e inténtalo de nuevo."),
+        text: await leerError(res, "Couldn't save. Check the details and try again."),
       });
       return;
     }
@@ -220,7 +220,7 @@ export function AiClient() {
     setToken("");
     setMensaje({
       kind: "ok",
-      text: "Guardado. Prueba la conexión y corre el Laboratorio antes de encender el agente con clientes reales.",
+      text: "Saved. Test the connection and run the Lab before turning the agent on with real customers.",
     });
   }
 
@@ -232,7 +232,7 @@ export function AiClient() {
     );
     setOcupado(null);
     if (!res?.ok) {
-      setMensaje({ kind: "error", text: "No se pudo quitar la llave." });
+      setMensaje({ kind: "error", text: "Couldn't remove the key." });
       return;
     }
     const data = (await res.json()) as Vista;
@@ -241,8 +241,8 @@ export function AiClient() {
     setMensaje({
       kind: "info",
       text: data.respaldoEntorno
-        ? "Llave eliminada. El agente sigue con las variables del entorno de la instancia."
-        : "Llave eliminada. Tu agente no puede contestar hasta que configures otra.",
+        ? "Key deleted. The agent keeps using the instance's environment variables."
+        : "Key deleted. Your agent can't answer until you set up another one.",
     });
   }
 
@@ -250,35 +250,31 @@ export function AiClient() {
     <div className="max-w-2xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Proveedor de IA</CardTitle>
+          <CardTitle>AI provider</CardTitle>
           <CardDescription>
-            Con esta llave piensa tu agente (a través del CRM: no hace falta
-            copiarla a tu agente) y el juez del Laboratorio. Aquí eliges el
-            proveedor, el modelo y la llave que paga el consumo. La llave se
-            guarda cifrada y no vuelve a mostrarse completa.
+            Your agent (through the CRM: no need to copy it to your agent) and the Lab judge think with this key. Here you pick the provider, the model and the key that pays for usage. The key is stored encrypted and is never shown in full again.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {vista === null ? (
-            <p className="text-sm text-muted-foreground">Cargando…</p>
+            <p className="text-sm text-muted-foreground">Loading…</p>
           ) : cred ? (
             <EstadoGuardado cred={cred} vista={vista} />
           ) : vista.respaldoEntorno ? (
             <div className="rounded-md border p-3 text-sm">
               <p>
-                Hoy el agente usa las variables del entorno de la instancia:{" "}
-                <code className="font-mono">{vista.respaldoEntorno.modelo || "sin modelo"}</code>{" "}
-                con la llave{" "}
+                {"Today the agent uses the instance's environment variables:"}{" "}
+                <code className="font-mono">{vista.respaldoEntorno.modelo || "no model"}</code>{" "}
+                with the key{" "}
                 <code className="font-mono">••••{vista.respaldoEntorno.tokenLast4}</code>.
               </p>
               <p className="mt-1 text-muted-foreground">
-                Lo que guardes aquí manda sobre ellas, sin reiniciar nada.
+                What you save here overrides them, no restart needed.
               </p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Todavía no hay proveedor de IA: tu agente no tiene con qué pensar y
-              los mensajes llegan a la bandeja para que los atienda una persona.
+              No AI provider yet: your agent has nothing to think with, and messages arrive in the inbox for a person to handle.
             </p>
           )}
 
@@ -286,7 +282,7 @@ export function AiClient() {
 
           <form onSubmit={guardar} className="space-y-3">
             <div className="space-y-1.5">
-              <Label htmlFor="ai-provider">Proveedor</Label>
+              <Label htmlFor="ai-provider">Provider</Label>
               <select
                 id="ai-provider"
                 value={provider}
@@ -304,8 +300,8 @@ export function AiClient() {
               </select>
               <p className="text-xs text-muted-foreground">
                 {preset.baseUrl
-                  ? `Habla con ${preset.baseUrl}. Una sola llave da acceso a los modelos de todos los laboratorios.`
-                  : "Cualquier API con la forma de la de OpenAI: OpenAI, Groq, Together, un servidor propio…"}
+                  ? `Talks to ${preset.baseUrl}. A single key gives access to models from every lab.`
+                  : "Any API shaped like OpenAI's: OpenAI, Groq, Together, your own server…"}
               </p>
             </div>
 
@@ -320,14 +316,13 @@ export function AiClient() {
                   autoComplete="off"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Con o sin <code className="font-mono">/v1</code> al final: se
-                  completa solo.
+                  With or without <code className="font-mono">/v1</code> {"at the end: it's added automatically."}
                 </p>
               </div>
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="ai-model">Modelo</Label>
+              <Label htmlFor="ai-model">Model</Label>
               <div className="flex gap-2">
                 <Input
                   id="ai-model"
@@ -343,7 +338,7 @@ export function AiClient() {
                   onClick={traerModelos}
                   disabled={ocupado !== null || faltaBase || faltaLlave}
                 >
-                  {ocupado === "modelos" ? "Trayendo…" : "Traer modelos"}
+                  {ocupado === "modelos" ? "Fetching…" : "Fetch models"}
                 </Button>
               </div>
               {modelos && (
@@ -356,14 +351,13 @@ export function AiClient() {
                 </datalist>
               )}
               <p className="text-xs text-muted-foreground">
-                Tu agente lo usa a través del CRM para conversar con tus
-                clientes, y el juez del Laboratorio para calificar.
+                Your agent uses it through the CRM to chat with your customers, and the Lab judge uses it to grade.
               </p>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="ai-token">
-                {cred ? "Reemplazar la llave" : "Llave del proveedor"}
+                {cred ? "Replace the key" : "Provider key"}
               </Label>
               <Input
                 id="ai-token"
@@ -372,11 +366,11 @@ export function AiClient() {
                 value={token}
                 onChange={(e) => setToken(e.target.value)}
                 placeholder={
-                  cred ? `•••• ${cred.tokenLast4} (déjalo vacío para conservarla)` : preset.tokenPlaceholder
+                  cred ? `•••• ${cred.tokenLast4} (leave it empty to keep it)` : preset.tokenPlaceholder
                 }
               />
               <p className="text-xs text-muted-foreground">
-                Se guarda cifrada en tu servidor. No la compartas por chat.
+                {"It's stored encrypted on your server. Don't share it over chat."}
               </p>
             </div>
 
@@ -402,13 +396,13 @@ export function AiClient() {
                 onClick={probar}
                 disabled={ocupado !== null || !puedeProbar}
               >
-                {ocupado === "probar" ? "Probando…" : "Probar conexión"}
+                {ocupado === "probar" ? "Testing…" : "Test connection"}
               </Button>
               <Button
                 type="submit"
                 disabled={ocupado !== null || !puedeProbar}
               >
-                {ocupado === "guardar" ? "Guardando…" : "Guardar"}
+                {ocupado === "guardar" ? "Saving…" : "Save"}
               </Button>
               {cred && (
                 <button
@@ -417,7 +411,7 @@ export function AiClient() {
                   disabled={ocupado !== null}
                   className="text-sm text-text-3 hover:text-foreground"
                 >
-                  Quitar
+                  Remove
                 </button>
               )}
             </div>
@@ -433,7 +427,7 @@ function EstadoGuardado({ cred, vista }: { cred: Credencial; vista: Vista }) {
     <div className="rounded-md border p-3 text-sm" data-ai-estado={cred.estado}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span>
-          Llave conectada: <code className="font-mono">••••{cred.tokenLast4}</code>
+          Key connected: <code className="font-mono">••••{cred.tokenLast4}</code>
           {" · "}
           {AI_PROVIDER_PRESETS[cred.proveedor].label}
           {" · "}
@@ -451,7 +445,7 @@ function EstadoGuardado({ cred, vista }: { cred: Credencial; vista: Vista }) {
       )}
       {cred.motivo && (
         <p className="mt-1 text-xs text-muted-foreground">
-          El proveedor dijo: {cred.motivo}
+          The provider said: {cred.motivo}
         </p>
       )}
     </div>
@@ -462,44 +456,43 @@ function EstadoGuardado({ cred, vista }: { cred: Credencial; vista: Vista }) {
 function AyudaLlave({ provider }: { provider: AiProviderId }) {
   return (
     <details className="rounded-lg border p-3 text-sm">
-      <summary className="cursor-pointer font-medium">¿Cómo consigo mi llave?</summary>
+      <summary className="cursor-pointer font-medium">How do I get my key?</summary>
       {provider === "openrouter" ? (
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
           <li>
-            Crea una cuenta del negocio en{" "}
+            Create a business account at{" "}
             <a className="underline" href="https://openrouter.ai" target="_blank" rel="noopener noreferrer">
               openrouter.ai
             </a>
             .
           </li>
           <li>
-            En{" "}
+            In{" "}
             <a className="underline" href="https://openrouter.ai/settings/credits" target="_blank" rel="noopener noreferrer">
               Credits
             </a>
-            , carga saldo. El consumo se cobra en esa cuenta.
+            , add credit. Usage is billed to that account.
           </li>
           <li>
-            Abre{" "}
+            Open{" "}
             <a className="underline" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener noreferrer">
               Keys
             </a>{" "}
-            → Create key y copia la llave.
+            → Create key and copy the key.
           </li>
-          <li>Pégala aquí, pulsa «Probar conexión» y luego «Guardar».</li>
+          <li>Paste it here, press «Test connection» and then «Save».</li>
         </ol>
       ) : (
         <ol className="mt-3 list-decimal space-y-2 pl-5 text-muted-foreground">
-          <li>En el panel de tu proveedor, crea una API key con permiso para chat completions.</li>
-          <li>Copia su base URL (la raíz de la API, p. ej. <code className="font-mono">https://api.openai.com</code>).</li>
-          <li>Pega aquí la base URL, el modelo y la llave; «Probar conexión» confirma que todo encaja.</li>
+          <li>{"In your provider's dashboard, create an API key with permission for chat completions."}</li>
+          <li>Copy its base URL (the root of the API, e.g. <code className="font-mono">https://api.openai.com</code>).</li>
+          <li>Paste the base URL, the model and the key here; «Test connection» confirms everything fits.</li>
         </ol>
       )}
       <p className="mt-3 text-muted-foreground">
-        Si prefieres dejarlo en el entorno de la instancia (
-        <code className="font-mono">OPENROUTER_API_TOKEN</code> y{" "}
-        <code className="font-mono">OPENROUTER_MODEL</code>), sigue funcionando
-        como respaldo mientras aquí no haya nada guardado.
+        If you prefer to keep it in the instance environment (
+        <code className="font-mono">OPENROUTER_API_TOKEN</code> and{" "}
+        <code className="font-mono">OPENROUTER_MODEL</code>), it keeps working as a fallback while nothing is saved here.
       </p>
     </details>
   );

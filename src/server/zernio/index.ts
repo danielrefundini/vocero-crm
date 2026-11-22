@@ -162,7 +162,7 @@ export async function sendZernioMessage(input: {
 }): Promise<ZernioSendResult> {
   if (!input.conversationId) {
     throw new MetaApiError(
-      "La conversación no tiene referencia de hilo en Zernio",
+      "The conversation has no thread reference in Zernio",
       { status: 400 }
     );
   }
@@ -233,7 +233,7 @@ export async function zernioFetch(
       ...(opts.timeoutMs ? { signal: AbortSignal.timeout(opts.timeoutMs) } : {}),
     });
   } catch (cause) {
-    throw new MetaApiError("No se pudo contactar la API de Zernio", {
+    throw new MetaApiError("Couldn't reach the Zernio API", {
       status: 0,
       details: cause,
     });

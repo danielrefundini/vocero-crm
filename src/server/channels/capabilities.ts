@@ -148,6 +148,41 @@ export const CHANNEL_CAPABILITIES: Record<Channel, ChannelCapabilities> = {
     deliveryReceipts: false,
     quoteReplies: false,
   },
+  /**
+   * A Telegram bot can reply at any time to someone who has messaged it (no
+   * service window), but can't start a conversation. Text up to 4,096
+   * characters; no formatting is sent (plain text).
+   */
+  telegram: {
+    label: CHANNEL_LABEL.telegram,
+    windowMs: null,
+    outsideWindow: "none",
+    humanAgentWindowMs: null,
+    textFormat: "plain",
+    maxTextBytes: null,
+    maxTextChars: 4096,
+    maxOutboundPerWindow: null,
+    outboundMedia: false,
+    structuredMessages: false,
+    deliveryReceipts: false,
+    quoteReplies: false,
+  },
+  // Website form leads: receive-only. Nothing goes back on this channel, the
+  // send path refuses it with an explanation (send.ts).
+  website: {
+    label: CHANNEL_LABEL.website,
+    windowMs: null,
+    outsideWindow: "none",
+    humanAgentWindowMs: null,
+    textFormat: "plain",
+    maxTextBytes: null,
+    maxTextChars: 4096,
+    maxOutboundPerWindow: null,
+    outboundMedia: false,
+    structuredMessages: false,
+    deliveryReceipts: false,
+    quoteReplies: false,
+  },
 };
 
 /**
@@ -167,13 +202,13 @@ export function windowClosedMessage(channel: Channel): string {
   const caps = capabilitiesFor(channel);
   switch (caps.outsideWindow) {
     case "template":
-      return "La ventana de 24 horas está cerrada; usa una plantilla aprobada";
+      return "The 24-hour window is closed; use an approved template";
     case "human_agent_tag":
       // 024: dentro de la extensión el envío sale etiquetado solo y no se le
       // pide nada al operador; este mensaje es para cuando también venció.
-      return `La ventana de atención de ${caps.label} está cerrada: solo se puede contestar hasta ${dias(caps.humanAgentWindowMs)} después del último mensaje del cliente. Hay que esperar a que vuelva a escribir`;
+      return `The service window of ${caps.label} is closed: replies are only allowed up to ${dias(caps.humanAgentWindowMs)} after the customer's last message. You have to wait for them to write again`;
     case "none":
-      return `La ventana de ${caps.label} está cerrada y este canal no permite reabrirla: hay que esperar a que el cliente vuelva a escribir`;
+      return `The window of ${caps.label} is closed and this channel doesn't allow reopening it: you have to wait for the customer to write again`;
   }
 }
 
@@ -183,11 +218,11 @@ export function windowClosedMessage(channel: Channel): string {
  */
 export function aiWindowClosedMessage(channel: Channel): string {
   const caps = capabilitiesFor(channel);
-  return `La ventana de respuestas automáticas de ${caps.label} está cerrada: pasadas ${horas(caps.windowMs)} del último mensaje del cliente solo puede contestar una persona`;
+  return `The automatic-reply window of ${caps.label} is closed: after ${horas(caps.windowMs)} from the customer's last message only a person can reply`;
 }
 
-const horas = (ms: number | null) => `${Math.round((ms ?? 0) / (60 * 60 * 1000))} horas`;
-const dias = (ms: number | null) => `${Math.round((ms ?? 0) / DAY_MS)} días`;
+const horas = (ms: number | null) => `${Math.round((ms ?? 0) / (60 * 60 * 1000))} hours`;
+const dias = (ms: number | null) => `${Math.round((ms ?? 0) / DAY_MS)} days`;
 
 /**
  * El texto más largo que acepta la API del CRM, sea cual sea el canal: el
@@ -200,7 +235,7 @@ export const MAX_TEXT_CHARS_ANY_CHANNEL = Math.max(
 );
 
 /** Lo que se le dice a quien manda un texto más largo que eso. */
-export const TEXT_TOO_LONG_ANY_CHANNEL = `El mensaje es demasiado largo: el máximo es ${MAX_TEXT_CHARS_ANY_CHANNEL.toLocaleString("es-MX")} caracteres`;
+export const TEXT_TOO_LONG_ANY_CHANNEL = `The message is too long: the maximum is ${MAX_TEXT_CHARS_ANY_CHANNEL.toLocaleString("en-US")} characters`;
 
 /** ¿Este texto cabe en el canal? Mira el límite que su plataforma mida. */
 export function textFits(channel: Channel, text: string): boolean {
@@ -221,13 +256,13 @@ export function textLimitMessage(channel: Channel): string {
   const caps = capabilitiesFor(channel);
   const limite =
     caps.maxTextChars !== null
-      ? `${caps.maxTextChars.toLocaleString("es-MX")} caracteres`
+      ? `${caps.maxTextChars.toLocaleString("en-US")} caracteres`
       : `${caps.maxTextBytes} bytes`;
-  return `${caps.label} no acepta mensajes de más de ${limite}: acorta el texto`;
+  return `${caps.label} doesn't accept messages longer than ${limite}: shorten the text`;
 }
 
 /** Mensaje para el operador cuando el canal ya no admite más mensajes. */
 export function outboundLimitMessage(channel: Channel): string {
   const caps = capabilitiesFor(channel);
-  return `${caps.label} solo permite ${caps.maxOutboundPerWindow} mensajes después del último mensaje del cliente: hay que esperar a que vuelva a escribir`;
+  return `${caps.label} only allows ${caps.maxOutboundPerWindow} messages after the customer's last message: you have to wait for them to write again`;
 }

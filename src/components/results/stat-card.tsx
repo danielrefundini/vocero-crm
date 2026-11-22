@@ -50,11 +50,11 @@ export function StatCard({
         >
           <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden />
           {d === null ? (
-            <span>sin base previa ({compare.previous})</span>
+            <span>no prior baseline ({compare.previous})</span>
           ) : (
             <span>
               {d > 0 ? "+" : ""}
-              {d}% vs. {compare.previous} antes
+              {d}% vs. {compare.previous} before
             </span>
           )}
         </p>
@@ -81,11 +81,11 @@ export function RateCard({
       </p>
       <p className="mt-1 text-xs">
         {rate.value === null ? (
-          <span className="text-text-3">sin casos en el periodo</span>
+          <span className="text-text-3">no cases in the period</span>
         ) : (
           <span className="text-text-3">
-            de {rate.sample} {unit}
-            {!rate.reliable && " · muestra chica"}
+            of {rate.sample} {unit}
+            {!rate.reliable && " · small sample"}
           </span>
         )}
       </p>

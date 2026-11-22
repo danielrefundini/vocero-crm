@@ -122,7 +122,7 @@ describe("zernio · qué cuenta se está conectando (D1)", () => {
     const r = pickZernioAccount(muchas, "", "instagram");
     expect(!r.ok && r.candidates.length).toBe(8);
     const fuera = pickZernioAccount(muchas, "nada", "instagram");
-    expect(!fuera.ok && fuera.message).toContain("y 4 más");
+    expect(!fuera.ok && fuera.message).toContain("and 4 more");
   });
 
   it("el nombre es el que una persona reconoce", () => {
@@ -225,8 +225,8 @@ describe("zernio · el webhook hacia esta instancia", () => {
     expect(
       webhookHealth([w({ url: "https://otro.com/api/webhooks/ig/x" })], SEGMENTO, IG).level
     ).toBe("error");
-    expect(webhookHealth([w({ isActive: false })], SEGMENTO, IG).message).toContain("desactivado");
-    expect(webhookHealth([w()], SEGMENTO, TT).message).toContain("no incluye esta cuenta");
+    expect(webhookHealth([w({ isActive: false })], SEGMENTO, IG).message).toContain("disabled");
+    expect(webhookHealth([w()], SEGMENTO, TT).message).toContain("doesn't include this account");
     expect(
       webhookHealth([w({ events: ["post.published"] })], SEGMENTO, IG).message
     ).toContain("message.received");

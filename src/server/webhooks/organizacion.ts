@@ -9,6 +9,8 @@ import { normalizeMetaPagePayload } from "@/server/messenger/ingest";
 import { zernioTargetChannel } from "@/server/zernio/dispatch";
 import { findZernioConnection } from "@/server/zernio/conexiones";
 import type { ZernioEvent } from "@/server/zernio";
+import { getTelegramCredentialsByBotId } from "@/server/telegram/credentials";
+import { resolveInstanceOrg } from "@/server/bot/auth";
 import type { FuenteWebhook } from "./eventos";
 
 /**
@@ -27,6 +29,9 @@ export type Buscadores = {
   porIgUserId: (id: string) => Promise<{ organizationId: string } | null>;
   porPageId: (id: string) => Promise<{ organizationId: string } | null>;
   porCuentaZernio: (evt: ZernioEvent) => Promise<{ organizationId: string } | null>;
+  porBotTelegram?: (botId: string) => Promise<{ organizationId: string } | null>;
+  /** Website forms belong to the instance's one business. */
+  instancia?: () => Promise<string | null>;
 };
 
 const buscadoresReales: Buscadores = {
@@ -34,6 +39,8 @@ const buscadoresReales: Buscadores = {
   porWabaId: getCredentialsByWabaId,
   porIgUserId: getInstagramCredentialsByIgUserId,
   porPageId: getMessengerCredentialsByPageId,
+  porBotTelegram: getTelegramCredentialsByBotId,
+  instancia: resolveInstanceOrg,
   porCuentaZernio: async (evt) => {
     const canal = zernioTargetChannel(evt);
     if (!canal) return null;
@@ -82,5 +89,12 @@ export async function resolverOrganizacion(
       const found = await b.porCuentaZernio(payload as ZernioEvent);
       return found?.organizationId ?? null;
     }
+    case "telegram": {
+      const botId = (payload as { botId?: string } | null)?.botId;
+      if (!botId || !b.porBotTelegram) return null;
+      return (await b.porBotTelegram(botId))?.organizationId ?? null;
+    }
+    case "website":
+      return b.instancia ? b.instancia() : null;
   }
 }

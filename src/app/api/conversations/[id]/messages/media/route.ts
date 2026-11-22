@@ -30,15 +30,15 @@ const SEND_ERROR_STATUS: Record<SendError["code"], number> = {
 export const POST = withAuth(async (session, req: Request, ctx: Params) => {
   const { id } = await ctx.params;
   const conv = await getConversation(session.organizationId, id);
-  if (!conv) return apiError(404, "not_found", "Conversación no encontrada");
+  if (!conv) return apiError(404, "not_found", "Conversation not found");
 
   const form = await req.formData().catch(() => null);
   if (!form) {
-    return apiError(400, "invalid", "Se esperaba multipart/form-data");
+    return apiError(400, "invalid", "Expected multipart/form-data");
   }
   const file = form.get("file");
   if (!(file instanceof File)) {
-    return apiError(422, "invalid", "Falta el archivo (campo `file`)");
+    return apiError(422, "invalid", "The file is missing (field `file`)");
   }
   const captionRaw = form.get("caption");
   const caption =

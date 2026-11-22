@@ -189,7 +189,7 @@ async function attachMediaAsset(
     }
     return asset;
   } catch (err) {
-    console.warn(`[media] no se pudo registrar el adjunto de ${messageId}:`, err);
+    console.warn(`[media] couldn't register the attachment from ${messageId}:`, err);
     return null;
   }
 }
@@ -248,7 +248,7 @@ export async function getOrCreateConversation(
     )
     .limit(1);
   const existing = rows[0];
-  if (!existing) throw new Error("conversación no encontrada tras upsert");
+  if (!existing) throw new Error("conversation not found after upsert");
   // 014: el hilo de la plataforma puede aparecer despues (o cambiar); se
   // guarda en cuanto se conoce para poder responder.
   if (opts?.threadRef && existing.channelThreadRef !== opts.threadRef) {
@@ -274,8 +274,8 @@ export async function processMessagesValue(value: WebhookValue): Promise<void> {
     // Caso típico: webhook/override configurado ANTES de guardar la conexión
     // en el wizard — el evento llega pero no hay a qué organización enrutarlo.
     console.warn(
-      `[webhook] evento para phone_number_id desconocido (${phoneNumberId}): ` +
-        "guarda la conexión en Configuración → WhatsApp para recibir mensajes"
+      `[webhook] event for unknown phone_number_id (${phoneNumberId}): ` +
+        "save the connection in Settings → WhatsApp to receive messages"
     );
     return;
   }
@@ -293,7 +293,7 @@ export async function processMessagesValue(value: WebhookValue): Promise<void> {
     const contenido = contenidoEntrante(msg);
     if (!contenido) {
       console.warn(
-        `[webhook] respuesta de botón ${msg.id} (${msg.type}) sin rótulo ni identificador: descartada`
+        `[webhook] button reply ${msg.id} (${msg.type}) with no label or identifier: discarded`
       );
       continue;
     }
@@ -302,7 +302,7 @@ export async function processMessagesValue(value: WebhookValue): Promise<void> {
       // Mensaje sin NINGUNA identidad utilizable (ni teléfono ni BSUID):
       // registrar y descartar — jamás reventar el webhook (003).
       console.warn(
-        `[webhook] mensaje ${msg.id} sin identidad utilizable (sin from ni from_user_id): descartado`
+        `[webhook] message ${msg.id} with no usable identity (no from or from_user_id): discarded`
       );
       continue;
     }
@@ -335,7 +335,7 @@ export async function processEchoesValue(value: WebhookValue): Promise<void> {
   const credentials = await getCredentialsByPhoneNumberId(phoneNumberId);
   if (!credentials) {
     console.warn(
-      `[webhook] echo para phone_number_id desconocido (${phoneNumberId}): descartado`
+      `[webhook] echo for unknown phone_number_id (${phoneNumberId}): discarded`
     );
     return;
   }
@@ -345,14 +345,14 @@ export async function processEchoesValue(value: WebhookValue): Promise<void> {
   for (const echo of echoes) {
     if (!SUPPORTED_TYPES.has(echo.type)) continue;
     if (!echo.to) {
-      console.warn(`[webhook] echo ${echo.id} sin destinatario: descartado`);
+      console.warn(`[webhook] echo ${echo.id} with no recipient: discarded`);
       continue;
     }
     try {
       await ingestManualEcho(credentials.organizationId, echo);
     } catch (err) {
       // Un echo malformado jamás tumba el webhook (edge case del spec).
-      console.error(`[webhook] error procesando echo ${echo.id}:`, err);
+      console.error(`[webhook] error processing echo ${echo.id}:`, err);
     }
   }
 }
@@ -426,7 +426,7 @@ async function ingestManualEcho(
     .returning();
   if (paused[0]) {
     console.log(
-      `[webhook] respuesta manual del dueño en ${conversation.id} — IA pausada (manual_reply)`
+      `[webhook] owner's manual reply in ${conversation.id} — AI paused (manual_reply)`
     );
   }
 
@@ -493,7 +493,7 @@ export async function ingestInboundMessage(input: {
       });
     } catch (err) {
       console.warn(
-        `[atribucion] no se registró el anuncio de ${conversation.id}:`,
+        `[attribution] the ad wasn't recorded for ${conversation.id}:`,
         err instanceof Error ? err.message : err
       );
     }
@@ -555,7 +555,11 @@ export async function ingestInboundMessage(input: {
 
   // 036 — Quien contesta es el cerebro conectado; sin él, una persona. El
   // 025: `message.id` es lo que el despacho le debe al cerebro.
-  if (despachoActivo()) await despacharAlCerebro(conversation.id, organizationId, message.id);
+  // Website form leads can't be answered in the channel they came from, so
+  // the agent doesn't get them: they're a reminder for a person.
+  if (despachoActivo() && conversation.channel !== "website") {
+    await despacharAlCerebro(conversation.id, organizationId, message.id);
+  }
 }
 
 function toDate(timestamp: string): Date {

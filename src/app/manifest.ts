@@ -13,5 +13,5 @@ export const dynamic = "force-dynamic";
  */
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const branding = await getBranding().catch(() => DEFAULT_BRANDING);
-  return buildManifest(branding, `${productName([...enabledChannels()])} de ${branding.name}`);
+  return buildManifest(branding, `${productName([...(await enabledChannels())])} for ${branding.name}`);
 }

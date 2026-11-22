@@ -16,11 +16,11 @@
  */
 
 const PAGINA_SIN_CONEXION = `<!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sin conexión</title>
+<title>Offline</title>
 <style>
   :root { color-scheme: light dark; --bg: #ffffff; --text: #0a1730; --muted: #4b5875; }
   @media (prefers-color-scheme: dark) { :root { --bg: #0b1327; --text: #e8eefb; --muted: #a7b3cc; } }
@@ -37,9 +37,9 @@ const PAGINA_SIN_CONEXION = `<!doctype html>
 </head>
 <body>
 <main>
-  <h1>Sin conexión</h1>
-  <p>No hay internet en este momento. Tus conversaciones siguen guardadas en el servidor y aparecen en cuanto vuelva la red.</p>
-  <button type="button" onclick="location.reload()">Reintentar</button>
+  <h1>Offline</h1>
+  <p>There's no internet connection right now. Your conversations are still saved on the server and will show up as soon as you're back online.</p>
+  <button type="button" onclick="location.reload()">Try again</button>
 </main>
 </body>
 </html>`;

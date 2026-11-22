@@ -36,7 +36,7 @@ export function prepararAudioSaliente(
       if (!(err instanceof WebmOggError)) throw err;
       throw new MediaValidationError(
         "unsupported_type",
-        `No se pudo preparar el audio para WhatsApp (${err.message}). Vuelve a grabarlo o súbelo en MP3, M4A u OGG`
+        `Couldn't prepare the audio for WhatsApp (${err.message}). Record it again or upload it as MP3, M4A or OGG`
       );
     }
   }

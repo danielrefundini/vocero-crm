@@ -4,7 +4,7 @@ import { getDb, schema } from "@/lib/db";
 import { getEnv } from "@/lib/env";
 import { MetaApiError } from "@/lib/meta/client";
 import { CHANNEL_ORDER } from "@/lib/channels";
-import { isChannelEnabled } from "@/server/channels/enabled";
+import { enabledChannels } from "@/server/channels/enabled";
 import {
   getInstagramCredentialsByAccountRef,
   getInstagramCredentialsByOrg,
@@ -40,8 +40,14 @@ import {
  */
 
 export const ZERNIO_CHANNELS = CHANNEL_ORDER.filter(
-  (c): c is ZernioChannel => c !== "whatsapp"
+  (c): c is ZernioChannel => c !== "whatsapp" && c !== "telegram" && c !== "website"
 );
+
+/** The Zernio channels switched on right now. */
+export async function enabledZernioChannels(): Promise<ZernioChannel[]> {
+  const on = await enabledChannels();
+  return ZERNIO_CHANNELS.filter((c) => on.has(c));
+}
 
 /** Segmento de la ruta del webhook de cada canal. */
 const WEBHOOK_PATH: Record<ZernioChannel, WebhookChannel> = {
@@ -124,7 +130,7 @@ export async function zernioConnectionsOfOrg(
   organizationId: string
 ): Promise<ZernioConnection[]> {
   const found = await Promise.all(
-    ZERNIO_CHANNELS.filter((c) => isChannelEnabled(c)).map((c) => byOrg(c, organizationId))
+    (await enabledZernioChannels()).map((c) => byOrg(c, organizationId))
   );
   return found.filter((c): c is ZernioConnection => c !== null);
 }
@@ -194,7 +200,7 @@ export async function healZernioAccountRef(
   if (!found?.viaProfile || !id) return;
   await update(channel, found.connection.id, { accountRef: id });
   console.warn(
-    `[zernio] la conexión de ${channel} tenía el id del perfil (${account?.profileId}): corregida a la cuenta ${id}`
+    `[zernio] the connection for ${channel} had the profile id (${account?.profileId}): corrected to account ${id}`
   );
 }
 
@@ -251,7 +257,7 @@ export async function ensureWebhookForOrg(
     return {
       ok: false,
       code: "sin_conexiones",
-      message: "No hay ningún canal conectado por Zernio.",
+      message: "No channel is connected via Zernio.",
     };
   }
 
@@ -264,13 +270,13 @@ export async function ensureWebhookForOrg(
       ok: false,
       code: "sin_https",
       message:
-        "Esta instancia no tiene una URL pública con https (APP_BASE_URL): Zernio no puede entregarle mensajes.",
+        "This instance has no public https URL (APP_BASE_URL): Zernio can't deliver messages to it.",
     };
   }
 
   const segment = webhookVerifyToken();
   const name = `vocero-${new URL(env.APP_BASE_URL).host}`;
-  const acceptableUrls = ZERNIO_CHANNELS.filter((c) => isChannelEnabled(c)).map((c) =>
+  const acceptableUrls = (await enabledZernioChannels()).map((c) =>
     webhookUrl(WEBHOOK_PATH[c])
   );
 
@@ -316,17 +322,17 @@ export async function ensureWebhookForOrg(
     return { ok: true, created, accounts: cubiertas.size };
   } catch (err) {
     const caido = err instanceof MetaApiError && (err.status === 0 || err.status >= 500);
-    console.warn("[zernio] no se pudo dar de alta el webhook:", err instanceof Error ? err.message : err);
+    console.warn("[zernio] couldn't register the webhook:", err instanceof Error ? err.message : err);
     return caido
       ? {
           ok: false,
           code: "zernio_unavailable",
-          message: "No se pudo contactar a Zernio para dar de alta el webhook. Reinténtalo desde Canales → Estado.",
+          message: "Couldn't reach Zernio to register the webhook. Retry from Channels → Status.",
         }
       : {
           ok: false,
           code: "zernio_rejected",
-          message: "Zernio no aceptó el webhook. Reinténtalo desde Canales → Estado o créalo a mano en Zernio.",
+          message: "Zernio didn't accept the webhook. Retry from Channels → Status or create it manually in Zernio.",
         };
   }
 }

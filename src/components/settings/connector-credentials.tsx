@@ -46,13 +46,13 @@ const FIELDS: Record<ExternalConnector, Field[]> = {
       name: "refreshToken",
       label: "Refresh token",
       secret: true,
-      help: "Se obtiene una sola vez autorizando tu propia app.",
+      help: "Obtained once by authorizing your own app.",
     },
     {
       name: "calendarId",
-      label: "Calendario",
+      label: "Calendar",
       placeholder: "primary",
-      help: "Déjalo en «primary» para tu calendario principal.",
+      help: "Leave it as «primary» for your main calendar.",
     },
   ],
 };
@@ -60,18 +60,18 @@ const FIELDS: Record<ExternalConnector, Field[]> = {
 /** Lo que hay que saber ANTES de pegar nada. Son los tropiezos reales. */
 const HELP: Record<ExternalConnector, { title: string; items: string[] }> = {
   zoom: {
-    title: "Crea una app Server-to-Server OAuth en el Marketplace de Zoom",
+    title: "Create a Server-to-Server OAuth app in the Zoom Marketplace",
     items: [
-      "Copia de ahí el Account ID, el Client ID y el Client Secret.",
-      "Dale los cuatro permisos: crear, actualizar y borrar reunión, y leer el usuario (meeting:write, meeting:update, meeting:delete y user:read).",
-      "El de leer usuario es el que usa el botón «Probar»: sin él la conexión falla aunque las credenciales sean correctas.",
+      "Copy the Account ID, Client ID and Client Secret from there.",
+      "Give it four scopes: create, update and delete meeting, and read user (meeting:write, meeting:update, meeting:delete and user:read).",
+      "Read user is the one the «Test» button uses: without it the connection fails even if the credentials are correct.",
     ],
   },
   google: {
-    title: "Crea un proyecto en Google Cloud con la API de Calendar activada",
+    title: "Create a Google Cloud project with the Calendar API enabled",
     items: [
-      "Necesitas Client ID, Client Secret y un refresh token con el permiso de eventos de calendario (calendar.events).",
-      "IMPORTANTE: publica tu app OAuth «en producción». Si la dejas en modo prueba, Google revoca el permiso a los 7 días y las citas dejarán de crear su enlace sin previo aviso.",
+      "You need a Client ID, Client Secret and a refresh token with the calendar events scope (calendar.events).",
+      "IMPORTANT: publish your OAuth app «in production». If you leave it in testing mode, Google revokes the permission after 7 days and appointments will stop creating their link without warning.",
     ],
   },
 };
@@ -134,12 +134,12 @@ export function ConnectorCredentials({
         kind: "error",
         text:
           data?.error?.message ??
-          `No se pudo conectar con ${meta.label}. Revisa las credenciales.`,
+          `Couldn't connect to ${meta.label}. Check the credentials.`,
       });
       return;
     }
     if (mode === "test") {
-      setMessage({ kind: "ok", text: "Conexión correcta" });
+      setMessage({ kind: "ok", text: "Connection OK" });
       return;
     }
     const data = (await res.json()) as { connection: Connection };
@@ -161,7 +161,7 @@ export function ConnectorCredentials({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Conectar {meta.label}</CardTitle>
+        <CardTitle>Connect {meta.label}</CardTitle>
         <CardDescription>{help.title}.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -173,8 +173,7 @@ export function ConnectorCredentials({
 
         {connection?.status === "error" && (
           <p className="rounded-sm border border-danger-soft bg-danger-tint px-3 py-2 text-sm text-danger-text">
-            {meta.label} rechazó las últimas credenciales. Las citas se siguen
-            agendando, pero sin enlace hasta que vuelvas a conectar.
+            {meta.label} rejected the latest credentials. Appointments are still booked, but without a link until you reconnect.
           </p>
         )}
 
@@ -202,10 +201,10 @@ export function ConnectorCredentials({
 
         <div className="flex flex-wrap items-center gap-3">
           <Button variant="outline" onClick={() => submit("test")} disabled={busy}>
-            Probar
+            Test
           </Button>
           <Button onClick={() => submit("save")} disabled={busy}>
-            {connection ? "Actualizar" : "Conectar"}
+            {connection ? "Refresh" : "Connect"}
           </Button>
           {connection && (
             <button
@@ -214,7 +213,7 @@ export function ConnectorCredentials({
               disabled={busy}
               className="text-sm text-text-3 hover:text-foreground"
             >
-              Desconectar
+              Disconnect
             </button>
           )}
           {message && (

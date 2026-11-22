@@ -16,7 +16,7 @@ type Entregas = {
 const REFRESCO_MS = 15_000;
 
 function hora(iso: string): string {
-  return new Date(iso).toLocaleString("es-MX", {
+  return new Date(iso).toLocaleString("en-US", {
     day: "numeric",
     month: "short",
     hour: "2-digit",
@@ -63,15 +63,15 @@ export function EntregasCard() {
     }).catch(() => null);
     setReintentando(false);
     if (!res?.ok) {
-      setAviso("No se pudo reintentar. Revisa la conexión con el servidor.");
+      setAviso("Couldn't retry. Check the connection to the server.");
       return;
     }
     const data = (await res.json()) as Entregas & { reintentados: number };
     setEstado(data);
     setAviso(
       data.agotados === 0 && data.pendientes === 0
-        ? `Listo: ${data.reintentados === 1 ? "entró el evento" : `entraron los ${data.reintentados} eventos`}.`
-        : "Se reintentó. Lo que vuelva a fallar sigue aquí."
+        ? `Done: ${data.reintentados === 1 ? "the event came in" : `the ${data.reintentados} events came in`}.`
+        : "Retried. Whatever fails again stays here."
     );
   }
 
@@ -80,11 +80,9 @@ export function EntregasCard() {
   return (
     <Card data-testid="entregas-webhook">
       <CardHeader>
-        <CardTitle>Entregas</CardTitle>
+        <CardTitle>Deliveries</CardTitle>
         <CardDescription>
-          Cada mensaje que llega se guarda antes de procesarse. Si algo falla,
-          se reintenta solo; lo que no entra después de seis intentos se queda
-          aquí para que lo reintentes.
+          {"Each incoming message is saved before it's processed. If something fails, it retries automatically; whatever doesn't get in after six attempts stays here for you to retry."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -97,8 +95,8 @@ export function EntregasCard() {
             <div className="min-w-[12rem] flex-1 space-y-1">
               <p className="font-medium text-danger-text">
                 {estado.agotados === 1
-                  ? "1 entrega no pudo entrar a la bandeja."
-                  : `${estado.agotados} entregas no pudieron entrar a la bandeja.`}
+                  ? "1 delivery couldn't get into the inbox."
+                  : `${estado.agotados} deliveries couldn't get into the inbox.`}
               </p>
               {estado.ultimoError && (
                 <p className="break-words text-danger-text opacity-80">
@@ -114,14 +112,13 @@ export function EntregasCard() {
               onClick={() => void reintentar()}
             >
               <RotateCw className="h-4 w-4" />
-              {reintentando ? "Reintentando…" : "Reintentar"}
+              {reintentando ? "Retrying…" : "Retry"}
             </Button>
           </div>
         ) : (
           !enReintento && (
             <p className="flex items-center gap-2 text-sm text-success">
-              <CheckCircle2 className="h-4 w-4" /> Entregas al día: todo lo que
-              llegó entró a la bandeja.
+              <CheckCircle2 className="h-4 w-4" /> Deliveries up to date: everything that arrived got into the inbox.
             </p>
           )
         )}
@@ -129,8 +126,8 @@ export function EntregasCard() {
           <p className="flex items-start gap-2 rounded-md border border-warning-soft bg-warning-tint p-3 text-xs text-warning-text">
             <RotateCw className="mt-0.5 h-3.5 w-3.5 shrink-0" />
             {estado.pendientes === 1
-              ? "1 entrega en reintento: entra sola en cuanto se pueda procesar."
-              : `${estado.pendientes} entregas en reintento: entran solas en cuanto se puedan procesar.`}
+              ? "1 delivery retrying: it goes in on its own as soon as it can be processed."
+              : `${estado.pendientes} deliveries retrying: they go in on their own as soon as they can be processed.`}
           </p>
         )}
         {aviso && <p className="text-xs text-muted-foreground">{aviso}</p>}

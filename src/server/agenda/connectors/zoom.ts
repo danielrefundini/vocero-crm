@@ -72,12 +72,12 @@ async function getAccessToken(creds: ZoomCreds): Promise<string> {
       headers: { Authorization: `Basic ${basic}` },
     });
   } catch (err) {
-    throw new ConnectorError("zoom", `No se pudo contactar a Zoom: ${err}`);
+    throw new ConnectorError("zoom", `Couldn't reach Zoom: ${err}`);
   }
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new ConnectorError("zoom", `Zoom rechazó las credenciales: ${detail}`, {
+    throw new ConnectorError("zoom", `Zoom rejected the credentials: ${detail}`, {
       status: res.status,
       // El endpoint de token responde 400 cuando las credenciales no sirven:
       // aquí un 400 SÍ es un problema de autenticación, a diferencia del resto
@@ -91,7 +91,7 @@ async function getAccessToken(creds: ZoomCreds): Promise<string> {
     expires_in?: number;
   } | null;
   if (!data?.access_token) {
-    throw new ConnectorError("zoom", "Zoom no devolvió un token de acceso");
+    throw new ConnectorError("zoom", "Zoom didn't return an access token");
   }
   setCachedZoomToken(key, data.access_token, data.expires_in ?? 3600);
   return data.access_token;
@@ -116,7 +116,7 @@ async function zoomFetch(
       },
     });
   } catch (err) {
-    throw new ConnectorError("zoom", `No se pudo contactar a Zoom: ${err}`);
+    throw new ConnectorError("zoom", `Couldn't reach Zoom: ${err}`);
   }
 
   // Idempotencia: borrar algo que ya no está es objetivo cumplido.
@@ -125,7 +125,7 @@ async function zoomFetch(
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new ConnectorError("zoom", `Zoom respondió ${res.status}: ${detail}`, {
+    throw new ConnectorError("zoom", `Zoom answered ${res.status}: ${detail}`, {
       status: res.status,
     });
   }
@@ -152,7 +152,7 @@ export const zoomConnector: AgendaConnector<ZoomCreds> = {
     })) as { id?: number | string; join_url?: string } | null;
 
     if (!data?.id || !data.join_url) {
-      throw new ConnectorError("zoom", "Zoom no devolvió la reunión creada");
+      throw new ConnectorError("zoom", "Zoom didn't return the created meeting");
     }
     return { externalId: String(data.id), joinUrl: data.join_url };
   },
@@ -187,7 +187,7 @@ export const zoomConnector: AgendaConnector<ZoomCreds> = {
       return {
         ok: false,
         error:
-          err instanceof Error ? err.message : "No se pudo conectar con Zoom",
+          err instanceof Error ? err.message : "Couldn't connect to Zoom",
       };
     }
   },

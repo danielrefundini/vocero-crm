@@ -1,3 +1,4 @@
+import { getEnv } from "@/lib/env";
 import { eq, max } from "drizzle-orm";
 import { CHANNEL_ORDER, type Channel } from "@/lib/channels";
 import { getDb, schema } from "@/lib/db";
@@ -5,6 +6,7 @@ import { scoped } from "@/lib/db/tenant";
 import { enabledChannels } from "@/server/channels/enabled";
 import { getInstagramCredentialsByOrg } from "@/server/instagram/credentials";
 import { getMessengerCredentialsByOrg } from "@/server/messenger/credentials";
+import { getTelegramCredentialsByOrg } from "@/server/telegram/credentials";
 import { getCredentialsByOrg } from "@/server/whatsapp/credentials";
 import { webhookVerifyToken } from "@/server/whatsapp/webhook-url";
 import {
@@ -38,7 +40,7 @@ import {
 export type ChannelStatus = {
   channel: Channel;
   connected: boolean;
-  source: "meta" | "zernio" | null;
+  source: "meta" | "zernio" | "telegram" | "website" | null;
   /** La cuenta, el número o la página, como lo reconoce una persona. */
   account: string | null;
   status: "connected" | "reconnect_required" | null;
@@ -50,7 +52,7 @@ export type ChannelStatus = {
 
 const SIN_ZERNIO: Health = {
   level: "warn",
-  message: "No se pudo consultar a Zernio ahora mismo. Vuelve a intentarlo en un momento.",
+  message: "Couldn't query Zernio right now. Try again in a moment.",
 };
 
 /** Cuándo entró el último mensaje de un cliente por cada canal (sin el Laboratorio). */
@@ -108,13 +110,14 @@ function saludDe(conn: ZernioConnection, lectura: Lectura): ChannelStatus["healt
 }
 
 export async function channelsStatus(organizationId: string): Promise<ChannelStatus[]> {
-  const encendidos = enabledChannels();
-  const [ultimos, wa, ig, fb, zernio] = await Promise.all([
+  const encendidos = (await enabledChannels());
+  const [ultimos, wa, ig, fb, zernio, tg] = await Promise.all([
     lastInboundByChannel(organizationId),
     getCredentialsByOrg(organizationId),
     encendidos.has("instagram") ? getInstagramCredentialsByOrg(organizationId) : null,
     encendidos.has("messenger") ? getMessengerCredentialsByOrg(organizationId) : null,
     zernioConnectionsOfOrg(organizationId),
+    encendidos.has("telegram") ? getTelegramCredentialsByOrg(organizationId) : null,
   ]);
 
   // Una lectura por llave, no por canal: lo normal es que los tres compartan una.
@@ -135,6 +138,32 @@ export async function channelsStatus(organizationId: string): Promise<ChannelSta
         source: wa ? "meta" : null,
         account: wa?.displayPhoneNumber ?? null,
         status: wa?.status ?? null,
+        health: null,
+      });
+      continue;
+    }
+
+    // Website forms: "connected" once the intake URL has its secret token.
+    if (channel === "website") {
+      const listo = Boolean(getEnv().WEBSITE_FORM_TOKEN);
+      filas.push({
+        ...base,
+        connected: listo,
+        source: listo ? "website" : null,
+        account: listo ? "Form intake URL" : null,
+        status: listo ? "connected" : null,
+        health: null,
+      });
+      continue;
+    }
+
+    if (channel === "telegram") {
+      filas.push({
+        ...base,
+        connected: Boolean(tg),
+        source: tg ? "telegram" : null,
+        account: tg ? (tg.botUsername ? `@${tg.botUsername}` : tg.botName ?? tg.botId) : null,
+        status: tg?.status ?? null,
         health: null,
       });
       continue;

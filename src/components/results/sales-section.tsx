@@ -25,49 +25,49 @@ export function SalesSection({
   return (
     <Section
       id="ventas"
-      title="Ventas"
-      hint="Lo que entró, lo que se cerró y dónde se atoran los tratos."
+      title="Sales"
+      hint="What came in, what closed and where deals get stuck."
       loading={loading}
       error={error}
       hasData={!!data}
       empty={!!data?.empty}
-      emptyText="No hay prospectos ni cierres en este periodo. Prueba con un rango más amplio."
+      emptyText="No leads or closes in this period. Try a wider range."
     >
       {data && (
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3 xl:grid-cols-6">
             <StatCard
-              label="Prospectos nuevos"
+              label="New leads"
               value={String(data.kpis.newLeads.current)}
               compare={data.kpis.newLeads}
             />
             <StatCard
-              label="Tratos ganados"
+              label="Deals won"
               value={String(data.kpis.won.current)}
               compare={data.kpis.won}
             />
             <StatCard
-              label="Dinero ganado"
+              label="Money won"
               value={money(data.kpis.wonCents.current)}
               compare={data.kpis.wonCents}
             />
             <StatCard
-              label="Tratos perdidos"
+              label="Deals lost"
               value={String(data.kpis.lost.current)}
               compare={data.kpis.lost}
               inverted
             />
             <RateCard
-              label="Tasa de cierre"
+              label="Close rate"
               rate={data.kpis.winRate}
-              unit="tratos cerrados"
+              unit="closed deals"
             />
             <StatCard
-              label="Ticket promedio"
+              label="Average ticket"
               value={money(data.kpis.avgTicketCents)}
               hint={
                 data.kpis.avgTicketCents === null
-                  ? "ningún trato ganado con monto"
+                  ? "no won deal with an amount"
                   : undefined
               }
             />
@@ -75,44 +75,44 @@ export function SalesSection({
 
           <div className="grid gap-6 lg:grid-cols-2">
             <TimeBars
-              title="Prospectos nuevos"
-              unit="prospectos"
+              title="New leads"
+              unit="leads"
               points={data.series.map((s) => ({ bucket: s.bucket, value: s.newLeads }))}
               format={(v) => String(v)}
             />
             <TimeBars
-              title="Tratos ganados"
-              unit="tratos ganados"
+              title="Deals won"
+              unit="deals won"
               points={data.series.map((s) => ({
                 bucket: s.bucket,
                 value: s.won,
                 detail: s.wonCents > 0 ? money(s.wonCents) : undefined,
               }))}
               format={(v) => String(v)}
-              emptyText="Ningún trato ganado en el periodo."
+              emptyText="No deals won in the period."
             />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
-              <Subhead>Embudo de los que entraron en este periodo</Subhead>
+              <Subhead>Funnel of those who came in this period</Subhead>
               <Funnel steps={data.funnel} />
             </div>
 
             <div className="space-y-6">
               <div>
-                <Subhead>Dónde se atoran</Subhead>
+                <Subhead>Where they get stuck</Subhead>
                 {data.timing.length === 0 ? (
                   <p className="text-sm text-text-3">
-                    Todavía no hay movimientos suficientes para medir tiempos.
+                    Not enough moves yet to measure times.
                   </p>
                 ) : (
                   <table className="w-full text-sm">
                     <thead className="sr-only">
                       <tr>
-                        <th scope="col">Etapa</th>
-                        <th scope="col">Días en promedio</th>
-                        <th scope="col">Movimientos medidos</th>
+                        <th scope="col">Stage</th>
+                        <th scope="col">Average days</th>
+                        <th scope="col">Moves measured</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -120,10 +120,10 @@ export function SalesSection({
                         <tr key={t.stageId ?? t.name} className="border-b last:border-0">
                           <td className="py-1.5 pr-2">{t.name}</td>
                           <td className="py-1.5 text-right tabular-nums">
-                            {t.avgDays ?? "—"} días
+                            {t.avgDays ?? "—"} days
                           </td>
                           <td className="w-24 py-1.5 text-right text-xs text-text-3 tabular-nums">
-                            {t.sample} mov.
+                            {t.sample} moves
                           </td>
                         </tr>
                       ))}
@@ -132,25 +132,25 @@ export function SalesSection({
                 )}
                 {data.timeToWinDays !== null && (
                   <p className="mt-2 text-xs text-text-3">
-                    Del primer contacto al cierre:{" "}
+                    From first contact to close:{" "}
                     <strong className="font-semibold text-foreground">
-                      {data.timeToWinDays} días
+                      {data.timeToWinDays} days
                     </strong>{" "}
-                    en promedio.
+                    on average.
                   </p>
                 )}
               </div>
 
               <div>
-                <Subhead>Por qué se perdieron</Subhead>
+                <Subhead>Why they were lost</Subhead>
                 {data.lossReasons.length === 0 ? (
-                  <p className="text-sm text-text-3">Ningún trato perdido en este periodo.</p>
+                  <p className="text-sm text-text-3">No deals lost in this period.</p>
                 ) : (
                   <table className="w-full text-sm">
                     <thead className="sr-only">
                       <tr>
-                        <th scope="col">Motivo</th>
-                        <th scope="col">Tratos</th>
+                        <th scope="col">Reason</th>
+                        <th scope="col">Deals</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -168,37 +168,34 @@ export function SalesSection({
           </div>
 
           <div>
-            <Subhead>Hoy en el embudo</Subhead>
+            <Subhead>Today in the funnel</Subhead>
             <p className="-mt-1 mb-2 text-xs text-text-3">
-              No depende del periodo: son los tratos abiertos en este momento.
+              {"Doesn't depend on the period: these are the deals open right now."}
             </p>
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:max-w-xl">
-              <StatCard label="Dinero en tratos abiertos" value={money(data.pipeline.openCents)} />
+              <StatCard label="Money in open deals" value={money(data.pipeline.openCents)} />
               <StatCard
-                label="Tratos sin monto"
+                label="Deals without amount"
                 value={String(data.pipeline.withoutAmount)}
-                hint={data.pipeline.withoutAmount > 0 ? "no suman al dinero abierto" : undefined}
+                hint={data.pipeline.withoutAmount > 0 ? "don't add to open money" : undefined}
               />
             </div>
             {data.pipeline.otherCurrency > 0 && (
               <p className="mt-3 rounded-md border border-warning-soft bg-warning-tint px-3 py-2 text-xs text-warning-text">
-                {plural(data.pipeline.otherCurrency, "trato", "tratos")} con monto en otra
-                moneda no {data.pipeline.otherCurrency === 1 ? "entra" : "entran"} en los
-                totales: mezclar monedas daría una suma falsa.
+                {plural(data.pipeline.otherCurrency, "deal", "deals")} with an amount in another currency {data.pipeline.otherCurrency === 1 ? "is" : "are"} not included in the totals: mixing currencies would give a false sum.
               </p>
             )}
           </div>
 
           {data.completeFrom && (
             <p className="text-[11px] text-text-3">
-              Los tiempos usan movimientos registrados desde el{" "}
-              {new Date(data.completeFrom).toLocaleDateString("es-MX", {
+              Times use moves recorded since{" "}
+              {new Date(data.completeFrom).toLocaleDateString("en-US", {
                 day: "numeric",
                 month: "long",
                 year: "numeric",
               })}
-              . Lo anterior se sembró al instalar la bitácora de etapas y no se usa para
-              medir duraciones.
+              {". Earlier data was seeded when the stage log was installed and isn't used to measure durations."}
             </p>
           )}
         </div>

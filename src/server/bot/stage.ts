@@ -71,8 +71,8 @@ export type ResultadoEtapa =
 
 function listaParaElModelo(stages: readonly { name: string }[]): string {
   return stages.length
-    ? `Puedes moverlo a: ${stages.map((s) => s.name).join(", ")}.`
-    : "No hay etapas a las que puedas moverlo.";
+    ? `You can move it to: ${stages.map((s) => s.name).join(", ")}.`
+    : "There are no stages you can move it to.";
 }
 
 export async function moverEtapaPorElCerebro(input: {
@@ -101,7 +101,7 @@ export async function moverEtapaPorElCerebro(input: {
     .limit(1);
   const conv = convRows[0];
   if (!conv) {
-    return { ok: false, status: 404, code: "not_found", message: "Conversación no encontrada" };
+    return { ok: false, status: 404, code: "not_found", message: "Conversation not found" };
   }
   // Misma regla que `/api/bot/messages`: con una persona al frente, el
   // cerebro no toca la conversación.
@@ -110,7 +110,7 @@ export async function moverEtapaPorElCerebro(input: {
       ok: false,
       status: 409,
       code: "ai_paused",
-      message: "La IA está en pausa en esta conversación",
+      message: "AI is paused in this conversation",
     };
   }
 
@@ -125,7 +125,7 @@ export async function moverEtapaPorElCerebro(input: {
       ok: false,
       status: 409,
       code: "herramienta_apagada",
-      message: "La herramienta «Mover de etapa» está apagada en el perfil del agente",
+      message: "The «Move stage» tool is off in the agent profile",
     };
   }
 
@@ -150,7 +150,7 @@ export async function moverEtapaPorElCerebro(input: {
   ]);
   const lead = leadRows[0];
   if (!lead) {
-    return { ok: false, status: 404, code: "sin_lead", message: "El contacto no tiene lead en el pipeline" };
+    return { ok: false, status: 404, code: "sin_lead", message: "The contact has no lead in the pipeline" };
   }
 
   const siguientes = etapasSiguientes(stages, lead.stageId);
@@ -160,7 +160,7 @@ export async function moverEtapaPorElCerebro(input: {
       ok: false,
       status: 422,
       code: "etapa_desconocida",
-      message: `No existe la etapa «${input.stage.trim()}». ${listaParaElModelo(siguientes)}`,
+      message: `There's no stage «${input.stage.trim()}». ${listaParaElModelo(siguientes)}`,
     };
   }
 
@@ -171,7 +171,7 @@ export async function moverEtapaPorElCerebro(input: {
       ok: false,
       status: 409,
       code: "etapa_no_permitida",
-      message: `No puedes mover al lead a «${destino.name}»: solo hacia adelante y a etapas abiertas. ${listaParaElModelo(siguientes)}`,
+      message: `You can't move the lead to «${destino.name}»: only forward and to open stages. ${listaParaElModelo(siguientes)}`,
     };
   }
 
@@ -185,7 +185,7 @@ export async function moverEtapaPorElCerebro(input: {
   if (!res.ok) {
     // Solo si el lead o la etapa desaparecieron entre la lectura y el
     // movimiento (el dueño borró algo en ese instante).
-    return { ok: false, status: 404, code: "sin_lead", message: "El lead o la etapa ya no existen" };
+    return { ok: false, status: 404, code: "sin_lead", message: "The lead or the stage no longer exists" };
   }
 
   return {

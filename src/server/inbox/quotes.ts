@@ -94,7 +94,7 @@ export async function resolverCita(
     const citas = await resolverCitas(organizationId, [m]);
     return citas.get(m.replyToWaMessageId) ?? null;
   } catch (err) {
-    console.warn("[citas] no se resolvió la cita:", err);
+    console.warn("[appointments] the appointment wasn't resolved:", err);
     return null;
   }
 }

@@ -193,7 +193,7 @@ export async function citasParaContexto(
     return await leerCitas(organizationId, contactId, now);
   } catch (err) {
     console.error(
-      `[agenda] no pude leer las citas del contacto ${contactId} para el contexto:`,
+      `[agenda] couldn't read the contact's appointments ${contactId} for context:`,
       err
     );
     return null;

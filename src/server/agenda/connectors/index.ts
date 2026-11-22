@@ -80,7 +80,7 @@ export async function bindConnector(
       if (!creds) {
         throw new ConnectorError(
           "zoom",
-          "Zoom no está conectado: faltan las credenciales"
+          "Zoom isn't connected: credentials are missing"
         );
       }
       return bind(zoomConnector, creds);
@@ -91,7 +91,7 @@ export async function bindConnector(
       if (!creds) {
         throw new ConnectorError(
           "google",
-          "Google no está conectado: faltan las credenciales"
+          "Google isn't connected: credentials are missing"
         );
       }
       return bind(googleConnector, creds);

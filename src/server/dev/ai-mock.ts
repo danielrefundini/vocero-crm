@@ -107,11 +107,11 @@ export function aiMockCompletion(messages: InMessage[]): string {
           {
             tipo: "fuera_de_kb",
             evidencia:
-              "El cliente preguntó por garantías y devoluciones y el conocimiento no lo cubre.",
+              "The customer asked about warranties and returns and the knowledge doesn't cover it.",
             sugerencia: {
-              pregunta: "¿Cuál es la política de garantías y devoluciones?",
+              pregunta: "What's the warranty and return policy?",
               respuesta:
-                "Aceptamos devoluciones dentro de los 30 días con ticket de compra; la garantía depende del fabricante.",
+                "We accept returns within 30 days with a receipt; the warranty depends on the manufacturer.",
             },
           },
         ],
