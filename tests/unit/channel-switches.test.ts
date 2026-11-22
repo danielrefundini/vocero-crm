@@ -29,5 +29,8 @@ describe("channel switches from Settings", () => {
   it("WhatsApp is not among the switches", () => {
     expect(SWITCHABLE_CHANNELS).not.toContain("whatsapp");
     expect(SWITCHABLE_CHANNELS).toContain("website");
+    // SMS and email are on when their keys are set, not by a switch.
+    expect(SWITCHABLE_CHANNELS).not.toContain("sms");
+    expect(SWITCHABLE_CHANNELS).not.toContain("email");
   });
 });

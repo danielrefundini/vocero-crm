@@ -11,11 +11,12 @@
  * aquí — ver docs/agenda-conectores.md.
  */
 
-export type ConnectorId = "enlace-fijo" | "zoom" | "google";
+export type ConnectorId = "enlace-fijo" | "zoom" | "google" | "in-home";
 
 /** Orden en que se le presentan al operador. El soberano primero. */
 export const CONNECTOR_ORDER: readonly ConnectorId[] = [
   "enlace-fijo",
+  "in-home",
   "zoom",
   "google",
 ];
@@ -42,7 +43,7 @@ export const CONNECTOR_META: Record<ConnectorId, ConnectorMeta> = {
   "enlace-fijo": {
     label: "Fixed link",
     description:
-      "Your usual room: paste the URL once and every appointment shares it. Nothing to connect.",
+      "Your usual room: paste the URL once and every appointment shares it. Nothing else to connect.",
     perBookingLink: false,
     updatesMeeting: false,
     writesCalendarEvent: false,
@@ -50,8 +51,7 @@ export const CONNECTOR_META: Record<ConnectorId, ConnectorMeta> = {
   },
   zoom: {
     label: "Zoom",
-    description:
-      "Each appointment creates its Zoom meeting. Rescheduling moves it; canceling deletes it.",
+    description: "Each appointment creates its own Zoom meeting. Rescheduling moves it; canceling deletes it.",
     perBookingLink: true,
     updatesMeeting: true,
     // Zoom sincroniza con el calendario del dueño por su cuenta, si él lo
@@ -61,12 +61,20 @@ export const CONNECTOR_META: Record<ConnectorId, ConnectorMeta> = {
   },
   google: {
     label: "Google Calendar + Meet",
-    description:
-      "Each appointment creates an event in your calendar with its Meet link.",
+    description: "Each appointment creates a calendar event with its own Meet link.",
     perBookingLink: true,
     updatesMeeting: true,
     writesCalendarEvent: true,
     external: true,
+  },
+  "in-home": {
+    label: "In-home visit",
+    description:
+      "A visit at the property. The confirmation includes a Google Maps link from the address. No Zoom or Meet account.",
+    perBookingLink: true,
+    updatesMeeting: false,
+    writesCalendarEvent: false,
+    external: false,
   },
 };
 

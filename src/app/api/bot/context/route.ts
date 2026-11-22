@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { apiError } from "@/lib/api";
 import { requireBotKey, resolveInstanceOrg } from "@/server/bot/auth";
+import { formatAddress, servicesFromStored, isBrand } from "@/lib/exteriors";
 import { serializeFicha } from "@/server/bot/ficha";
 import { findContactByIdentity } from "@/server/inbox/identity";
 import { isWindowOpen, windowRemainingMs } from "@/server/inbox/window";
@@ -134,6 +135,20 @@ export async function GET(req: Request) {
       waIdentity: contact.waIdentity,
       channel: contact.channel,
       phone: contact.phone,
+      email: contact.email,
+      address: {
+        street: contact.addressStreet,
+        city: contact.addressCity,
+        state: contact.addressState,
+        zip: contact.addressZip,
+        formatted: formatAddress({
+          street: contact.addressStreet,
+          city: contact.addressCity,
+          state: contact.addressState,
+          zip: contact.addressZip,
+        }),
+      },
+      services: servicesFromStored(contact.services),
       ficha: serializeFicha(contact),
     },
     conversation: {
@@ -155,7 +170,18 @@ export async function GET(req: Request) {
       ),
     },
     lead: leadRows[0]
-      ? { id: leadRows[0].lead.id, stageName: leadRows[0].stage.name, nextStages }
+      ? {
+          id: leadRows[0].lead.id,
+          stageName: leadRows[0].stage.name,
+          nextStages,
+          amountCents: leadRows[0].lead.amountCents,
+          currency: leadRows[0].lead.currency,
+          quoteDate: leadRows[0].lead.quoteDate,
+          brand:
+            leadRows[0].lead.brand && isBrand(leadRows[0].lead.brand)
+              ? leadRows[0].lead.brand
+              : null,
+        }
       : null,
     adOrigen: anuncio
       ? {

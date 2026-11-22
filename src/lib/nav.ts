@@ -128,6 +128,7 @@ export function settingsSections({
   // Always there: besides the status, it holds the on/off switches.
   canales.push({ href: "/settings/channels", label: "On / off & status" });
   canales.push({ href: "/settings/whatsapp", label: "WhatsApp" });
+  canales.push({ href: "/settings/follow-up", label: "SMS & email" });
   if (instagram) canales.push({ href: "/settings/instagram", label: "Instagram" });
   if (messenger) canales.push({ href: "/settings/messenger", label: "Messenger" });
   if (tiktok) canales.push({ href: "/settings/tiktok", label: "TikTok" });
@@ -136,14 +137,12 @@ export function settingsSections({
 
   // #85 — el proveedor de IA se configura aquí; el entorno queda de respaldo.
   const agente: SettingsLink[] = [{ href: "/settings/ai", label: "AI" }];
-  if (agenda) agente.push({ href: "/settings/calendar", label: "Scheduling" });
+  if (agenda) agente.push({ href: "/settings/calendar", label: "Calendar" });
 
   const negocio: SettingsLink[] = [
-    { href: "/settings/branding", label: "Branding" },
-    // 062 — Tema, letra, tamaño y densidad (cada quien la suya).
+    { href: "/settings/branding", label: "Brand" },
     { href: "/settings/appearance", label: "Appearance" },
     { href: "/settings/templates", label: "Templates" },
-    // 049 — lo que el equipo inserta con «/atajo» en la Bandeja.
     { href: "/settings/quick-replies", label: "Quick replies" },
     { href: "/settings/team", label: "Team" },
   ];

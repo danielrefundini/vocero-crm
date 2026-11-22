@@ -4,6 +4,7 @@ import { getDb, schema } from "@/lib/db";
 import { apiError, parseBody } from "@/lib/api";
 import { requireBotKey, resolveInstanceOrg } from "@/server/bot/auth";
 import { upsertFicha } from "@/server/bot/ficha";
+import { applyStructuredFields, splitStructuredFicha } from "@/server/exteriors/apply";
 
 export const dynamic = "force-dynamic";
 
@@ -45,10 +46,19 @@ export async function PUT(req: Request) {
     .limit(1);
   if (!rows[0]) return apiError(404, "not_found", "Conversation not found");
 
+  const split = splitStructuredFicha(body.data.ficha);
+  if (Object.keys(split.structured).length > 0) {
+    await applyStructuredFields({
+      organizationId,
+      contactId: rows[0].contactId,
+      fields: split.structured,
+      servicesMode: "merge",
+    });
+  }
   const result = await upsertFicha({
     organizationId,
     contactId: rows[0].contactId,
-    ficha: body.data.ficha,
+    ficha: split.ficha,
   });
   if (!result) return apiError(404, "not_found", "Contact not found");
   return Response.json(result);

@@ -9,7 +9,15 @@
  * mintiendo.
  */
 
-export type Channel = "whatsapp" | "instagram" | "messenger" | "tiktok" | "telegram" | "website";
+export type Channel =
+  | "whatsapp"
+  | "instagram"
+  | "messenger"
+  | "tiktok"
+  | "telegram"
+  | "website"
+  | "sms"
+  | "email";
 
 /**
  * Orden en que los canales se presentan al operador. WhatsApp primero: es el
@@ -22,6 +30,8 @@ export const CHANNEL_ORDER: readonly Channel[] = [
   "tiktok",
   "telegram",
   "website",
+  "sms",
+  "email",
 ];
 
 /** Nombre visible del canal, para la interfaz y para los errores del operador. */
@@ -37,6 +47,8 @@ export const CHANNEL_LABEL: Record<Channel, string> = {
   telegram: "Telegram",
   // Website form submissions (Formspree or a direct post). Receive-only.
   website: "Website",
+  sms: "SMS",
+  email: "Email",
 };
 
 /**

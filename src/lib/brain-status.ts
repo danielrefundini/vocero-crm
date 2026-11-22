@@ -145,8 +145,8 @@ function healthKnown(h: BrainHealthDto | null): h is BrainHealthDto {
 export function externalAnswerLabel(status: BrainStatusDto): string {
   const name = externalBrainName(status);
   return name
-    ? `Your external brain answers (${name})`
-    : "Your external brain answers";
+    ? `Your external brain is replying (${name})`
+    : "Your external brain is replying";
 }
 
 /** «hace 3 min». Tolera relojes desfasados: el futuro es «hace unos segundos». */
@@ -156,7 +156,7 @@ export function haceCuanto(iso: string, now: number = Date.now()): string {
   const m = Math.floor(s / 60);
   if (m < 60) return `${m} min ago`;
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h} h ago`;
+  if (h < 24) return `${h} hr ago`;
   const d = Math.floor(h / 24);
   return d === 1 ? "1 day ago" : `${d} days ago`;
 }

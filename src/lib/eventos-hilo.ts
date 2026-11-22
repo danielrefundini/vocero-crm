@@ -16,12 +16,12 @@ export type EventoHiloDto = {
  * `hostilidad` faltaba allá: se agrega aquí y el panel lo usa.
  */
 export const HANDOFF_LABELS: Record<string, string> = {
-  cliente: "The customer asked for a human",
-  modelo: "The agent decided to escalate",
-  error: "AI provider error",
-  ventana: "24h window closed",
+  cliente: "The customer asked for a person",
+  modelo: "The agent chose to hand off",
+  error: "The AI provider failed",
+  ventana: "The 24-hour window is closed",
   hostilidad: "The customer got aggressive and the agent stepped back",
-  manual_reply: "You replied from the phone — AI paused",
+  manual_reply: "You replied from the phone — AI is paused",
 };
 
 /** D1 — «Pasó a Interesado · por Ana», «Entró al embudo en Nuevo»… */
@@ -32,7 +32,10 @@ export function textoEventoEtapa(e: {
   source: StageChangeSource | string;
   actorNombre: string | null;
 }): string {
-  const base = e.fromStageName === null ? `Entered the funnel at ${e.toStageName}` : `Moved to ${e.toStageName}`;
+  const base =
+    e.fromStageName === null
+      ? `Entered the pipeline at ${e.toStageName}`
+      : `Moved to ${e.toStageName}`;
   const motivo =
     e.lossReason && e.lossReason in LOSS_REASON_LABEL
       ? ` · ${LOSS_REASON_LABEL[e.lossReason as LossReason]}`
@@ -48,6 +51,6 @@ export function textoEventoEtapa(e: {
 /** D1 — «La IA se pausó: el cliente pidió un humano». */
 export function textoTraspaso(motivo: string | null): string {
   const etiqueta = motivo ? HANDOFF_LABELS[motivo] : undefined;
-  if (!etiqueta) return "AI paused";
-  return `AI paused: ${etiqueta.charAt(0).toLowerCase()}${etiqueta.slice(1)}`;
+  if (!etiqueta) return "The AI paused";
+  return `The AI paused: ${etiqueta.charAt(0).toLowerCase()}${etiqueta.slice(1)}`;
 }

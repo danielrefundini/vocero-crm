@@ -3,6 +3,7 @@ import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
 import { scoped } from "@/lib/db/tenant";
 import { labelInTz } from "@/lib/time/slots";
+import { formatAddress } from "@/lib/exteriors";
 import { CONNECTOR_META, type ConnectorId } from "@/lib/agenda-connectors";
 import {
   computeAvailability,
@@ -89,6 +90,10 @@ export async function createSessionBooking(input: {
   /** Camino manual del operador. */
   contactId?: string | null;
   notes?: string | null;
+  /** Conector de esta cita. Si no viene, el activo de la agenda. */
+  connector?: ConnectorId | null;
+  /** Dirección de la visita. En in-home, si falta, se copia del contacto. */
+  propertyAddress?: string | null;
   /**
    * true ⇒ exige que el instante figure entre los ofrecidos a la conversación
    * (agente/bot). El operador elige de la disponibilidad que está viendo, así
@@ -133,6 +138,11 @@ export async function createSessionBooking(input: {
     throw new BookingError("invalid", "The appointment needs a contact");
   }
   contactName = await getContactName(input.organizationId, contactId);
+  const connector = input.connector ?? settings.connector;
+  let propertyAddress = input.propertyAddress?.trim() || null;
+  if (!propertyAddress && connector === "in-home") {
+    propertyAddress = await propertyAddressOf(input.organizationId, contactId);
+  }
 
   // REGLA 1: solo se reserva lo que se ofreció.
   if (input.requireOffer) {
@@ -195,7 +205,8 @@ export async function createSessionBooking(input: {
         durationMinutes: settings.slotMinutes,
         // Copia histórica: si el negocio cambia de conector, esta cita conserva
         // el que le tocó y sigue hablando con él al moverse o cancelarse.
-        connector: settings.connector,
+        connector,
+        propertyAddress,
         isTest,
         notes: input.notes ?? null,
       })
@@ -535,6 +546,7 @@ async function deliverMeeting(
             durationMinutes: booking.durationMinutes,
             timezone: settings.timezone,
             notes: booking.notes ?? undefined,
+            location: booking.propertyAddress ?? undefined,
           });
 
     return await persistDelivery(booking.id, {
@@ -666,10 +678,7 @@ async function getOwnBooking(
   return rows[0];
 }
 
-async function getContactName(
-  organizationId: string,
-  contactId: string
-): Promise<string> {
+async function getContactName(organizationId: string, contactId: string): Promise<string> {
   const db = getDb();
   const rows = await db
     .select({ name: schema.contact.name })
@@ -683,6 +692,35 @@ async function getContactName(
     )
     .limit(1);
   return rows[0]?.name ?? "";
+}
+
+async function propertyAddressOf(organizationId: string, contactId: string): Promise<string | null> {
+  const db = getDb();
+  const rows = await db
+    .select({
+      addressStreet: schema.contact.addressStreet,
+      addressCity: schema.contact.addressCity,
+      addressState: schema.contact.addressState,
+      addressZip: schema.contact.addressZip,
+    })
+    .from(schema.contact)
+    .where(
+      scoped(
+        schema.contact.organizationId,
+        organizationId,
+        eq(schema.contact.id, contactId)
+      )
+    )
+    .limit(1);
+  const row = rows[0];
+  if (!row) return null;
+  const formatted = formatAddress({
+    street: row.addressStreet,
+    city: row.addressCity,
+    state: row.addressState,
+    zip: row.addressZip,
+  });
+  return formatted || null;
 }
 
 /**

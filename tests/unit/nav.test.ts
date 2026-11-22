@@ -74,36 +74,37 @@ describe("ajustes en tres secciones", () => {
     const sections = settingsSections({});
     expect(sections.map((s) => s.title)).toEqual(["Channels", "Agent", "Business"]);
     expect(links(sections)).toEqual({
-      Channels: ["On / off & status", "WhatsApp"],
+      Channels: ["On / off & status", "WhatsApp", "SMS & email"],
       Agent: ["AI"],
-      Business: ["Branding", "Appearance", "Templates", "Quick replies", "Team"],
+      Business: ["Brand", "Appearance", "Templates", "Quick replies", "Team"],
     });
   });
 
   it("cada bandera añade su enlace en su sección y en ninguna otra", () => {
     // 023: con un canal social, "On / off & status" abre la sección.
     expect(links(settingsSections({ messenger: true }))).toEqual({
-      Channels: ["On / off & status", "WhatsApp", "Messenger"],
+      Channels: ["On / off & status", "WhatsApp", "SMS & email", "Messenger"],
       Agent: ["AI"],
-      Business: ["Branding", "Appearance", "Templates", "Quick replies", "Team"],
+      Business: ["Brand", "Appearance", "Templates", "Quick replies", "Team"],
     });
     expect(links(settingsSections({ instagram: true })).Channels).toEqual([
       "On / off & status",
       "WhatsApp",
+      "SMS & email",
       "Instagram",
     ]);
     expect(
       links(settingsSections({ instagram: true, messenger: true, tiktok: true })).Channels
-    ).toEqual(["On / off & status", "WhatsApp", "Instagram", "Messenger", "TikTok"]);
+    ).toEqual(["On / off & status", "WhatsApp", "SMS & email", "Instagram", "Messenger", "TikTok"]);
     expect(links(settingsSections({ agenda: true }))).toEqual({
-      Channels: ["On / off & status", "WhatsApp"],
-      Agent: ["AI", "Scheduling"],
-      Business: ["Branding", "Appearance", "Templates", "Quick replies", "Team"],
+      Channels: ["On / off & status", "WhatsApp", "SMS & email"],
+      Agent: ["AI", "Calendar"],
+      Business: ["Brand", "Appearance", "Templates", "Quick replies", "Team"],
     });
     expect(links(settingsSections({ atribucion: true }))).toEqual({
-      Channels: ["On / off & status", "WhatsApp"],
+      Channels: ["On / off & status", "WhatsApp", "SMS & email"],
       Agent: ["AI"],
-      Business: ["Branding", "Appearance", "Templates", "Quick replies", "Team", "Ads"],
+      Business: ["Brand", "Appearance", "Templates", "Quick replies", "Team", "Ads"],
     });
   });
 
@@ -122,6 +123,7 @@ describe("ajustes en tres secciones", () => {
       [
         "/settings/channels",
         "/settings/whatsapp",
+        "/settings/follow-up",
         "/settings/instagram",
         "/settings/messenger",
         "/settings/tiktok",

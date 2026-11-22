@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { getEnv } from "@/lib/env";
 import { CHANNEL_ORDER, isChannel, type Channel } from "@/lib/channels";
+import { resendOutboundConfig, twilioConfig } from "@/server/follow-up/config";
 
 /**
  * 014 — Qué canales están encendidos en esta instancia.
@@ -47,7 +48,7 @@ export function parseChannels(
   if (parseTelegramFlag(website)) enabled.add("website");
   for (const part of (raw ?? "").split(",")) {
     const name = part.trim().toLowerCase();
-    if (name === "telegram" || name === "website") continue;
+    if (name === "telegram" || name === "website" || KEY_CHANNELS.includes(name as Channel)) continue;
     // Cualquier canal del catalogo, no una lista escrita a mano aqui: el
     // canal siguiente solo tiene que existir en lib/channels.ts.
     if (isChannel(name)) enabled.add(name);
@@ -61,10 +62,24 @@ export function envChannels(): Set<Channel> {
   return parseChannels(env.CHANNELS, env.TELEGRAM, env.WEBSITE_FORMS);
 }
 
+/**
+ * SMS (Twilio) and email (Resend) exist when their keys are set, not by a
+ * switch: without the keys there's nothing to turn on.
+ */
+const KEY_CHANNELS: readonly Channel[] = ["sms", "email"];
+
 /** The channels the owner can switch from Settings (WhatsApp can't). */
 export const SWITCHABLE_CHANNELS: readonly Channel[] = CHANNEL_ORDER.filter(
-  (c) => c !== ALWAYS_ON
+  (c) => c !== ALWAYS_ON && !KEY_CHANNELS.includes(c)
 );
+
+/** SMS and email, on when their keys are in the environment. */
+function keyChannels(): Channel[] {
+  const on: Channel[] = [];
+  if (twilioConfig()) on.push("sms");
+  if (resendOutboundConfig()) on.push("email");
+  return on;
+}
 
 const SETTING_KEY = "channels";
 
@@ -115,7 +130,9 @@ export function resolveChannels(saved: Channel[] | null, fromEnv: Set<Channel>):
 }
 
 export async function enabledChannels(): Promise<Set<Channel>> {
-  return resolveChannels(await savedChannels(), envChannels());
+  const on = resolveChannels(await savedChannels(), envChannels());
+  for (const c of keyChannels()) on.add(c);
+  return on;
 }
 
 export async function isChannelEnabled(channel: Channel): Promise<boolean> {
@@ -133,7 +150,9 @@ export async function saveEnabledChannels(channels: readonly Channel[]): Promise
       set: { value, updatedAt: new Date() },
     });
   globalForChannels.__voceroChannels = { at: Date.now(), value };
-  return resolveChannels(value, envChannels());
+  const on = resolveChannels(value, envChannels());
+  for (const c of keyChannels()) on.add(c);
+  return on;
 }
 
 /**

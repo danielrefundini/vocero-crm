@@ -97,7 +97,7 @@ describe("motivosDePerdida", () => {
       desenlace({ leadId: "d", kind: "won" }),
     ]);
     expect(m).toEqual([
-      { reason: "precio", label: "Too expensive", count: 2 },
+      { reason: "precio", label: "Price was too high", count: 2 },
       { reason: "sin_registro", label: "No reason recorded", count: 1 },
     ]);
   });
@@ -157,7 +157,7 @@ describe("unirFuentes", () => {
       ["desconocida", 3, 0, 0],
     ]);
     expect(filas[0]!.label).toBe("Ad");
-    expect(filas.at(-1)!.label).toBe("Unidentified");
+    expect(filas.at(-1)!.label).toBe("Unknown");
     // La tasa de la fila es ventas entre prospectos, calculada en el servidor.
     expect(filas[0]!.winRate).toEqual({ value: 25, sample: 4, reliable: false });
     expect(filas.at(-1)!.winRate.value).toBeNull();

@@ -39,6 +39,7 @@ export function CalendarToolbar({
   onView,
   onListRange,
   onBlock,
+  onNewVisit,
 }: {
   view: CalendarView;
   anchor: string;
@@ -51,6 +52,7 @@ export function CalendarToolbar({
   onView: (view: CalendarView) => void;
   onListRange: (from: string, to: string) => void;
   onBlock: () => void;
+  onNewVisit: () => void;
 }) {
   const picker = useRef<HTMLInputElement>(null);
 
@@ -150,6 +152,10 @@ export function CalendarToolbar({
             </button>
           ))}
         </div>
+        <Button size="sm" variant="outline" onClick={onNewVisit}>
+          <Plus className="h-4 w-4" />
+          <span className="hidden sm:inline">New visit</span>
+        </Button>
         <Button size="sm" onClick={onBlock} aria-label="Block time">
           <Plus className="h-4 w-4" />
           <span className="hidden sm:inline">Block time</span>

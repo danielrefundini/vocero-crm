@@ -253,7 +253,7 @@ export function AgendaClient() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="buffer">Buffer between appointments (min)</Label>
+            <Label htmlFor="buffer">Travel buffer between appointments (minutes)</Label>
             <Input
               id="buffer"
               type="number"
@@ -262,6 +262,9 @@ export function AgendaClient() {
               value={settings.bufferMinutes}
               onChange={(e) => patch({ bufferMinutes: Number(e.target.value) })}
             />
+            <p className="text-[11px] text-muted-foreground">
+              Gap after each appointment before the next one can start. Use it for drive time between in-home visits. Stays between 0 and 120. 30 is a good starting point; set it here rather than changing every organization.
+            </p>
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="notice">Minimum notice (hours)</Label>
@@ -370,7 +373,7 @@ export function AgendaClient() {
 
       {/* Las credenciales se guardan por su cuenta, no con el botón de arriba:
           se validan contra el proveedor antes de tocar la base. */}
-      {settings.connector !== "enlace-fijo" && (
+      {settings.connector !== "enlace-fijo" && settings.connector !== "in-home" && (
         <ConnectorCredentials connector={settings.connector} />
       )}
 

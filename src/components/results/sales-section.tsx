@@ -47,7 +47,7 @@ export function SalesSection({
               compare={data.kpis.won}
             />
             <StatCard
-              label="Money won"
+              label="Revenue won"
               value={money(data.kpis.wonCents.current)}
               compare={data.kpis.wonCents}
             />
@@ -67,7 +67,7 @@ export function SalesSection({
               value={money(data.kpis.avgTicketCents)}
               hint={
                 data.kpis.avgTicketCents === null
-                  ? "no won deal with an amount"
+                  ? "no won deal has an amount"
                   : undefined
               }
             />
@@ -89,7 +89,7 @@ export function SalesSection({
                 detail: s.wonCents > 0 ? money(s.wonCents) : undefined,
               }))}
               format={(v) => String(v)}
-              emptyText="No deals won in the period."
+              emptyText="No deals won in this period."
             />
           </div>
 
@@ -175,7 +175,7 @@ export function SalesSection({
             <div className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:max-w-xl">
               <StatCard label="Money in open deals" value={money(data.pipeline.openCents)} />
               <StatCard
-                label="Deals without amount"
+                label="Deals with no amount"
                 value={String(data.pipeline.withoutAmount)}
                 hint={data.pipeline.withoutAmount > 0 ? "don't add to open money" : undefined}
               />

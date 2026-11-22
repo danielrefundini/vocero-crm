@@ -4,6 +4,7 @@ import { scoped } from "@/lib/db/tenant";
 import { eq } from "drizzle-orm";
 import { WEB_PREFIX } from "@/server/inbox/identity";
 import { ingestInboundMessage } from "@/server/inbox/ingest";
+import { applyStructuredFields } from "@/server/exteriors/apply";
 import { upsertFicha } from "@/server/bot/ficha";
 import { resolveInstanceOrg } from "@/server/bot/auth";
 
@@ -27,6 +28,17 @@ export type WebsiteLead = {
   /** `web:<email>` or `web:<phone digits>`; null when neither was sent. */
   identity: string | null;
   formId: string | null;
+  /** Address and services, when the form asks for them (contact card fields). */
+  details: Record<string, string>;
+};
+
+/** Form keys that fill the contact card's address and services. */
+const DETAIL_KEYS: Record<string, string[]> = {
+  address_street: ["address", "street", "street_address", "address_street", "address_line_1"],
+  address_city: ["city", "town", "address_city"],
+  address_state: ["state", "address_state", "region"],
+  address_zip: ["zip", "zip_code", "zipcode", "postal_code", "address_zip"],
+  services: ["service", "services", "service_type", "project", "project_type", "interested_in"],
 };
 
 const NAME_KEYS = ["name", "full_name", "fullname", "your_name", "nombre"];
@@ -128,10 +140,17 @@ export function normalizeWebsiteForm(body: unknown): WebsiteLead | null {
     .digest("hex")
     .slice(0, 32);
 
+  const details: Record<string, string> = {};
+  for (const [field, keys] of Object.entries(DETAIL_KEYS)) {
+    const hit = primero(keys);
+    if (hit) details[field] = hit.value;
+  }
+
   return {
     name,
     email,
     phone,
+    details,
     text: lineas.join("\n"),
     messageId: `web_${huella}`,
     identity,
@@ -209,6 +228,17 @@ export async function ingestWebsiteLead(organizationId: string, lead: WebsiteLea
   if (lead.email && !actual.email) patch.email = lead.email;
   if (lead.phone && !actual.phone) patch.phone = lead.phone;
   if (Object.keys(patch).length) await upsertFicha({ organizationId, contactId: c.id, ficha: patch });
+  // Email, address and services go to the card's own fields too. The latest
+  // submission updates the email and address; services are added, not replaced.
+  const fields: Record<string, unknown> = {};
+  if (lead.email) fields.email = lead.email;
+  for (const [k, v] of Object.entries(lead.details)) {
+    if (k === "services") fields.services = v.split(/\s*(?:,|;|\/|\band\b)\s*/i).filter(Boolean);
+    else fields[k] = v;
+  }
+  await applyStructuredFields({ organizationId, contactId: c.id, fields, servicesMode: "merge" }).catch(
+    (err) => console.error("[website] couldn't fill the contact card:", err)
+  );
   if (lead.phone && !c.phone) {
     await db
       .update(schema.contact)

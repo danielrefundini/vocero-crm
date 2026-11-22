@@ -135,10 +135,10 @@ describe("textos compartidos", () => {
   it("«Nea» solo si su /health habla el contrato de Nea", () => {
     const conNea = status({ botKeyConfigured: true, health: EN_LINEA });
     expect(externalBrainName(conNea)).toBe("Nea");
-    expect(externalAnswerLabel(conNea)).toBe("Your external brain answers (Nea)");
+    expect(externalAnswerLabel(conNea)).toBe("Your external brain is replying (Nea)");
     const sinNombre = status({ botKeyConfigured: true, lastSeenAt: HACE_3_MIN });
     expect(externalBrainName(sinNombre)).toBeNull();
-    expect(externalAnswerLabel(sinNombre)).toBe("Your external brain answers");
+    expect(externalAnswerLabel(sinNombre)).toBe("Your external brain is replying");
   });
 
   it("«responde tu cerebro externo» solo si se le despacha, está encendido y no está caído", () => {
@@ -168,7 +168,7 @@ describe("textos compartidos", () => {
     expect(haceCuanto(new Date(t - 20_000).toISOString(), t)).toBe("a few seconds ago");
     expect(haceCuanto(new Date(t + 60_000).toISOString(), t)).toBe("a few seconds ago");
     expect(haceCuanto(HACE_3_MIN.toISOString(), t)).toBe("3 min ago");
-    expect(haceCuanto(new Date(t - 2 * 3_600_000).toISOString(), t)).toBe("2 h ago");
+    expect(haceCuanto(new Date(t - 2 * 3_600_000).toISOString(), t)).toBe("2 hr ago");
     expect(haceCuanto(HACE_25_H.toISOString(), t)).toBe("1 day ago");
   });
 });

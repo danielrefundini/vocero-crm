@@ -75,3 +75,24 @@ describe("Website form intake", () => {
     expect(capabilitiesFor("website").outboundMedia).toBe(false);
   });
 });
+
+describe("website form → contact card fields", () => {
+  it("picks the address and services out of the form", () => {
+    const lead = normalizeWebsiteForm({
+      name: "Jordan Lee",
+      email: "jordan@example.com",
+      Address: "12 Oak St",
+      City: "Rockville",
+      State: "MD",
+      "Zip Code": "20850",
+      Service: "Windows, Gutters",
+    });
+    expect(lead?.details).toEqual({
+      address_street: "12 Oak St",
+      address_city: "Rockville",
+      address_state: "MD",
+      address_zip: "20850",
+      services: "Windows, Gutters",
+    });
+  });
+});

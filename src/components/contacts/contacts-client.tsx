@@ -19,6 +19,8 @@ import { formatPhone } from "@/lib/utils";
 import { ContactAvatar } from "@/components/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ExteriorsFields, EMPTY_EXTERIORS, type ExteriorsValue } from "@/components/exteriors/exteriors-fields";
+import { parseMoneyToCents } from "@/lib/money";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -163,8 +165,8 @@ export function ContactsClient() {
             <EmptyState
               icon={Users}
               className="h-full"
-              title="No contacts"
-              description="Everyone who messages your WhatsApp will be recorded here automatically."
+              title="No contacts yet"
+              description="People who message you, and leads from your website, show up here."
             />
           )
         ) : (
@@ -327,11 +329,25 @@ function EditDialog({
 }: {
   contact: ContactDto;
   onClose: () => void;
-  onSave: (patch: { name: string; notes: string; aiPaused?: boolean }) => Promise<void>;
+  onSave: (patch: Record<string, unknown>) => Promise<void>;
 }) {
   const [name, setName] = useState(contact.name);
   const [notes, setNotes] = useState(contact.notes ?? "");
   const [aiPaused, setAiPaused] = useState(contact.aiPaused ?? false);
+  const [exteriors, setExteriors] = useState<ExteriorsValue>({
+    ...EMPTY_EXTERIORS,
+    email: contact.email ?? "",
+    addressStreet: contact.address?.street ?? "",
+    addressCity: contact.address?.city ?? "",
+    addressState: contact.address?.state ?? "",
+    addressZip: contact.address?.zip ?? "",
+    services: contact.services ?? [],
+    brand: contact.deal?.brand ?? "daniel_exteriors",
+    quoteAmount:
+      contact.deal?.amountCents == null ? "" : (contact.deal.amountCents / 100).toFixed(2),
+    quoteDate: contact.deal?.quoteDate ?? "",
+  });
+  const [error, setError] = useState<string | null>(null);
 
   return (
     <div
@@ -339,7 +355,7 @@ function EditDialog({
       onClick={onClose}
     >
       <div
-        className="max-h-[85dvh] w-full max-w-md overflow-y-auto rounded-lg border bg-popover p-5 shadow-xl"
+        className="max-h-[85dvh] w-full max-w-lg overflow-y-auto rounded-lg border bg-popover p-5 shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         <h3 className="mb-4 font-semibold">Edit contact</h3>
@@ -348,24 +364,15 @@ function EditDialog({
             <label className="text-sm font-medium" htmlFor="edit-name">
               Name
             </label>
-            <Input
-              id="edit-name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
+            <Input id="edit-name" value={name} onChange={(e) => setName(e.target.value)} />
           </div>
+          <ExteriorsFields value={exteriors} onChange={setExteriors} />
           <div className="space-y-1.5">
             <label className="text-sm font-medium" htmlFor="edit-notes">
               Notes
             </label>
-            <Textarea
-              id="edit-notes"
-              rows={4}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
+            <Textarea id="edit-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
-          {/* 027 */}
           <label className="flex items-start gap-2 text-sm">
             <input
               type="checkbox"
@@ -374,28 +381,42 @@ function EditDialog({
               className="mt-0.5 accent-primary"
             />
             <span>
-              {"The agent doesn't reply to them"}
-              <span className="block text-[11px] text-text-3">
-                Their messages arrive in the Inbox and you handle them.
+              The agent does not reply to this person
+              <span className="block text-[11px] text-muted-foreground">
+                Their messages stay in the inbox for you.
               </span>
             </span>
           </label>
         </div>
+        {error && <p className="mt-3 text-xs text-destructive">{error}</p>}
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
             Cancel
           </Button>
           <Button
             disabled={!name.trim()}
-            onClick={() =>
+            onClick={() => {
+              const amount = exteriors.quoteAmount.trim();
+              const cents = amount ? parseMoneyToCents(amount) : null;
+              if (amount && cents === null) {
+                setError("Quote amount must be a number, or left blank.");
+                return;
+              }
               void onSave({
                 name: name.trim(),
                 notes,
-                // Solo si cambió: mandarlo siempre reescribiría el interruptor
-                // de la Bandeja cada vez que alguien corrige un nombre.
                 ...(aiPaused !== (contact.aiPaused ?? false) ? { aiPaused } : {}),
-              })
-            }
+                email: exteriors.email.trim() || null,
+                addressStreet: exteriors.addressStreet,
+                addressCity: exteriors.addressCity,
+                addressState: exteriors.addressState,
+                addressZip: exteriors.addressZip,
+                services: exteriors.services,
+                brand: exteriors.brand || null,
+                amountCents: cents,
+                quoteDate: exteriors.quoteDate || null,
+              });
+            }}
           >
             Save
           </Button>
@@ -404,3 +425,4 @@ function EditDialog({
     </div>
   );
 }
+

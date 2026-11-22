@@ -14,6 +14,7 @@ import {
   markZoomError,
 } from "@/server/agenda/connectors/zoom-credentials";
 import { googleConnector } from "@/server/agenda/connectors/google";
+import { inHomeConnector } from "@/server/agenda/connectors/in-home";
 import {
   getGoogleCredentials,
   markGoogleError,
@@ -96,6 +97,9 @@ export async function bindConnector(
       }
       return bind(googleConnector, creds);
     }
+
+    case "in-home":
+      return bind(inHomeConnector, null);
   }
 }
 
@@ -120,6 +124,8 @@ export async function markConnectorAuthError(
       return;
     case "google":
       await markGoogleError(organizationId);
+      return;
+    case "in-home":
       return;
   }
 }

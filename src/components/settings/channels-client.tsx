@@ -62,6 +62,8 @@ const SETTINGS_HREF: Record<Channel, string> = {
   tiktok: "/settings/tiktok",
   telegram: "/settings/telegram",
   website: "/settings/website",
+  sms: "/settings/follow-up",
+  email: "/settings/follow-up",
 };
 
 const DOT: Record<Level, string> = {

@@ -183,6 +183,40 @@ export const CHANNEL_CAPABILITIES: Record<Channel, ChannelCapabilities> = {
     deliveryReceipts: false,
     quoteReplies: false,
   },
+  /**
+   * SMS (Twilio) has no 24-hour window and no templates: it's the follow-up
+   * for leads from the website or people not on WhatsApp. Twilio's cap is
+   * 1,600 characters across concatenated segments.
+   */
+  sms: {
+    label: CHANNEL_LABEL.sms,
+    windowMs: null,
+    outsideWindow: "none",
+    humanAgentWindowMs: null,
+    textFormat: "plain",
+    maxTextBytes: null,
+    maxTextChars: 1600,
+    maxOutboundPerWindow: null,
+    outboundMedia: false,
+    structuredMessages: false,
+    deliveryReceipts: true,
+    quoteReplies: false,
+  },
+  /** Email (Resend): no window, no practical text limit. */
+  email: {
+    label: CHANNEL_LABEL.email,
+    windowMs: null,
+    outsideWindow: "none",
+    humanAgentWindowMs: null,
+    textFormat: "plain",
+    maxTextBytes: null,
+    maxTextChars: null,
+    maxOutboundPerWindow: null,
+    outboundMedia: false,
+    structuredMessages: false,
+    deliveryReceipts: false,
+    quoteReplies: false,
+  },
 };
 
 /**

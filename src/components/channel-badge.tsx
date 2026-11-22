@@ -51,6 +51,14 @@ const MARK: Record<Channel, { path: string; tile: string }> = {
   tiktok: { path: TIKTOK_PATH, tile: "bg-[#010101]" },
   telegram: { path: TELEGRAM_PATH, tile: "bg-[#229ED9]" },
   website: { path: WEBSITE_PATH, tile: "bg-[#f59e0b]" },
+  sms: {
+    path: "M4 3h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2z",
+    tile: "bg-brand",
+  },
+  email: {
+    path: "M3 5h18a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm9 7L3.5 6.5h17L12 12z",
+    tile: "bg-foreground",
+  },
 };
 
 /**

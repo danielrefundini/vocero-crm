@@ -5,11 +5,14 @@ import { newId } from "@/lib/db/ids";
 /** Etapas sembradas del pipeline (US2). */
 const SEED_STAGES: { name: string; kind: "open" | "won" | "lost" }[] = [
   { name: "New", kind: "open" },
-  { name: "In conversation", kind: "open" },
-  { name: "Interested", kind: "open" },
-  { name: "Customer", kind: "won" },
+  { name: "Contacted", kind: "open" },
+  { name: "Consult booked", kind: "open" },
+  { name: "Quoted", kind: "open" },
+  { name: "Won", kind: "won" },
   { name: "Lost", kind: "lost" },
 ];
+
+export { SEED_STAGES };
 
 /**
  * Primer registro de la instancia: crea la organización, deja al usuario como
@@ -33,7 +36,7 @@ export async function onUserCreated(userId: string, userName: string) {
     const orgId = newId("organization");
     await tx.insert(schema.organization).values({
       id: orgId,
-      name: userName ? `Business of ${userName}` : "My business",
+      name: userName ? `${userName}'s business` : "My business",
       slug: "principal",
     });
     await tx.insert(schema.member).values({

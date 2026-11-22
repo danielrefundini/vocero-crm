@@ -185,8 +185,17 @@ export function BookingDrawer({
                   rel="noreferrer noopener"
                   className="flex items-center gap-2 break-all text-sm text-brand-text hover:underline"
                 >
-                  <Video className="h-4 w-4 shrink-0" /> Meeting link
+                  <Video className="h-4 w-4 shrink-0" />
+                  {b.connector === "in-home" ? "Open in Google Maps" : "Meeting link"}
                 </a>
+              )}
+              {b.connector === "in-home" && b.propertyAddress && (
+                <p className="text-sm text-text-2">{b.propertyAddress}</p>
+              )}
+              {b.connector === "in-home" && !b.meetingLink && (
+                <p className="text-sm text-warning-text">
+                  Map link is missing. Add a property address on the contact and book again, or set one on the next visit.
+                </p>
               )}
               {b.connector === "google" && (
                 <p className="text-xs text-text-3">

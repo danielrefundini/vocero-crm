@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CONNECTOR_META, type ConnectorId } from "@/lib/agenda-connectors";
+import { CONNECTOR_META } from "@/lib/agenda-connectors";
 
 /**
  * 015 — Las credenciales de un conector externo.
@@ -23,7 +23,7 @@ import { CONNECTOR_META, type ConnectorId } from "@/lib/agenda-connectors";
  * Hacia fuera nunca vuelve un secreto: solo sus últimos 4 y el estado.
  */
 
-type ExternalConnector = Exclude<ConnectorId, "enlace-fijo">;
+type ExternalConnector = "zoom" | "google";
 
 type Field = {
   name: string;

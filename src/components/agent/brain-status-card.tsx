@@ -46,15 +46,19 @@ export function BrainStatusCard({
   return (
     <Card data-brain-card data-warning={status.warning ?? "ninguno"}>
       <CardHeader className="pb-4">
-        <CardTitle>Who answers your customers</CardTitle>
+        <CardTitle>Who replies to your customers</CardTitle>
         <CardDescription>
-          {"Vocero doesn't ship an agent: the one you connect alongside answers (Nea, or your own), and only with the switch above turned on. Without an agent, you answer from the inbox."}
+          This CRM does not include an agent. Replies come from the brain you connect beside it
+          (Nea, or your own), and only while the switch above is on. Without that, you reply from the inbox.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {status.warning === "sin_cerebro" && (
           <Callout tone="info" icon={Info} title="No agent connected">
-            Vocero works as a manual inbox: your customers get what you reply. For an agent to answer, run it next to the CRM and set <Env>BRAIN_DISPATCH_URL</Env> and <Env>BOT_API_KEY</Env> in the environment.{" "}
+            This stays a manual inbox: customers get the replies you send. To let an agent reply,
+            run one beside the CRM and set <Env>BRAIN_DISPATCH_URL</Env> and <Env>BOT_API_KEY</Env>.
+            Leave the agent model key empty so it uses the Claude model already saved in Settings → AI.
+            See docs/agent-setup.md.{" "}
             <a
               href={GUIA_DEL_PAR_URL}
               className="inline-flex items-center gap-0.5 whitespace-nowrap font-medium text-brand-text underline underline-offset-2 hover:text-brand"
@@ -65,8 +69,9 @@ export function BrainStatusCard({
           </Callout>
         )}
         {status.warning === "apagado" && (
-          <Callout tone="warning" icon={AlertTriangle} title="Your agent is connected but off">
-            Turn it on with the switch above so it answers. Meanwhile nobody answers automatically: messages wait in the inbox.
+          <Callout tone="warning" icon={AlertTriangle} title="Your agent is connected but switched off">
+            Turn it on with the switch above so it can reply. Until then nobody replies automatically:
+            messages wait in the inbox.
           </Callout>
         )}
 
