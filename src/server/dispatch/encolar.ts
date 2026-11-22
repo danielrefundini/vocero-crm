@@ -118,6 +118,36 @@ function esMensajeSocialSinLead(type: string, text: string | null): boolean {
   ]);
   if (sociales.has(normalizado)) return true;
 
+  const tokens = normalizado.split(" ");
+  const palabrasDeElogio = new Set([
+    "great", "nice", "beautiful", "amazing", "awesome", "excellent", "lovely",
+    "fantastic", "wonderful", "gorgeous", "stunning", "congrats",
+    "congratulations", "parabens", "felicidades", "bom", "boa", "otimo",
+    "legal", "lindo", "linda", "incrivel", "bonito", "bonita", "excelente",
+    "hermoso", "hermosa", "feliz",
+  ]);
+  const palabrasSociales = new Set([
+    ...palabrasDeElogio, "hi", "hello", "hey", "hola", "oi", "ola", "thanks",
+    "thank", "you", "thx", "ty", "obrigado", "obrigada", "valeu", "gracias",
+    "muchas", "muito", "pelo", "pela", "por", "que", "el", "la", "the", "a",
+    "an", "your", "this", "that", "these", "those", "my", "our", "so",
+    "really", "very", "looks", "look", "is", "are", "was", "were", "job",
+    "work", "project", "house", "home", "roof", "windows", "window", "siding",
+    "doors", "door", "deck", "team", "guys", "trabalho", "projeto", "casa",
+    "telhado", "janelas", "janela", "portas", "porta", "equipe", "ficou",
+    "esta", "show", "bacana", "demais", "buen", "bueno", "bonito", "bonita",
+    "hermoso", "hermosa", "muy", "buenos", "buenas", "dela", "del", "de",
+    "and", "on", "it", "keep", "up", "guys", "equipo", "seu", "sua", "meu",
+    "minha", "esse", "essa", "o", "os", "as", "um", "uma",
+  ]);
+  if (
+    tokens.length <= 16 &&
+    tokens.some((token) => palabrasDeElogio.has(token)) &&
+    tokens.every((token) => palabrasSociales.has(token))
+  ) {
+    return true;
+  }
+
   // Variantes curtas de elogios; no coinciden si la persona pide algo concreto.
   return /^(?:(?:your|this|that|the) )?(?:(?:roof|windows?|siding|doors?|deck|house|home|project|work|job) )?(?:looks?|is|are|was|were) (?:so |really |very )?(?:great|nice|beautiful|amazing|awesome|excellent|lovely|fantastic|wonderful|gorgeous|stunning)$/.test(
     normalizado
