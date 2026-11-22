@@ -92,7 +92,7 @@ function esMensajeSocialSinLead(type: string, text: string | null): boolean {
   if (!normalizado) return true;
 
   const contieneIntencionComercial =
-    /\b(?:quote|estimate|price|pricing|cost|how much|repair|replace|replacement|install|installation|schedule|appointment|inspection|roof|roofing|siding|window|windows|door|doors|gutter|gutters|deck|garage|insulation|leak|storm|need|looking for|interested|cotizacion|presupuesto|precio|cuanto|reparar|reemplazar|instalar|cita|techo|ventana|puerta|canalon|necesito|parabens|parabens pelo|orcamento|orçamento|preco|quanto|consertar|trocar|instalar|agendar|telhado|janela|porta|calha|preciso)\b/.test(
+    /\b(?:quote|estimate|price|pricing|cost|how much|repair|replace|replacement|install|installation|schedule|appointment|inspection|need|looking for|interested|can you|do you|do yall|provide|offer|cotizacion|presupuesto|precio|cuanto|reparar|reemplazar|instalacion|cita|necesito|orcamento|preco|quanto|consertar|trocar|instalacao|agendar|preciso|pode|podem|tem como|queria)\b/.test(
       normalizado
     );
   if (contieneIntencionComercial) return false;
