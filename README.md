@@ -175,8 +175,10 @@ inunde la API sin llave no deja a tu bot sin servicio.
 necesita recibir el webhook de Meta: con `BRAIN_DISPATCH_URL` (p. ej.
 `http://nea:8000/vocero/dispatch`), la misma `BOT_API_KEY` y el interruptor de
 la pantalla Agente encendido, el mensaje entra primero a la bandeja y el CRM
-le hace a tu agente un `POST` firmado con lo que el cliente escribió desde la
-última respuesta, junto, después de esperar a que termine su ráfaga. Tu agente
+le hace a tu agente un `POST` firmado con los mensajes de la ráfaga, después
+de esperar a que termine. Los mensajes que son claramente solo elogios,
+reacciones, agradecimientos o saludos genéricos se quedan en la bandeja y no
+se despachan al agente. Tu agente
 contesta por `POST /api/bot/messages`. Es igual para WhatsApp, Instagram,
 Messenger y TikTok, y no hay secreto de Meta que copiar ni cola de reenvío que
 vigilar. Si tu agente no recibe el turno (tres intentos), la conversación
