@@ -50,11 +50,15 @@ que un mismo cerebro sirva a las dos ediciones. Las diferencias están marcadas.
 
 ## Cuándo se despacha
 
-Con `BRAIN_DISPATCH_URL` y `BOT_API_KEY` configuradas, cada mensaje entrante
-real de WhatsApp, Instagram o Messenger encola un despacho, salvo que la
-conversación tenga la IA en pausa o esté traspasada a un humano. El CRM espera
-`AGENT_COALESCE_MS` desde el último mensaje (6 s por defecto) para juntar la
-ráfaga.
+Con `BRAIN_DISPATCH_URL` y `BOT_API_KEY` configuradas, los mensajes
+entrantes reales de WhatsApp, Instagram o Messenger encolan un despacho,
+salvo que la conversación tenga la IA en pausa o esté traspasada a un humano.
+Antes de encolar, el CRM omite sin llamar a un LLM los mensajes de texto que
+coinciden con patrones de alta confianza de reacción, saludo genérico,
+agradecimiento o elogio sin una solicitud comercial. Se conservan en la
+bandeja. Los adjuntos y los mensajes con señales de precio, servicio, reparación,
+instalación o cita siguen al cerebro. El CRM espera `AGENT_COALESCE_MS` desde
+el último mensaje (6 s por defecto) para juntar la ráfaga.
 
 Mientras el despacho está activo, el agente incluido no contesta.
 
