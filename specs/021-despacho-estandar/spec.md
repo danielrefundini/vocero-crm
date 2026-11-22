@@ -138,6 +138,20 @@ un `POST` firmado al cerebro, y lo que el cerebro conteste por
   problema de configuración, con qué corregir. Nunca se muestra la ruta ni
   credenciales de la URL: solo el host.
 
+### Historia 5 — Filtrar interacciones sociales obvias (P2)
+
+Los mensajes que son claramente solo reacciones, saludos genéricos,
+agradecimientos o elogios no deben consumir una llamada al cerebro; continúan
+visibles en la bandeja para el negocio.
+
+- **AC17** Un mensaje de texto que coincide con un patrón social de alta
+  confianza no crea un despacho ni llama al cerebro; el mensaje permanece
+  guardado y visible en el inbox.
+- **AC18** Una pregunta sobre servicio, precio, reparación, instalación o cita
+  siempre se despacha, aunque también incluya un elogio.
+- **AC19** Los mensajes con adjuntos que no sean sticker siguen al cerebro; el
+  filtro no los clasifica por su texto.
+
 ## Requisitos no funcionales
 
 - La ingesta no espera al cerebro: encolar es un `INSERT` o un `UPDATE`.
