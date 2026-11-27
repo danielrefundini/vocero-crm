@@ -1,6 +1,7 @@
 import { withAuth } from "@/lib/api";
 import { agendaDisabledResponse, agendaEnabled } from "@/server/agenda/flag";
 import {
+  CalendarScopeMissingError,
   exchangeGoogleCode,
   listCalendarAccounts,
   saveCalendarAccount,
@@ -48,6 +49,7 @@ export const GET = withAuth(async (session, req: Request) => {
     await saveCalendarAccount({ organizationId: session.organizationId, email, refreshToken });
     return back("connected", `&email=${encodeURIComponent(email)}`);
   } catch (err) {
+    if (err instanceof CalendarScopeMissingError) return back("no_calendar_scope");
     console.warn(`[calendar] Google connect failed: ${err}`);
     return back("failed");
   }
