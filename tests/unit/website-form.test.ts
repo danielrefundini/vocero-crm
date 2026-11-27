@@ -107,7 +107,7 @@ describe("website form → contact card fields", () => {
       Project: "Windows",
       "Option chosen": "Good: Vytex vinyl",
       "Size and details": "11 windows (1 bay or bow)",
-      "What's going on": "Drafts or high bills, Foggy glass",
+      "What’s going on": "Drafts or high bills, Foggy glass",
       Timeline: "1-3 months",
       "Range shown": "$23,100 – $36,000 (11 windows, 1 bay or bow · Vytex vinyl)",
       Consent: "Agreed to be called or texted about this request",
@@ -126,11 +126,12 @@ describe("website form → contact card fields", () => {
       "Appointment: Tue, Dec 1 at 1:00 PM",
       "Option chosen: Good: Vytex vinyl",
       "Size and details: 11 windows (1 bay or bow)",
-      "What's going on: Drafts or high bills, Foggy glass",
+      "What’s going on: Drafts or high bills, Foggy glass",
       "Timeline: 1-3 months",
       "Range shown: $23,100 – $36,000 (11 windows, 1 bay or bow · Vytex vinyl)",
     ]);
     expect(normalizeWebsiteForm({ name: "A", "Range shown": "No range (not sure yet)" })!.quoted).toBe(false);
+    expect(normalizeWebsiteForm({ name: "A", "What's going on": "Leak" })!.notes).toEqual(["What's going on: Leak"]);
   });
 
   it("splits one-line US addresses", () => {

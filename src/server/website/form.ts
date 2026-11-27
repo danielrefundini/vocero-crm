@@ -62,7 +62,6 @@ const NOTE_KEYS = [
   "appointment",
   "option_chosen",
   "size_and_details",
-  "what's_going_on",
   "whats_going_on",
   "issues",
   "timeline",
@@ -78,7 +77,12 @@ const PHONE_KEYS = ["phone", "tel", "telephone", "phone_number", "mobile", "cell
 const MESSAGE_KEYS = ["message", "comments", "comment", "details", "description", "notes"];
 
 function clave(k: string): string {
-  return k.trim().toLowerCase().replace(/[\s-]+/g, "_");
+  // Apostrophes vanish, straight or curly: "What’s going on" → whats_going_on.
+  return k
+    .trim()
+    .toLowerCase()
+    .replace(/['’‘`]/g, "")
+    .replace(/[\s-]+/g, "_");
 }
 
 function texto(v: unknown): string | null {
