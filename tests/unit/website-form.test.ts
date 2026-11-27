@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { isValidFormspreeSignature, normalizeWebsiteForm } from "@/server/website/form";
+import { isValidFormspreeSignature, normalizeWebsiteForm, splitUsAddress } from "@/server/website/form";
 import { capabilitiesFor } from "@/server/channels/capabilities";
 import { parseChannels } from "@/server/channels/enabled";
 
@@ -94,5 +94,64 @@ describe("website form → contact card fields", () => {
       address_zip: "20850",
       services: "Windows, Gutters",
     });
+  });
+
+  it("fills the card and the notes from the website estimator", () => {
+    const lead = normalizeWebsiteForm({
+      Request: "Free in-home inspection",
+      Appointment: "Tue, Dec 1 at 1:00 PM",
+      Name: "Dana Test",
+      Phone: "(202) 555-0100",
+      "Property address": "18723 Purple Martin Lane, Montgomery Village, MD 20879",
+      "ZIP code": "20879",
+      Project: "Windows",
+      "Option chosen": "Good: Vytex vinyl",
+      "Size and details": "11 windows (1 bay or bow)",
+      "What's going on": "Drafts or high bills, Foggy glass",
+      Timeline: "1-3 months",
+      "Range shown": "$23,100 – $36,000 (11 windows, 1 bay or bow · Vytex vinyl)",
+      Consent: "Agreed to be called or texted about this request",
+      email: "dana@example.com",
+    })!;
+    expect(lead.details).toEqual({
+      address_street: "18723 Purple Martin Lane",
+      address_city: "Montgomery Village",
+      address_state: "MD",
+      address_zip: "20879",
+      services: "Windows",
+    });
+    expect(lead.quoted).toBe(true);
+    expect(lead.notes).toEqual([
+      "Request: Free in-home inspection",
+      "Appointment: Tue, Dec 1 at 1:00 PM",
+      "Option chosen: Good: Vytex vinyl",
+      "Size and details: 11 windows (1 bay or bow)",
+      "What's going on: Drafts or high bills, Foggy glass",
+      "Timeline: 1-3 months",
+      "Range shown: $23,100 – $36,000 (11 windows, 1 bay or bow · Vytex vinyl)",
+    ]);
+    expect(normalizeWebsiteForm({ name: "A", "Range shown": "No range (not sure yet)" })!.quoted).toBe(false);
+  });
+
+  it("splits one-line US addresses", () => {
+    expect(splitUsAddress("123 Main St, Rockville MD 20850")).toEqual({
+      street: "123 Main St",
+      city: "Rockville",
+      state: "MD",
+      zip: "20850",
+    });
+    expect(splitUsAddress("1 Oak Ct, Apt 2, Fairfax, VA 22030-1234, USA")).toEqual({
+      street: "1 Oak Ct, Apt 2",
+      city: "Fairfax",
+      state: "VA",
+      zip: "22030",
+    });
+    expect(splitUsAddress("123 Main St, Rockville")).toEqual({
+      street: "123 Main St",
+      city: "Rockville",
+      state: null,
+      zip: null,
+    });
+    expect(splitUsAddress("123 Main St")).toBeNull();
   });
 });
