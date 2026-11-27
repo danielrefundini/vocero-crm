@@ -1,6 +1,11 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { isValidFormspreeSignature, normalizeWebsiteForm, splitUsAddress } from "@/server/website/form";
+import {
+  isValidFormspreeSignature,
+  normalizeWebsiteForm,
+  parseAppointmentTime,
+  splitUsAddress,
+} from "@/server/website/form";
 import { capabilitiesFor } from "@/server/channels/capabilities";
 import { parseChannels } from "@/server/channels/enabled";
 
@@ -154,5 +159,29 @@ describe("website form → contact card fields", () => {
       zip: null,
     });
     expect(splitUsAddress("123 Main St")).toBeNull();
+  });
+
+  it("reads the time picked on the site, in the business's time zone", () => {
+    const tz = "America/New_York";
+    const now = new Date("2026-11-26T22:00:00Z");
+    // EST is UTC-5 in December.
+    expect(parseAppointmentTime("Tue, Dec 1 at 1:00 PM", now, tz)).toBe("2026-12-01T18:00:00.000Z");
+    expect(parseAppointmentTime("Sat, Nov 28 at 10:00 AM", now, tz)).toBe("2026-11-28T15:00:00.000Z");
+    expect(parseAppointmentTime("Mon, Dec 7 at 12:00 PM", now, tz)).toBe("2026-12-07T17:00:00.000Z");
+    // Early January seen in late December belongs to next year.
+    expect(parseAppointmentTime("Mon, Jan 4 at 9:30 AM", new Date("2026-12-30T15:00:00Z"), tz)).toBe(
+      "2027-01-04T14:30:00.000Z"
+    );
+    expect(parseAppointmentTime("June 5, 2027 at 6:30 pm", now, tz)).toBe("2027-06-05T22:30:00.000Z");
+    expect(parseAppointmentTime("whenever works", now, tz)).toBeNull();
+    expect(parseAppointmentTime("Feb 30 at 1:00 PM", now, tz)).toBeNull();
+  });
+
+  it("tells an in-home inspection from a phone call", () => {
+    const visit = normalizeWebsiteForm({ name: "A", Request: "Free in-home inspection", Appointment: "Tue, Dec 1 at 1:00 PM" })!;
+    expect(visit.appointment).toEqual({ text: "Tue, Dec 1 at 1:00 PM", kind: "in-home" });
+    const call = normalizeWebsiteForm({ name: "A", Request: "15-minute phone call", Appointment: "Wed, Dec 2 at 3:00 PM" })!;
+    expect(call.appointment).toEqual({ text: "Wed, Dec 2 at 3:00 PM", kind: "call" });
+    expect(normalizeWebsiteForm({ name: "A", message: "hi" })!.appointment).toBeNull();
   });
 });

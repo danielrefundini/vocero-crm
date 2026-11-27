@@ -1,12 +1,17 @@
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { getDb, schema } from "@/lib/db";
 import { scoped } from "@/lib/db/tenant";
-import { eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { WEB_PREFIX } from "@/server/inbox/identity";
 import { ingestInboundMessage } from "@/server/inbox/ingest";
 import { applyStructuredFields } from "@/server/exteriors/apply";
 import { upsertFicha } from "@/server/bot/ficha";
 import { resolveInstanceOrg } from "@/server/bot/auth";
+import { todayInTz, zonedWallClockToUtc } from "@/lib/time/slots";
+import { formatAddress } from "@/lib/exteriors";
+import { BookingError, createSessionBooking } from "@/server/agenda/service";
+import { getSettings } from "@/server/agenda/settings";
+import { moveLeadToStage } from "@/server/leads/stage-history";
 
 /**
  * Website form intake. A submission (Formspree webhook, or the site posting
@@ -38,6 +43,8 @@ export type WebsiteLead = {
   notes?: string[];
   /** The form showed the visitor a price range, so the deal counts as quoted. */
   quoted?: boolean;
+  /** The time the visitor picked on the site, as they saw it, and what for. */
+  appointment?: { text: string; kind: "in-home" | "call" } | null;
 };
 
 /** Form keys that fill the contact card's address and services. */
@@ -68,6 +75,43 @@ const NOTE_KEYS = [
   "range_shown",
 ];
 const RANGE_KEYS = ["range_shown", "price_range", "estimate"];
+const APPOINTMENT_KEYS = ["appointment", "appointment_time", "preferred_time", "booking_time"];
+
+const MONTHS: Record<string, number> = {
+  jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12,
+};
+
+/**
+ * "Tue, Dec 1 at 1:00 PM" (the site's wording) → the instant, read as the
+ * business's wall clock. With no year, the nearest one that isn't in the past
+ * (a date more than a day behind today is next year's). Null when unreadable.
+ */
+export function parseAppointmentTime(text: string, now: Date, tz: string): string | null {
+  const m = text.match(
+    /([A-Za-z]{3,9})\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s*(\d{4}))?,?\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*([ap])\.?\s*m\b/i
+  );
+  if (!m) return null;
+  const month = MONTHS[(m[1] ?? "").slice(0, 4).toLowerCase()] ?? MONTHS[(m[1] ?? "").slice(0, 3).toLowerCase()];
+  const day = Number(m[2]);
+  let hour = Number(m[4]);
+  const minute = Number(m[5] ?? "0");
+  if (!month || day < 1 || day > 31 || hour < 1 || hour > 12 || minute > 59) return null;
+  if ((m[6] ?? "").toLowerCase() === "p" && hour !== 12) hour += 12;
+  if ((m[6] ?? "").toLowerCase() === "a" && hour === 12) hour = 0;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const today = todayInTz(now, tz);
+  let year = m[3] ? Number(m[3]) : Number(today.slice(0, 4));
+  const iso = (y: number) => `${y}-${pad(month)}-${pad(day)}`;
+  if (!m[3]) {
+    const yesterday = new Date(Date.parse(`${today}T00:00:00Z`) - 86_400_000).toISOString().slice(0, 10);
+    if (iso(year) < yesterday) year += 1;
+  }
+  // A date that doesn't exist (Feb 30) rolls over in Date: refuse it instead.
+  const check = new Date(Date.UTC(year, month - 1, day));
+  if (check.getUTCMonth() !== month - 1) return null;
+  const instant = zonedWallClockToUtc(iso(year), `${pad(hour)}:${pad(minute)}`, tz);
+  return instant ? instant.toISOString() : null;
+}
 
 const NAME_KEYS = ["name", "full_name", "fullname", "your_name", "nombre"];
 const FIRST_KEYS = ["first_name", "firstname", "first"];
@@ -198,6 +242,18 @@ export function normalizeWebsiteForm(body: unknown): WebsiteLead | null {
   const range = primero(RANGE_KEYS);
   const quoted = Boolean(range && /\$\s*\d/.test(range.value));
 
+  const cita = primero(APPOINTMENT_KEYS);
+  const pedido = primero(["request", "appointment_type", "meeting_type"]);
+  const appointment = cita
+    ? {
+        text: cita.value,
+        // A phone call when the form says so; otherwise a visit at the property.
+        kind: (pedido && /\b(call|phone)\b/i.test(pedido.value) && !/inspection|visit|in-home/i.test(pedido.value)
+          ? "call"
+          : "in-home") as "call" | "in-home",
+      }
+    : null;
+
   return {
     name,
     email,
@@ -205,6 +261,7 @@ export function normalizeWebsiteForm(body: unknown): WebsiteLead | null {
     details,
     notes,
     quoted,
+    appointment,
     text: lineas.join("\n"),
     messageId: `web_${huella}`,
     identity,
@@ -362,4 +419,131 @@ export async function ingestWebsiteLead(organizationId: string, lead: WebsiteLea
       .set({ phone: lead.phone, updatedAt: new Date() })
       .where(scoped(schema.contact.organizationId, organizationId, eq(schema.contact.id, c.id)));
   }
+  if (lead.appointment) {
+    await bookWebsiteAppointment(organizationId, c.id, lead.appointment).catch((err) =>
+      console.error("[website] couldn't book the website appointment:", err)
+    );
+  }
+}
+
+/**
+ * Puts the time picked on the site on the CRM calendar: an in-home visit at
+ * the contact's address, or a call. Same rules as booking by hand (the slot
+ * must be open in the CRM's hours and free). When it can't be booked, the lead
+ * still arrives and the contact notes say why, so someone books it by hand.
+ */
+async function bookWebsiteAppointment(
+  organizationId: string,
+  contactId: string,
+  appointment: { text: string; kind: "in-home" | "call" }
+): Promise<void> {
+  const settings = await getSettings(organizationId);
+  const startUtc = parseAppointmentTime(appointment.text, new Date(), settings.timezone);
+  if (!startUtc) {
+    await appendContactNote(
+      organizationId,
+      contactId,
+      `⚠ Website appointment "${appointment.text}" wasn't booked: the time couldn't be read. Book it in Appointments.`
+    );
+    return;
+  }
+  const db = getDb();
+  // A retried delivery finds the appointment it already booked.
+  const [existing] = await db
+    .select({ id: schema.booking.id })
+    .from(schema.booking)
+    .where(
+      scoped(
+        schema.booking.organizationId,
+        organizationId,
+        and(eq(schema.booking.contactId, contactId), eq(schema.booking.scheduledAt, new Date(startUtc)))
+      )
+    )
+    .limit(1);
+  if (existing) return;
+
+  const [contact] = await db
+    .select({
+      street: schema.contact.addressStreet,
+      city: schema.contact.addressCity,
+      state: schema.contact.addressState,
+      zip: schema.contact.addressZip,
+    })
+    .from(schema.contact)
+    .where(scoped(schema.contact.organizationId, organizationId, eq(schema.contact.id, contactId)))
+    .limit(1);
+  const address = contact ? formatAddress(contact) : "";
+  try {
+    await createSessionBooking({
+      organizationId,
+      startUtc,
+      source: "manual",
+      contactId,
+      connector: appointment.kind === "in-home" ? "in-home" : "enlace-fijo",
+      propertyAddress: appointment.kind === "in-home" ? address || null : null,
+      notes: appointment.kind === "in-home" ? "Booked on the website: in-home inspection" : "Booked on the website: phone call",
+      requireOffer: false,
+    });
+    await moveToBookedStage(organizationId, contactId).catch((err) =>
+      console.warn("[website] couldn't move the deal to the booked stage:", err)
+    );
+  } catch (err) {
+    if (!(err instanceof BookingError)) throw err;
+    const why =
+      err.code === "slot_taken"
+        ? "that time is outside the calendar's hours or already taken"
+        : err.message;
+    await appendContactNote(
+      organizationId,
+      contactId,
+      `⚠ Website appointment "${appointment.text}" wasn't booked: ${why}. Book it in Appointments.`
+    );
+  }
+}
+
+/**
+ * Booking moves a deal one stage forward. A visitor who booked on the site is
+ * past "contacted": the deal goes to the open stage named for a booking
+ * ("Consult booked", "Appointment set"...), never backwards.
+ */
+async function moveToBookedStage(organizationId: string, contactId: string): Promise<void> {
+  const db = getDb();
+  const [lead] = await db
+    .select({ id: schema.lead.id, stageId: schema.lead.stageId })
+    .from(schema.lead)
+    .where(scoped(schema.lead.organizationId, organizationId, eq(schema.lead.contactId, contactId)))
+    .limit(1);
+  if (!lead) return;
+  const stages = await db
+    .select({ id: schema.pipelineStage.id, name: schema.pipelineStage.name, kind: schema.pipelineStage.kind })
+    .from(schema.pipelineStage)
+    .where(scoped(schema.pipelineStage.organizationId, organizationId))
+    .orderBy(asc(schema.pipelineStage.position));
+  const current = stages.findIndex((s) => s.id === lead.stageId);
+  const target = stages.findIndex(
+    (s) => s.kind === "open" && /book|consult|appointment|scheduled|visit|inspection/i.test(s.name)
+  );
+  if (current < 0 || target < 0 || target <= current) return;
+  await moveLeadToStage({
+    organizationId,
+    leadId: lead.id,
+    toStageId: stages[target]!.id,
+    source: "dueno",
+    extra: { lastActivityAt: new Date() },
+  });
+}
+
+async function appendContactNote(organizationId: string, contactId: string, line: string): Promise<void> {
+  const db = getDb();
+  const [row] = await db
+    .select({ notes: schema.contact.notes })
+    .from(schema.contact)
+    .where(scoped(schema.contact.organizationId, organizationId, eq(schema.contact.id, contactId)))
+    .limit(1);
+  const prev = row?.notes ?? "";
+  if (prev.includes(line)) return;
+  await db
+    .update(schema.contact)
+    .set({ notes: prev ? `${prev}\n${line}` : line, updatedAt: new Date() })
+    .where(scoped(schema.contact.organizationId, organizationId, eq(schema.contact.id, contactId)));
 }
