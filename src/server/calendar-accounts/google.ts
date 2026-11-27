@@ -257,6 +257,20 @@ export function googleAuthUrl(input: { redirectUri: string; state: string; login
   return `${env.GOOGLE_AUTH_URL}?${params.toString()}`;
 }
 
+/** Either one lets the CRM read and write events. */
+const CALENDAR_SCOPES = [
+  "https://www.googleapis.com/auth/calendar.events",
+  "https://www.googleapis.com/auth/calendar",
+];
+
+/** The person left the calendar box unticked on Google's permission screen. */
+export class CalendarScopeMissingError extends Error {
+  constructor() {
+    super("Calendar access wasn't granted. Connect again and tick the calendar permission.");
+    this.name = "CalendarScopeMissingError";
+  }
+}
+
 /** Trades the code for tokens and reads which email signed in. */
 export async function exchangeGoogleCode(input: {
   code: string;
@@ -284,8 +298,9 @@ export async function exchangeGoogleCode(input: {
   if (!res.ok || !data) {
     throw new Error(data?.error_description || data?.error || `Google answered ${res.status}`);
   }
-  if (!data.scope?.includes("auth/calendar.events")) {
-    throw new Error("Calendar access wasn't granted. Connect again and tick the calendar permission.");
+  const granted = (data.scope ?? "").split(/\s+/);
+  if (!CALENDAR_SCOPES.some((s) => granted.includes(s))) {
+    throw new CalendarScopeMissingError();
   }
   const email = emailFromIdToken(data.id_token);
   if (!email) throw new Error("Google didn't say which email signed in");

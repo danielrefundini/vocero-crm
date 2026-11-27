@@ -34,6 +34,10 @@ const RESULT: Record<string, { tone: "ok" | "bad"; text: string }> = {
     tone: "bad",
     text: "Google didn't give lasting access. Remove the CRM at myaccount.google.com/permissions and connect again.",
   },
+  no_calendar_scope: {
+    tone: "bad",
+    text: "Google didn't give calendar access. Connect again and, on Google's permission screen, tick the box to see and edit your calendar events.",
+  },
   owner_only: { tone: "bad", text: "Only the owner can link calendars." },
   not_configured: { tone: "bad", text: "Google sign-in isn't set up on this CRM yet." },
 };

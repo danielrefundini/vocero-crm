@@ -14,6 +14,7 @@ vi.mock("@/lib/env", () => ({
 }));
 
 import {
+  CalendarScopeMissingError,
   emailFromIdToken,
   eventRange,
   exchangeGoogleCode,
@@ -96,7 +97,21 @@ describe("Google sign-in URL and code exchange", () => {
       "fetch",
       vi.fn(async () => Response.json({ refresh_token: "rt", scope: "openid email", id_token: idToken({ email: "a@b.test" }) }))
     );
-    await expect(exchangeGoogleCode({ code: "c", redirectUri: "r" })).rejects.toThrow(/Calendar access/);
+    await expect(exchangeGoogleCode({ code: "c", redirectUri: "r" })).rejects.toBeInstanceOf(CalendarScopeMissingError);
+  });
+
+  it("accepts the full calendar permission too", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({
+          refresh_token: "rt",
+          scope: "openid https://www.googleapis.com/auth/calendar email",
+          id_token: idToken({ email: "a@b.test" }),
+        })
+      )
+    );
+    await expect(exchangeGoogleCode({ code: "c", redirectUri: "r" })).resolves.toMatchObject({ email: "a@b.test" });
   });
 
   it("emailFromIdToken ignores unverified or broken tokens", () => {
