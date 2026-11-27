@@ -13,15 +13,16 @@ import {
   type SlotUtc,
 } from "@/lib/time/slots";
 import { getSettings, type CalendarSettings } from "@/server/agenda/settings";
+import { externalEvents } from "@/server/calendar-accounts/google";
 
 /**
  * 015 — Motor de disponibilidad:
  *   horario semanal del negocio − citas activas − bloqueos manuales.
  *
- * Limitación v1 documentada (Constitución VII): NO lee calendarios externos.
- * Es una decisión, no un olvido: meter al proveedor en este camino acoplaría su
- * latencia y sus caídas a la pantalla que más se usa. Los compromisos de fuera
- * se reflejan con bloqueos manuales.
+ * Linked Google calendars (Settings → Calendar) with "Block busy times" on
+ * also count as busy. Their events are cached for a minute and each call has a
+ * short timeout: if Google is slow or down, that calendar is left out and the
+ * CRM keeps offering times from its own data, never an error.
  */
 
 export type AvailableSlot = SlotUtc & { label: string };
@@ -101,6 +102,7 @@ export async function computeAvailability(
       zonedWallClockToUtc(addDaysISO(to, 1), "00:00", tz) ??
       new Date(now.getTime() + 86_400_000 * 61),
     excludeBookingId: opts?.excludeBookingId,
+    timezone: tz,
   });
 
   return filterFreeSlots(candidates, busy, {
@@ -144,6 +146,22 @@ export async function findSlot(
 }
 
 async function getBusyIntervals(
+  organizationId: string,
+  input: { fromUtc: Date; toUtc: Date; excludeBookingId?: string; timezone: string }
+): Promise<SlotUtc[]> {
+  const [own, google] = await Promise.all([
+    ownBusyIntervals(organizationId, input),
+    externalEvents(organizationId, {
+      fromUtc: input.fromUtc,
+      toUtc: input.toUtc,
+      dayStartUtc: (day) => zonedWallClockToUtc(day, "00:00", input.timezone),
+      purpose: "busy",
+    }).catch(() => []),
+  ]);
+  return [...own, ...google.map((e) => ({ startUtc: e.startUtc, endUtc: e.endUtc }))];
+}
+
+async function ownBusyIntervals(
   organizationId: string,
   input: { fromUtc: Date; toUtc: Date; excludeBookingId?: string }
 ): Promise<SlotUtc[]> {

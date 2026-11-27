@@ -6,6 +6,9 @@ import { listBookings, listBookingsInRange } from "@/server/agenda/queries";
 import { getSettings } from "@/server/agenda/settings";
 import { createBlock, createSessionBooking } from "@/server/agenda/service";
 import { bookingErrorResponse, bookingPayload } from "@/server/agenda/http";
+import { addDaysISO, partsInTz, zonedWallClockToUtc } from "@/lib/time/slots";
+import { externalEvents } from "@/server/calendar-accounts/google";
+import type { BookingListItem } from "@/server/agenda/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -36,8 +39,38 @@ export const GET = withAuth(async (session, req: Request) => {
     query.range,
     settings
   );
+  const tz = settings.timezone;
+  const google = await externalEvents(session.organizationId, {
+    fromUtc: zonedWallClockToUtc(query.range.from, "00:00", tz)!,
+    toUtc: zonedWallClockToUtc(addDaysISO(query.range.to, 1), "00:00", tz)!,
+    dayStartUtc: (day) => zonedWallClockToUtc(day, "00:00", tz),
+    purpose: "show",
+  }).catch(() => []);
+  const shown: BookingListItem[] = google.map((ev) => {
+    const parts = partsInTz(ev.startUtc, tz);
+    return {
+      id: ev.id,
+      kind: "block",
+      status: "agendada",
+      source: "manual",
+      scheduledAtUtc: ev.startUtc,
+      durationMinutes: Math.max(5, Math.round((Date.parse(ev.endUtc) - Date.parse(ev.startUtc)) / 60000)),
+      date: parts.date,
+      time: parts.time,
+      weekday: parts.weekday,
+      contact: null,
+      conversationId: null,
+      connector: null,
+      meetingLink: null,
+      propertyAddress: null,
+      linkPending: false,
+      isTest: false,
+      notes: ev.title,
+      external: { email: ev.email, htmlLink: ev.htmlLink, allDay: ev.allDay },
+    };
+  });
   return Response.json({
-    bookings,
+    bookings: [...bookings, ...shown].sort((a, b) => a.scheduledAtUtc.localeCompare(b.scheduledAtUtc)),
     timezone: settings.timezone,
     weeklyHours: settings.weeklyHours,
     range: query.range,

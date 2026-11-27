@@ -932,6 +932,9 @@ export const booking = pgTable(
     /** Conversación del Laboratorio: jamás llama a un conector real. */
     isTest: boolean("is_test").notNull().default(false),
     notes: text("notes"),
+    /** Linked Google calendar that holds a copy of this appointment, and its event. */
+    calendarAccountId: text("calendar_account_id"),
+    calendarEventId: text("calendar_event_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -1036,6 +1039,38 @@ export const googleCredentials = pgTable(
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [uniqueIndex("google_credentials_org_uq").on(t.organizationId)]
+);
+
+/**
+ * Google accounts linked to the CRM calendar with "Connect Google" (several per
+ * business). Each one can receive the CRM's appointments (only one does), block
+ * the CRM's open times with its busy events, and show its events on the
+ * Appointments page. The refresh token is encrypted like every other secret.
+ */
+export const calendarAccount = pgTable(
+  "calendar_account",
+  {
+    id: text("id").primaryKey(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    provider: text("provider", { enum: ["google"] }).notNull().default("google"),
+    email: text("email").notNull(),
+    refreshTokenCipher: text("refresh_token_cipher").notNull(),
+    refreshTokenIv: text("refresh_token_iv").notNull(),
+    refreshTokenTag: text("refresh_token_tag").notNull(),
+    calendarId: text("calendar_id").notNull().default("primary"),
+    writeBookings: boolean("write_bookings").notNull().default(false),
+    blockBusy: boolean("block_busy").notNull().default(true),
+    showEvents: boolean("show_events").notNull().default(true),
+    status: text("status", { enum: ["connected", "error"] })
+      .notNull()
+      .default("connected"),
+    lastError: text("last_error"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("calendar_account_org_email_uq").on(t.organizationId, t.provider, t.email)]
 );
 
 export const agentTestCase = pgTable(

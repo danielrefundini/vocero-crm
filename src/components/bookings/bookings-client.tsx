@@ -202,7 +202,8 @@ export function BookingsClient({
       const day = dayIsoInTz(new Date(b.scheduledAtUtc), timezone);
       return range !== null && day >= range.from && day <= range.to;
     });
-    const shown = showTests ? inRange : inRange.filter((b) => !b.isTest);
+    const own = inRange.filter((b) => !b.external);
+    const shown = showTests ? own : own.filter((b) => !b.isTest);
     return {
       sessions: shown.filter((b) => b.kind === "session" && b.status !== "cancelada").length,
       blocks: shown.filter((b) => b.kind === "block" && b.status !== "cancelada").length,
@@ -217,6 +218,11 @@ export function BookingsClient({
     : null;
 
   function select(b: Booking) {
+    // A Google event isn't the CRM's to change: it opens in Google Calendar.
+    if (b.external) {
+      if (b.external.htmlLink) window.open(b.external.htmlLink, "_blank", "noopener,noreferrer");
+      return;
+    }
     setSelectedId(b.id);
     setSnapshot(b);
   }

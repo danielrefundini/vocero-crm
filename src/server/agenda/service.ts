@@ -25,6 +25,7 @@ import {
 import { ConnectorError } from "@/server/agenda/connectors/types";
 import { moveLeadToStage } from "@/server/leads/stage-history";
 import { publish } from "@/server/events/bus";
+import { syncBookingCalendar } from "@/server/calendar-accounts/sync";
 
 /**
  * 015 — Ciclo de vida de la cita y las dos reglas INNEGOCIABLES:
@@ -239,6 +240,7 @@ export async function createSessionBooking(input: {
 
   // Efectos secundarios: ninguno puede revertir la cita.
   const delivered = await deliverMeeting(booking, settings, contactName);
+  await syncBookingCalendar(input.organizationId, delivered.id);
   await advanceLeadStage(
     input.organizationId,
     contactId,
@@ -345,6 +347,7 @@ export async function rescheduleBooking(input: {
       timezone: settings.timezone,
     });
   });
+  await syncBookingCalendar(input.organizationId, next.id);
 
   publish(input.organizationId, {
     type: "booking.updated",
@@ -447,6 +450,7 @@ export async function cancelBooking(input: {
   await withConnector(booking, settings, async (conn, externalRef) => {
     await conn.deleteMeeting(externalRef);
   });
+  await syncBookingCalendar(input.organizationId, booking.id);
 
   publish(input.organizationId, {
     type: "booking.updated",
@@ -473,6 +477,7 @@ export async function markBookingStatus(input: {
     }
     throw err;
   }
+  await syncBookingCalendar(input.organizationId, booking.id);
   publish(input.organizationId, {
     type: "booking.updated",
     data: { bookingId: booking.id },

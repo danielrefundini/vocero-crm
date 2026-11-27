@@ -13,12 +13,14 @@ export const STATUS_LABEL: Record<Booking["status"], string> = {
 
 /** Un bloqueo no se "agenda" ni se "cancela": está activo o se quitó. */
 export function statusLabel(b: Booking): string {
+  if (b.external) return "Google";
   if (b.kind === "block") return b.status === "cancelada" ? "Removed" : "Active";
   return STATUS_LABEL[b.status];
 }
 
 /** Lo que se lee en la rejilla: el contacto o, en un bloqueo, su nota. */
 export function bookingTitle(b: Booking): string {
+  if (b.external) return b.notes?.trim() || "Busy";
   if (b.kind === "block") return b.notes?.trim() || "Block";
   return b.contact?.name.trim() || "No contact";
 }
@@ -34,6 +36,9 @@ export function bookingTone(b: Booking): { box: string; dot: string } {
       box: "border-dashed border-border-strong bg-subtle text-text-3 line-through",
       dot: "bg-text-4",
     };
+  }
+  if (b.external) {
+    return { box: "border-border-strong bg-subtle text-text-2", dot: "bg-text-4" };
   }
   if (b.kind === "block") {
     return { box: "booking-hatch border-border-strong text-text-2", dot: "bg-text-3" };
