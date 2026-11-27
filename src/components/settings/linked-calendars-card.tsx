@@ -8,8 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 
 /**
- * Settings → Calendar: the Google calendars linked to the CRM. One of them gets
- * the CRM's appointments; any of them can block busy times and show their
+ * Settings → Calendar: the Google calendars linked to the CRM. Each one can
+ * receive copies of the CRM's appointments, block busy times and show its
  * events on the CRM calendar.
  */
 
@@ -97,8 +97,9 @@ export function LinkedCalendarsCard() {
       <CardHeader>
         <CardTitle>Linked Google calendars</CardTitle>
         <CardDescription>
-          Link one or more Google accounts. CRM appointments are copied to the one you pick, busy times in any of
-          them stop double bookings, and their events show on the CRM calendar.
+          Link one or more Google accounts, like your business and personal email. CRM appointments are copied to
+          the calendars you pick, busy times in any of them stop double bookings, and their events show on the CRM
+          calendar.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -138,16 +139,16 @@ export function LinkedCalendarsCard() {
                     {acc.status === "connected" ? "Connected" : "Needs reconnect"}
                   </Badge>
                 </div>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="radio"
-                    name="write-bookings"
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <span>Copy CRM appointments here</span>
+                  <Switch
+                    size="sm"
+                    label={`Copy CRM appointments to ${acc.email}`}
                     checked={acc.writeBookings}
                     disabled={!data.canManage || busy !== null}
-                    onChange={() => void change(acc, { writeBookings: true })}
+                    onCheckedChange={(v) => void change(acc, { writeBookings: v })}
                   />
-                  CRM appointments go to this calendar
-                </label>
+                </div>
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <span>Block its busy times</span>
                   <Switch
@@ -192,15 +193,20 @@ export function LinkedCalendarsCard() {
             ))}
             {data.accounts.length > 0 && !data.accounts.some((a) => a.writeBookings) && (
               <p className="text-xs text-text-3">
-                {"No calendar is picked for appointments, so they stay in the CRM only."}
+                {"No calendar gets copies of the appointments, so they stay in the CRM only."}
               </p>
             )}
             {!data.canManage ? (
               <p className="text-xs text-text-3">Only the owner can link or change calendars.</p>
             ) : data.configured ? (
-              <a href="/api/calendar/google/connect" className={buttonVariants({ variant: "default" })}>
-                {data.accounts.length ? "Connect another Google account" : "Connect Google"}
-              </a>
+              <div className="space-y-2">
+                <a href="/api/calendar/google/connect" className={buttonVariants({ variant: "default" })}>
+                  {data.accounts.length ? "Connect another Google account" : "Connect Google"}
+                </a>
+                <p className="text-xs text-text-3">
+                  {"On Google's screen, tick the box to see and edit your calendar events. If Google says the app isn't verified, click Advanced, then continue to the app."}
+                </p>
+              </div>
             ) : (
               <div className="space-y-1 rounded-sm border border-dashed border-border-strong px-3 py-2.5 text-xs text-text-2">
                 <p className="font-semibold text-foreground">Google sign-in isn&apos;t set up yet</p>

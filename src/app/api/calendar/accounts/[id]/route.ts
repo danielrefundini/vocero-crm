@@ -1,7 +1,9 @@
+import { after } from "next/server";
 import { z } from "zod";
 import { apiError, withAuth } from "@/lib/api";
 import { agendaDisabledResponse, agendaEnabled } from "@/server/agenda/flag";
 import { deleteCalendarAccount, updateCalendarAccount } from "@/server/calendar-accounts/google";
+import { resyncUpcomingBookings } from "@/server/calendar-accounts/sync";
 
 export const dynamic = "force-dynamic";
 
@@ -26,6 +28,12 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
   const { id } = await ctx.params;
   const account = await updateCalendarAccount(session.organizationId, id, parsed.data);
   if (!account) return apiError(404, "not_found", "Linked calendar not found");
+  // A calendar that starts (or stops) receiving appointments gets (or loses)
+  // the ones already booked, after the answer is sent.
+  if (parsed.data.writeBookings !== undefined) {
+    const orgId = session.organizationId;
+    after(() => resyncUpcomingBookings(orgId));
+  }
   return Response.json({ account });
 });
 

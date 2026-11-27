@@ -15,6 +15,7 @@ vi.mock("@/lib/env", () => ({
 
 import {
   CalendarScopeMissingError,
+  crmEventId,
   emailFromIdToken,
   eventRange,
   exchangeGoogleCode,
@@ -41,7 +42,7 @@ afterEach(() => {
 describe("OAuth state", () => {
   it("round-trips with the matching cookie nonce", () => {
     const { state, nonce } = signOAuthState(who);
-    expect(verifyOAuthState(state, nonce)).toEqual(who);
+    expect(verifyOAuthState(state, nonce)).toEqual({ ...who, retries: 0 });
   });
 
   it("rejects a different nonce, a tampered payload, or no state", () => {
@@ -54,6 +55,13 @@ describe("OAuth state", () => {
     expect(verifyOAuthState(`${forged}.${sig}`, nonce)).toBeNull();
     expect(verifyOAuthState(null, nonce)).toBeNull();
     expect(verifyOAuthState("garbage", nonce)).toBeNull();
+  });
+
+  it("carries how many times Google was asked again", () => {
+    const { state, nonce } = signOAuthState({ ...who, retries: 1 });
+    expect(verifyOAuthState(state, nonce)?.retries).toBe(1);
+    const first = signOAuthState(who);
+    expect(verifyOAuthState(first.state, first.nonce)?.retries).toBe(0);
   });
 
   it("expires after 10 minutes", () => {
@@ -92,12 +100,19 @@ describe("Google sign-in URL and code exchange", () => {
     });
   });
 
-  it("refuses when the calendar permission wasn't ticked", async () => {
+  it("refuses when the calendar permission wasn't ticked, keeping the email to ask again", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => Response.json({ refresh_token: "rt", scope: "openid email", id_token: idToken({ email: "a@b.test" }) }))
     );
-    await expect(exchangeGoogleCode({ code: "c", redirectUri: "r" })).rejects.toBeInstanceOf(CalendarScopeMissingError);
+    const err = await exchangeGoogleCode({ code: "c", redirectUri: "r" }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(CalendarScopeMissingError);
+    expect((err as CalendarScopeMissingError).email).toBe("a@b.test");
+  });
+
+  it("asking again goes straight to the permission screen", () => {
+    const url = new URL(googleAuthUrl({ redirectUri: "r", state: "s", loginHint: "a@b.test", skipAccountPicker: true }));
+    expect(url.searchParams.get("prompt")).toBe("consent");
   });
 
   it("accepts the full calendar permission too", async () => {
@@ -148,6 +163,15 @@ describe("Google events", () => {
   });
 });
 
+describe("CRM appointment copies", () => {
+  it("use one fixed Google event id per appointment, valid for Google", () => {
+    const id = crmEventId("bk_qy59rw5rfoh4j4fvzrxt");
+    expect(id).toBe(crmEventId("bk_qy59rw5rfoh4j4fvzrxt"));
+    expect(id).not.toBe(crmEventId("bk_other"));
+    expect(id).toMatch(/^[a-v0-9]{5,1024}$/);
+  });
+});
+
 describe("CRM origin for the Google round trip", () => {
   const req = (host: string, proto = "https") =>
     new Request("http://internal/api/calendar/google/connect", {
@@ -163,5 +187,60 @@ describe("CRM origin for the Google round trip", () => {
   it("reads the state cookie", () => {
     expect(readCookie(req("alt.example.test"), "gcal_oauth")).toBe("abc");
     expect(readCookie(req("alt.example.test"), "missing")).toBeNull();
+  });
+});
+
+describe("writing a copy to Google", () => {
+  const acc = {
+    id: "gcal_1",
+    email: "a@b.test",
+    calendarId: "primary",
+    writeBookings: true,
+    blockBusy: true,
+    showEvents: true,
+    status: "connected" as const,
+    lastError: null,
+    refreshToken: "rt-copy-test",
+  };
+  const input = {
+    bookingId: "bk_copy",
+    title: "Inspection: Ana",
+    startUtc: "2026-11-30T15:00:00.000Z",
+    durationMinutes: 60,
+    timezone: "America/New_York",
+    location: null,
+    description: "",
+  };
+
+  function google(eventStatus: number) {
+    const calls: { method: string; url: string; body?: Record<string, unknown> }[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.endsWith("/token")) return Response.json({ access_token: "at", expires_in: 3600 });
+        const method = init?.method ?? "GET";
+        calls.push({ method, url, body: init?.body ? JSON.parse(String(init.body)) : undefined });
+        if (method === "PATCH") return new Response("{}", { status: eventStatus });
+        return Response.json({ id: "x" });
+      })
+    );
+    return calls;
+  }
+
+  it("updates the existing copy in place", async () => {
+    const { upsertBookingEvent } = await import("@/server/calendar-accounts/google");
+    const calls = google(200);
+    await upsertBookingEvent(acc, input);
+    expect(calls.map((c) => c.method)).toEqual(["PATCH"]);
+    expect(calls[0]!.url).toContain(`/calendars/primary/events/${crmEventId("bk_copy")}`);
+    expect(calls[0]!.body?.status).toBe("confirmed");
+  });
+
+  it("creates it with the fixed id when Google has none", async () => {
+    const { upsertBookingEvent } = await import("@/server/calendar-accounts/google");
+    const calls = google(404);
+    await upsertBookingEvent(acc, input);
+    expect(calls.map((c) => c.method)).toEqual(["PATCH", "POST"]);
+    expect(calls[1]!.body?.id).toBe(crmEventId("bk_copy"));
   });
 });
