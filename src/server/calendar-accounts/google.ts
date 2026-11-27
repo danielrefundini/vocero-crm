@@ -139,13 +139,6 @@ export async function updateCalendarAccount(
   if (patch.showEvents !== undefined) set.showEvents = patch.showEvents;
   if (patch.writeBookings !== undefined) set.writeBookings = patch.writeBookings;
   const result = await db.transaction(async (tx) => {
-    // Only one calendar receives the appointments.
-    if (patch.writeBookings === true) {
-      await tx
-        .update(schema.calendarAccount)
-        .set({ writeBookings: false, updatedAt: new Date() })
-        .where(scoped(schema.calendarAccount.organizationId, organizationId));
-    }
     const rows = await tx
       .update(schema.calendarAccount)
       .set(set)
@@ -161,6 +154,10 @@ export async function updateCalendarAccount(
 
 export async function deleteCalendarAccount(organizationId: string, id: string): Promise<boolean> {
   const db = getDb();
+  // Give the permission back to Google too, so the account no longer lists
+  // the CRM. Best effort: the link is removed here either way.
+  const linked = (await accountsWithTokens(organizationId)).find((a) => a.id === id);
+  if (linked) await revokeGoogleToken(linked.refreshToken);
   const rows = await db
     .delete(schema.calendarAccount)
     .where(scoped(schema.calendarAccount.organizationId, organizationId, eq(schema.calendarAccount.id, id)))
@@ -173,6 +170,15 @@ export async function deleteCalendarAccount(organizationId: string, id: string):
     .where(and(eq(schema.booking.organizationId, organizationId), eq(schema.booking.calendarAccountId, id)));
   clearAccountCaches();
   return rows.length > 0;
+}
+
+async function revokeGoogleToken(refreshToken: string): Promise<void> {
+  await fetch(`${getEnv().GOOGLE_OAUTH_BASE_URL}/revoke`, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ token: refreshToken }).toString(),
+    signal: AbortSignal.timeout(5000),
+  }).catch(() => {});
 }
 
 async function markAccountError(id: string, message: string): Promise<void> {
@@ -197,7 +203,13 @@ function stateKey(): Buffer {
 }
 
 /** Signed state for the Google round trip: who started it, and a nonce tied to a cookie. */
-export function signOAuthState(input: { organizationId: string; userId: string; origin: string }): {
+export function signOAuthState(input: {
+  organizationId: string;
+  userId: string;
+  origin: string;
+  /** Times Google already came back without the calendar permission. */
+  retries?: number;
+}): {
   state: string;
   nonce: string;
 } {
@@ -208,6 +220,7 @@ export function signOAuthState(input: { organizationId: string; userId: string; 
       u: input.userId,
       r: input.origin,
       n: nonce,
+      t: input.retries ?? 0,
       e: Date.now() + 10 * 60_000,
     })
   ).toString("base64url");
@@ -218,7 +231,7 @@ export function signOAuthState(input: { organizationId: string; userId: string; 
 export function verifyOAuthState(
   state: string | null,
   nonce: string | null
-): { organizationId: string; userId: string; origin: string } | null {
+): { organizationId: string; userId: string; origin: string; retries: number } | null {
   if (!state || !nonce) return null;
   const [payload, sig] = state.split(".");
   if (!payload || !sig) return null;
@@ -231,16 +244,23 @@ export function verifyOAuthState(
       u: string;
       r: string;
       n: string;
+      t?: number;
       e: number;
     };
     if (data.e < Date.now() || data.n !== nonce) return null;
-    return { organizationId: data.o, userId: data.u, origin: data.r };
+    return { organizationId: data.o, userId: data.u, origin: data.r, retries: data.t ?? 0 };
   } catch {
     return null;
   }
 }
 
-export function googleAuthUrl(input: { redirectUri: string; state: string; loginHint?: string }): string {
+export function googleAuthUrl(input: {
+  redirectUri: string;
+  state: string;
+  loginHint?: string;
+  /** Asking again for the same account: straight to the permission screen. */
+  skipAccountPicker?: boolean;
+}): string {
   const env = getEnv();
   const params = new URLSearchParams({
     client_id: env.GOOGLE_OAUTH_CLIENT_ID ?? "",
@@ -249,7 +269,7 @@ export function googleAuthUrl(input: { redirectUri: string; state: string; login
     scope: GOOGLE_SCOPES.join(" "),
     access_type: "offline",
     // Always ask, so Google always returns a refresh token (also on relink).
-    prompt: "consent select_account",
+    prompt: input.skipAccountPicker ? "consent" : "consent select_account",
     include_granted_scopes: "true",
     state: input.state,
   });
@@ -265,7 +285,7 @@ const CALENDAR_SCOPES = [
 
 /** The person left the calendar box unticked on Google's permission screen. */
 export class CalendarScopeMissingError extends Error {
-  constructor() {
+  constructor(readonly email: string | null = null) {
     super("Calendar access wasn't granted. Connect again and tick the calendar permission.");
     this.name = "CalendarScopeMissingError";
   }
@@ -300,7 +320,7 @@ export async function exchangeGoogleCode(input: {
   }
   const granted = (data.scope ?? "").split(/\s+/);
   if (!CALENDAR_SCOPES.some((s) => granted.includes(s))) {
-    throw new CalendarScopeMissingError();
+    throw new CalendarScopeMissingError(emailFromIdToken(data.id_token));
   }
   const email = emailFromIdToken(data.id_token);
   if (!email) throw new Error("Google didn't say which email signed in");
@@ -564,39 +584,47 @@ function eventBody(input: BookingEventInput) {
   };
 }
 
-export async function writeAccountFor(organizationId: string): Promise<AccountWithToken | null> {
-  if (!googleOAuthConfigured()) return null;
-  const accounts = await accountsWithTokens(organizationId);
-  return accounts.find((a) => a.writeBookings && a.status === "connected") ?? null;
+/**
+ * The Google event id of a CRM appointment: the same in every linked calendar,
+ * derived from the booking id (Google allows a-v and 0-9), so the CRM never has
+ * to remember which calendars hold a copy.
+ */
+export function crmEventId(bookingId: string): string {
+  return `crm${Buffer.from(bookingId, "utf8").toString("hex")}`;
+}
+
+/** Linked calendars that can be written to right now. */
+export async function connectedAccounts(organizationId: string): Promise<AccountWithToken[]> {
+  if (!googleOAuthConfigured()) return [];
+  return (await accountsWithTokens(organizationId)).filter((a) => a.status === "connected");
+}
+
+/** Creates or updates the copy of an appointment (also restores one deleted in Google). */
+export async function upsertBookingEvent(acc: AccountWithToken, input: BookingEventInput): Promise<void> {
+  const id = crmEventId(input.bookingId);
+  const body = JSON.stringify({ ...eventBody(input), status: "confirmed" });
+  const path = `${calPath(acc)}/${encodeURIComponent(id)}`;
+  const patched = await gcal(acc, path, { method: "PATCH", body, allow404: true });
+  if (patched === null) {
+    try {
+      await gcal(acc, calPath(acc), { method: "POST", body: JSON.stringify({ id, ...JSON.parse(body) }) });
+    } catch (err) {
+      // Created meanwhile by another request: update it instead.
+      if (!String(err).includes(" 409")) throw err;
+      await gcal(acc, path, { method: "PATCH", body });
+    }
+  }
+  clearAccountCaches();
+}
+
+/** Removes the copy of an appointment from one calendar; nothing there is fine. */
+export async function removeBookingEvent(acc: AccountWithToken, bookingId: string): Promise<void> {
+  await deleteBookingEvent(acc, crmEventId(bookingId));
 }
 
 export async function accountById(organizationId: string, id: string): Promise<AccountWithToken | null> {
   const accounts = await accountsWithTokens(organizationId);
   return accounts.find((a) => a.id === id) ?? null;
-}
-
-export async function insertBookingEvent(acc: AccountWithToken, input: BookingEventInput): Promise<string> {
-  const data = (await gcal(acc, calPath(acc), { method: "POST", body: JSON.stringify(eventBody(input)) })) as {
-    id?: string;
-  } | null;
-  if (!data?.id) throw new Error("Google didn't return the event id");
-  clearAccountCaches();
-  return data.id;
-}
-
-/** False when the event no longer exists in Google (deleted by hand). */
-export async function patchBookingEvent(
-  acc: AccountWithToken,
-  eventId: string,
-  input: BookingEventInput
-): Promise<boolean> {
-  const data = await gcal(acc, `${calPath(acc)}/${encodeURIComponent(eventId)}`, {
-    method: "PATCH",
-    body: JSON.stringify(eventBody(input)),
-    allow404: true,
-  });
-  clearAccountCaches();
-  return data !== null;
 }
 
 export async function deleteBookingEvent(acc: AccountWithToken, eventId: string): Promise<void> {

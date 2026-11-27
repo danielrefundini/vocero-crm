@@ -1,12 +1,16 @@
+import { after } from "next/server";
 import { withAuth } from "@/lib/api";
 import { agendaDisabledResponse, agendaEnabled } from "@/server/agenda/flag";
 import {
   CalendarScopeMissingError,
   exchangeGoogleCode,
+  googleAuthUrl,
   listCalendarAccounts,
   saveCalendarAccount,
+  signOAuthState,
   verifyOAuthState,
 } from "@/server/calendar-accounts/google";
+import { resyncUpcomingBookings } from "@/server/calendar-accounts/sync";
 import {
   STATE_COOKIE,
   crmOrigin,
@@ -23,8 +27,10 @@ export const GET = withAuth(async (session, req: Request) => {
   if (!agendaEnabled()) return agendaDisabledResponse();
   const url = new URL(req.url);
   const origin = crmOrigin(req);
-  const back = (q: string, extra = "") =>
-    redirectTo(`${origin}/settings/calendar?google=${q}${extra}`, stateCookie("", origin, 0));
+  const back = (q: string, extra = "") => {
+    console.info(`[calendar] Google connect: ${q}`);
+    return redirectTo(`${origin}/settings/calendar?google=${q}${extra}`, stateCookie("", origin, 0));
+  };
 
   if (url.searchParams.get("error")) return back("canceled");
   const state = verifyOAuthState(url.searchParams.get("state"), readCookie(req, STATE_COOKIE));
@@ -46,10 +52,31 @@ export const GET = withAuth(async (session, req: Request) => {
       const known = (await listCalendarAccounts(session.organizationId)).some((a) => a.email === email);
       return back(known ? "connected" : "no_refresh_token");
     }
-    await saveCalendarAccount({ organizationId: session.organizationId, email, refreshToken });
+    const saved = await saveCalendarAccount({ organizationId: session.organizationId, email, refreshToken });
+    if (saved.writeBookings) {
+      const orgId = session.organizationId;
+      after(() => resyncUpcomingBookings(orgId));
+    }
     return back("connected", `&email=${encodeURIComponent(email)}`);
   } catch (err) {
-    if (err instanceof CalendarScopeMissingError) return back("no_calendar_scope");
+    if (err instanceof CalendarScopeMissingError) {
+      // Google's screen leaves the calendar box unticked. Send the person
+      // straight back once (same account, no picker) instead of failing.
+      if (state.retries < 1) {
+        console.info("[calendar] Google connect: no calendar permission, asking again");
+        const next = signOAuthState({ ...state, retries: state.retries + 1 });
+        return redirectTo(
+          googleAuthUrl({
+            redirectUri: googleRedirectUri(state.origin),
+            state: next.state,
+            loginHint: err.email ?? undefined,
+            skipAccountPicker: true,
+          }),
+          stateCookie(next.nonce, origin, 600)
+        );
+      }
+      return back("no_calendar_scope");
+    }
     console.warn(`[calendar] Google connect failed: ${err}`);
     return back("failed");
   }

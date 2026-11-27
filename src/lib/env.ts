@@ -71,6 +71,9 @@ export const envSchema = z.object({
   GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
   GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   GOOGLE_AUTH_URL: z.string().url().default("https://accounts.google.com/o/oauth2/v2/auth"),
+  /** Public legal pages (/privacy, /terms): who runs this CRM and a contact email. */
+  LEGAL_OPERATOR_NAME: z.string().optional(),
+  LEGAL_CONTACT_EMAIL: z.string().email().optional().or(z.literal("")),
   ALLOW_SIGNUP: z.string().optional(),
   AGENT_COALESCE_MS: z.coerce.number().int().min(0).default(6000),
   WA_MOCK_ENABLED: z.string().optional(),
