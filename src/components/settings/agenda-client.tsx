@@ -18,6 +18,7 @@ import {
   type ConnectorId,
 } from "@/lib/agenda-connectors";
 import { ConnectorCredentials } from "@/components/settings/connector-credentials";
+import { LinkedCalendarsCard } from "@/components/settings/linked-calendars-card";
 
 /**
  * 015 — Ajustes → Agenda: cuándo atiende el negocio y cómo se entrega la
@@ -299,6 +300,8 @@ export function AgendaClient() {
           </div>
         </CardContent>
       </Card>
+
+      <LinkedCalendarsCard />
 
       <Card>
         <CardHeader>

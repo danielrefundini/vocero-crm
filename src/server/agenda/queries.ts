@@ -27,6 +27,8 @@ export type BookingListItem = {
   linkPending: boolean;
   isTest: boolean;
   notes: string | null;
+  /** An event of a linked Google calendar, shown read-only (kind "block"). */
+  external?: { email: string; htmlLink: string | null; allDay: boolean } | null;
 };
 
 /** Tope del listado sin rango: el de siempre, que leen los guiones E2E. */

@@ -94,7 +94,9 @@ export function AgendaList({
                       )}
                     </span>
                     <span className="block truncate text-xs text-text-3">
-                      {b.kind === "block"
+                      {b.external
+                        ? `Google · ${b.external.email}`
+                        : b.kind === "block"
                         ? `Block · ${b.durationMinutes} min`
                         : `${b.durationMinutes} min · ${b.source === "ai" ? "Booked by AI" : "Manual"}${b.isTest ? " · Test" : ""}`}
                     </span>
@@ -106,7 +108,7 @@ export function AgendaList({
                     <Video aria-label="Has a meeting link" className="hidden h-4 w-4 shrink-0 text-text-3 sm:block" />
                   )}
                   <span className="hidden shrink-0 text-xs font-medium text-text-2 sm:block">
-                    {b.kind === "block" ? (b.status === "cancelada" ? "Block removed" : "Block") : STATUS_LABEL[b.status]}
+                    {b.external ? "Google" : b.kind === "block" ? (b.status === "cancelada" ? "Block removed" : "Block") : STATUS_LABEL[b.status]}
                   </span>
                 </button>
               </li>
