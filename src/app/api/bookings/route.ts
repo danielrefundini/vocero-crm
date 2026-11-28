@@ -77,6 +77,7 @@ export const GET = withAuth(async (session, req: Request) => {
     color: a.color,
     writeBookings: a.writeBookings && a.status === "connected",
     connected: a.status === "connected",
+    brand: a.brand,
     showEvents: a.showEvents,
   }));
   return Response.json({

@@ -1063,6 +1063,12 @@ export const calendarAccount = pgTable(
     writeBookings: boolean("write_bookings").notNull().default(false),
     blockBusy: boolean("block_busy").notNull().default(true),
     showEvents: boolean("show_events").notNull().default(true),
+    /**
+     * The brand whose appointments go here (`daniel_exteriors` |
+     * `presidential_exteriors`). NULL = no brand: it gets the appointments
+     * whose brand has no calendar of its own, if it receives appointments.
+     */
+    brand: text("brand"),
     status: text("status", { enum: ["connected", "error"] })
       .notNull()
       .default("connected"),

@@ -218,6 +218,13 @@
       "when": 1795751758873,
       "tag": "0030_google_calendars",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1795844761541,
+      "tag": "0031_calendar_brand",
+      "breakpoints": true
     }
   ]
 }

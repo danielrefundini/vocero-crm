@@ -84,4 +84,37 @@ describe("bookingTargets (server)", () => {
     expect(bookingTargets(accs, "c").map((a) => a.id)).toEqual(["a"]);
     expect(bookingTargets(accs, "zzz").map((a) => a.id)).toEqual(["a"]);
   });
+  it("routes by the lead's brand when no calendar was picked", () => {
+    const withBrand = [
+      { id: "a", writeBookings: true, status: "connected", brand: "presidential_exteriors" },
+      { id: "b", writeBookings: false, status: "connected", brand: "daniel_exteriors" },
+      { id: "c", writeBookings: false, status: "error", brand: "daniel_exteriors" },
+    ];
+    expect(bookingTargets(withBrand, null, "daniel_exteriors").map((a) => a.id)).toEqual(["b"]);
+    expect(bookingTargets(withBrand, null, "presidential_exteriors").map((a) => a.id)).toEqual(["a"]);
+    expect(bookingTargets(withBrand, null, null).map((a) => a.id)).toEqual(["a"]);
+    expect(bookingTargets(withBrand, "a", "daniel_exteriors").map((a) => a.id)).toEqual(["a"]);
+  });
+
+  it("sends a lead's appointments to its brand's calendar", () => {
+    const branded: LinkedCalendar[] = [
+      { ...cals[0]!, brand: "presidential_exteriors" },
+      { ...cals[1]!, brand: "daniel_exteriors" },
+    ];
+    const [daniel, pres, none, picked] = withCalendars(
+      [
+        { ...base, brand: "daniel_exteriors" },
+        { ...base, id: "bk_2", brand: "presidential_exteriors" },
+        { ...base, id: "bk_3", brand: null },
+        { ...base, id: "bk_4", brand: "daniel_exteriors", calendarAccountId: "a" },
+      ] as Booking[],
+      branded
+    );
+    expect(daniel!.calendars).toEqual([{ email: "me@x.test", color: calendarColor(1) }]);
+    expect(pres!.calendars).toEqual([{ email: "biz@x.test", color: calendarColor(0) }]);
+    // No brand: the calendars set to receive appointments.
+    expect(none!.calendars).toEqual([{ email: "biz@x.test", color: calendarColor(0) }]);
+    // A pick in the panel beats the brand.
+    expect(picked!.calendars).toEqual([{ email: "biz@x.test", color: calendarColor(0) }]);
+  });
 });

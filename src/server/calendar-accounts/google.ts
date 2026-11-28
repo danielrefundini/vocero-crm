@@ -30,6 +30,8 @@ export type CalendarAccount = {
   writeBookings: boolean;
   blockBusy: boolean;
   showEvents: boolean;
+  /** The brand whose appointments it gets, or null. */
+  brand: string | null;
   status: "connected" | "error";
   lastError: string | null;
   /** Its color on the CRM calendar (by the order it was linked). */
@@ -53,6 +55,7 @@ function toAccount(row: typeof schema.calendarAccount.$inferSelect, index: numbe
     writeBookings: row.writeBookings,
     blockBusy: row.blockBusy,
     showEvents: row.showEvents,
+    brand: row.brand,
     status: row.status,
     lastError: row.lastError,
     color: calendarColor(index),
@@ -135,12 +138,13 @@ export async function saveCalendarAccount(input: {
 export async function updateCalendarAccount(
   organizationId: string,
   id: string,
-  patch: { writeBookings?: boolean; blockBusy?: boolean; showEvents?: boolean }
+  patch: { writeBookings?: boolean; blockBusy?: boolean; showEvents?: boolean; brand?: string | null }
 ): Promise<CalendarAccount | null> {
   const db = getDb();
   const set: Record<string, unknown> = { updatedAt: new Date() };
   if (patch.blockBusy !== undefined) set.blockBusy = patch.blockBusy;
   if (patch.showEvents !== undefined) set.showEvents = patch.showEvents;
+  if (patch.brand !== undefined) set.brand = patch.brand;
   if (patch.writeBookings !== undefined) set.writeBookings = patch.writeBookings;
   const result = await db.transaction(async (tx) => {
     const rows = await tx

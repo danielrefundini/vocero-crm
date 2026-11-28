@@ -54,9 +54,11 @@ async function sync(organizationId: string, bookingId: string): Promise<void> {
       booking: schema.booking,
       contactName: schema.contact.name,
       contactPhone: schema.contact.phone,
+      brand: schema.lead.brand,
     })
     .from(schema.booking)
     .leftJoin(schema.contact, eq(schema.contact.id, schema.booking.contactId))
+    .leftJoin(schema.lead, eq(schema.lead.contactId, schema.booking.contactId))
     .where(scoped(schema.booking.organizationId, organizationId, eq(schema.booking.id, bookingId)))
     .limit(1);
   if (!row) return;
@@ -77,7 +79,7 @@ async function sync(organizationId: string, bookingId: string): Promise<void> {
   const mirrored = b.kind === "session" && !b.isTest && b.status !== "cancelada" && b.connector !== "google";
   const input = mirrored ? await eventInput(organizationId, b, row.contactName, row.contactPhone) : null;
 
-  const targets = new Set(bookingTargets(accounts, b.calendarAccountId).map((a) => a.id));
+  const targets = new Set(bookingTargets(accounts, b.calendarAccountId, row.brand).map((a) => a.id));
   const results = await Promise.allSettled(
     accounts.map((acc) =>
       input && targets.has(acc.id) ? upsertBookingEvent(acc, input) : removeBookingEvent(acc, b.id)
@@ -93,17 +95,39 @@ export const NO_GOOGLE_COPY = "none";
 /**
  * The linked calendars that get a copy of an appointment: the one picked for
  * it in its panel, none when "don't copy" was picked, or else every calendar
- * set to receive appointments. A pick whose account was unlinked falls back
- * to the default.
+ * set to the lead's brand, or else every calendar set to receive appointments.
+ * A pick whose account was unlinked falls back to the default.
  */
-export function bookingTargets<T extends { id: string; writeBookings: boolean; status: string }>(
-  accounts: T[],
-  pick: string | null
-): T[] {
+export function bookingTargets<
+  T extends { id: string; writeBookings: boolean; status: string; brand?: string | null },
+>(accounts: T[], pick: string | null, brand?: string | null): T[] {
   if (pick === NO_GOOGLE_COPY) return [];
-  const picked = pick ? accounts.find((a) => a.id === pick && a.status === "connected") : undefined;
+  const connected = accounts.filter((a) => a.status === "connected");
+  const picked = pick ? connected.find((a) => a.id === pick) : undefined;
   if (picked) return [picked];
-  return accounts.filter((a) => a.writeBookings && a.status === "connected");
+  const branded = brand ? connected.filter((a) => a.brand === brand) : [];
+  if (branded.length) return branded;
+  return connected.filter((a) => a.writeBookings);
+}
+
+/** Moves the copies of a contact's upcoming appointments (its brand changed). */
+export async function resyncContactBookings(organizationId: string, contactId: string): Promise<void> {
+  const rows = await getDb()
+    .select({ id: schema.booking.id })
+    .from(schema.booking)
+    .where(
+      scoped(
+        schema.booking.organizationId,
+        organizationId,
+        and(
+          eq(schema.booking.contactId, contactId),
+          eq(schema.booking.kind, "session"),
+          gte(schema.booking.scheduledAt, new Date())
+        )
+      )
+    )
+    .limit(50);
+  for (const r of rows) await syncBookingCalendar(organizationId, r.id);
 }
 
 async function eventInput(
