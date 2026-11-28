@@ -1,4 +1,5 @@
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { calendarColor } from "@/lib/calendar-colors";
 import { and, asc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
@@ -31,6 +32,8 @@ export type CalendarAccount = {
   showEvents: boolean;
   status: "connected" | "error";
   lastError: string | null;
+  /** Its color on the CRM calendar (by the order it was linked). */
+  color: string;
 };
 
 type AccountWithToken = CalendarAccount & { refreshToken: string };
@@ -42,7 +45,7 @@ export function googleOAuthConfigured(): boolean {
 
 /* ------------------------------------------------------------------ store */
 
-function toAccount(row: typeof schema.calendarAccount.$inferSelect): CalendarAccount {
+function toAccount(row: typeof schema.calendarAccount.$inferSelect, index: number): CalendarAccount {
   return {
     id: row.id,
     email: row.email,
@@ -52,6 +55,7 @@ function toAccount(row: typeof schema.calendarAccount.$inferSelect): CalendarAcc
     showEvents: row.showEvents,
     status: row.status,
     lastError: row.lastError,
+    color: calendarColor(index),
   };
 }
 
@@ -61,7 +65,7 @@ export async function listCalendarAccounts(organizationId: string): Promise<Cale
     .from(schema.calendarAccount)
     .where(scoped(schema.calendarAccount.organizationId, organizationId))
     .orderBy(asc(schema.calendarAccount.createdAt));
-  return rows.map(toAccount);
+  return rows.map((row, i) => toAccount(row, i));
 }
 
 async function accountsWithTokens(organizationId: string): Promise<AccountWithToken[]> {
@@ -71,10 +75,10 @@ async function accountsWithTokens(organizationId: string): Promise<AccountWithTo
     .where(scoped(schema.calendarAccount.organizationId, organizationId))
     .orderBy(asc(schema.calendarAccount.createdAt));
   const out: AccountWithToken[] = [];
-  for (const row of rows) {
+  for (const [i, row] of rows.entries()) {
     try {
       out.push({
-        ...toAccount(row),
+        ...toAccount(row, i),
         refreshToken: decryptSecret({
           cipher: row.refreshTokenCipher,
           iv: row.refreshTokenIv,
@@ -125,7 +129,7 @@ export async function saveCalendarAccount(input: {
     })
     .returning();
   clearAccountCaches();
-  return toAccount(row!);
+  return withColor(input.organizationId, row!);
 }
 
 export async function updateCalendarAccount(
@@ -149,7 +153,16 @@ export async function updateCalendarAccount(
     return rows[0] ?? null;
   });
   clearAccountCaches();
-  return result ? toAccount(result) : null;
+  return result ? withColor(organizationId, result) : null;
+}
+
+/** An account as the screens see it, with its color (its place in the link order). */
+async function withColor(
+  organizationId: string,
+  row: typeof schema.calendarAccount.$inferSelect
+): Promise<CalendarAccount> {
+  const all = await listCalendarAccounts(organizationId);
+  return all.find((a) => a.id === row.id) ?? toAccount(row, all.length);
 }
 
 export async function deleteCalendarAccount(organizationId: string, id: string): Promise<boolean> {
@@ -506,6 +519,7 @@ export type ExternalEvent = {
   id: string;
   accountId: string;
   email: string;
+  color: string;
   title: string;
   startUtc: string;
   endUtc: string;
@@ -544,6 +558,7 @@ export async function externalEvents(
                   id: `gcal_${acc.id}_${ev.id}`,
                   accountId: acc.id,
                   email: acc.email,
+                  color: acc.color,
                   title: ev.summary?.trim() || "Busy",
                   htmlLink: ev.htmlLink ?? null,
                   ...r,

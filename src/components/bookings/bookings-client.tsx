@@ -31,7 +31,8 @@ import { AgendaList } from "./agenda-list";
 import { BlockDialog } from "./block-dialog";
 import { NewVisitDialog } from "./new-visit-dialog";
 import { BookingDrawer, type ActResult } from "./booking-drawer";
-import type { Booking } from "./booking-look";
+import { hideCalendars, withCalendars, type Booking, type LinkedCalendar } from "./booking-look";
+import { CalendarLegend } from "./calendar-dots";
 import { CalendarToolbar } from "./calendar-toolbar";
 import { MonthGrid } from "./month-grid";
 import { TimeGrid } from "./time-grid";
@@ -50,11 +51,12 @@ import { TimeGrid } from "./time-grid";
 const VIEW_KEY = "vocero:citas:vista";
 const CANCELLED_KEY = "vocero:citas:canceladas";
 const TESTS_KEY = "vocero:citas:pruebas";
+const HIDDEN_CALS_KEY = "vocero:citas:calendarios-ocultos";
 
 /** Una ráfaga de eventos SSE (una cita y su enlace) se paga con UNA consulta. */
 const SSE_COALESCE_MS = 250;
 
-type Loaded = { key: string; bookings: Booking[]; truncated: boolean };
+type Loaded = { key: string; bookings: Booking[]; truncated: boolean; calendars: LinkedCalendar[] };
 
 function readPref(key: string): string | null {
   try {
@@ -99,6 +101,7 @@ export function BookingsClient({
   const [loadError, setLoadError] = useState(false);
   const [showCancelled, setShowCancelled] = useState(false);
   const [showTests, setShowTests] = useState(false);
+  const [hiddenCals, setHiddenCals] = useState<Set<string>>(() => new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<Booking | null>(null);
   const [blockDraft, setBlockDraft] = useState<{ day: string; time: string } | null>(null);
@@ -110,6 +113,12 @@ export function BookingsClient({
   useEffect(() => {
     setShowCancelled(readPref(CANCELLED_KEY) === "1");
     setShowTests(readPref(TESTS_KEY) === "1");
+    try {
+      const saved = JSON.parse(readPref(HIDDEN_CALS_KEY) ?? "[]") as unknown;
+      if (Array.isArray(saved)) setHiddenCals(new Set(saved.filter((x): x is string => typeof x === "string")));
+    } catch {
+      // an unreadable preference just shows every calendar
+    }
     const stored = readPref(VIEW_KEY);
     setView(
       initialView ??
@@ -145,6 +154,7 @@ export function BookingsClient({
           timezone: string;
           weeklyHours: WeeklyHours;
           truncated?: boolean;
+          calendars?: LinkedCalendar[];
         } | null)
       : null;
     // Varias navegaciones seguidas: solo se pinta la respuesta del último rango.
@@ -157,7 +167,13 @@ export function BookingsClient({
     setLoadError(false);
     setTimezone(data.timezone);
     setWeeklyHours(data.weeklyHours);
-    setLoaded({ key, bookings: data.bookings, truncated: Boolean(data.truncated) });
+    const calendars = data.calendars ?? [];
+    setLoaded({
+      key,
+      bookings: withCalendars(data.bookings, calendars),
+      truncated: Boolean(data.truncated),
+      calendars,
+    });
   }, []);
 
   const reload = useCallback(async () => {
@@ -194,8 +210,8 @@ export function BookingsClient({
 
   const all = useMemo(() => loaded?.bookings ?? [], [loaded]);
   const visible = useMemo(
-    () => calendarVisible(all, { showCancelled, showTests }),
-    [all, showCancelled, showTests]
+    () => hideCalendars(calendarVisible(all, { showCancelled, showTests }), hiddenCals),
+    [all, showCancelled, showTests, hiddenCals]
   );
   const counts = useMemo(() => {
     const inRange = all.filter((b) => {
@@ -359,6 +375,20 @@ export function BookingsClient({
             onShowTests={(next) => {
               setShowTests(next);
               writePref(TESTS_KEY, next ? "1" : "0");
+            }}
+          />
+
+          <CalendarLegend
+            calendars={(loaded?.calendars ?? []).filter((c) => c.writeBookings || c.showEvents)}
+            hidden={hiddenCals}
+            onToggle={(email) => {
+              setHiddenCals((prev) => {
+                const next = new Set(prev);
+                if (next.has(email)) next.delete(email);
+                else next.add(email);
+                writePref(HIDDEN_CALS_KEY, JSON.stringify([...next]));
+                return next;
+              });
             }}
           />
 

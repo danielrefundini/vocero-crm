@@ -28,7 +28,13 @@ export type BookingListItem = {
   isTest: boolean;
   notes: string | null;
   /** An event of a linked Google calendar, shown read-only (kind "block"). */
-  external?: { email: string; htmlLink: string | null; allDay: boolean } | null;
+  external?: { email: string; color?: string; htmlLink: string | null; allDay: boolean } | null;
+  /**
+   * The linked Google calendars this appointment is in (filled on the screen
+   * from the `calendars` the range response lists): a CRM appointment, the ones
+   * it's copied to; a Google event, its own.
+   */
+  calendars?: { email: string; color: string }[];
 };
 
 /** Tope del listado sin rango: el de siempre, que leen los guiones E2E. */

@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import { bookingSegments, hhmm, weekdayShortNames } from "@/lib/time/calendar";
 import { cn } from "@/lib/utils";
-import { bookingTitle, bookingTone, type Booking } from "./booking-look";
+import { bookingDotStyle, bookingTitle, bookingTone, type Booking } from "./booking-look";
+import { CalendarDots } from "./calendar-dots";
 
 /**
  * 215 — La vista de mes: de lunes a domingo, hasta tres citas por día y
@@ -106,11 +107,12 @@ export function MonthGrid({
                     b.status === "cancelada" && "text-text-3 line-through"
                   )}
                 >
-                  <span aria-hidden className={cn("h-2 w-2 shrink-0 rounded-full", bookingTone(b).dot)} />
+                  <span aria-hidden className={cn("h-2 w-2 shrink-0 rounded-full", bookingTone(b).dot)} style={bookingDotStyle(b)} />
                   <span className="hidden shrink-0 font-mono text-[10.5px] text-text-3 sm:inline">
                     {hhmm(startMin)}
                   </span>
                   <span className="truncate">{bookingTitle(b)}</span>
+                  <CalendarDots booking={b} className="ml-auto" />
                 </button>
               ))}
               {extra > 0 && (

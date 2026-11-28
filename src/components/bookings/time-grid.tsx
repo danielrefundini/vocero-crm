@@ -13,7 +13,8 @@ import {
 } from "@/lib/time/calendar";
 import type { WeeklyHours } from "@/server/agenda/settings";
 import { cn } from "@/lib/utils";
-import { bookingTitle, bookingTone, hasDeliveryIssue, type Booking } from "./booking-look";
+import { bookingBoxStyle, bookingTitle, bookingTone, hasDeliveryIssue, type Booking } from "./booking-look";
+import { CalendarDots } from "./calendar-dots";
 
 /**
  * 215 — La rejilla de horas de las vistas Día y Semana, como Google Calendar:
@@ -273,6 +274,7 @@ function EventBlock({
         selected && "ring-2 ring-brand ring-offset-1 ring-offset-background"
       )}
       style={{
+        ...bookingBoxStyle(b),
         top: top + 1,
         height,
         left: `calc(${(col / cols) * 100}% + 2px)`,
@@ -292,6 +294,7 @@ function EventBlock({
           {b.isTest && "Test · "}
           {title}
         </span>
+        <CalendarDots booking={b} className="ml-auto" />
       </span>
       {showTime && (
         <span

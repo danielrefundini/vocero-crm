@@ -5,7 +5,8 @@ import { AlertTriangle, CalendarDays, Sparkles, Video } from "lucide-react";
 import { bookingSegments, hhmm, longDayLabel, spanLabel, type DateRange } from "@/lib/time/calendar";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "@/components/ui/empty-state";
-import { STATUS_LABEL, bookingTitle, bookingTone, hasDeliveryIssue, type Booking } from "./booking-look";
+import { STATUS_LABEL, bookingDotStyle, bookingTitle, bookingTone, hasDeliveryIssue, type Booking } from "./booking-look";
+import { CalendarDots } from "./calendar-dots";
 
 /**
  * 215 — La Lista: las citas del rango, agrupadas por día, como la «Agenda» de
@@ -80,7 +81,7 @@ export function AgendaList({
                   <span className="w-[6.5rem] shrink-0 font-mono text-[12px] text-text-2">
                     {hhmm(startMin)} – {hhmm(endMin)}
                   </span>
-                  <span aria-hidden className={cn("h-2.5 w-2.5 shrink-0 rounded-full", bookingTone(b).dot)} />
+                  <span aria-hidden className={cn("h-2.5 w-2.5 shrink-0 rounded-full", bookingTone(b).dot)} style={bookingDotStyle(b)} />
                   <span className="min-w-0 flex-1">
                     <span
                       className={cn(
@@ -89,6 +90,7 @@ export function AgendaList({
                       )}
                     >
                       <span className="truncate">{bookingTitle(b)}</span>
+                      <CalendarDots booking={b} />
                       {b.source === "ai" && b.kind === "session" && (
                         <Sparkles aria-label="Booked by AI" className="h-3.5 w-3.5 shrink-0 text-brand-text" />
                       )}

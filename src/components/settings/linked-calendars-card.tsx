@@ -21,6 +21,7 @@ type Account = {
   showEvents: boolean;
   status: "connected" | "error";
   lastError: string | null;
+  color?: string;
 };
 
 type Data = { configured: boolean; redirectUri: string; canManage: boolean; accounts: Account[] };
@@ -128,7 +129,17 @@ export function LinkedCalendarsCard() {
               <div key={acc.id} className="space-y-2.5 rounded-sm border border-border px-3 py-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold">{acc.email}</p>
+                    <p className="flex min-w-0 items-center gap-2 text-sm font-semibold">
+                      {acc.color && (
+                        <span
+                          aria-hidden
+                          title="This calendar's color on the CRM calendar"
+                          className="h-3 w-3 shrink-0 rounded-full"
+                          style={{ backgroundColor: acc.color }}
+                        />
+                      )}
+                      <span className="truncate">{acc.email}</span>
+                    </p>
                     {acc.status === "error" && (
                       <p className="text-xs text-warning-text">
                         {acc.lastError ?? "Google stopped accepting this link."} Connect it again to fix it.

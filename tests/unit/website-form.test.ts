@@ -184,4 +184,16 @@ describe("website form → contact card fields", () => {
     expect(call.appointment).toEqual({ text: "Wed, Dec 2 at 3:00 PM", kind: "call" });
     expect(normalizeWebsiteForm({ name: "A", message: "hi" })!.appointment).toBeNull();
   });
+
+  it("opens a new contact for each day and time picked, even from the same email", () => {
+    const base = { email: "same@example.com", Request: "Free in-home inspection" };
+    const first = normalizeWebsiteForm({ ...base, name: "Ann", Appointment: "Tue, Dec 1 at 1:00 PM" })!;
+    const again = normalizeWebsiteForm({ ...base, name: "Ann", Appointment: "Tue, Dec 1 at 1:00 PM" })!;
+    const other = normalizeWebsiteForm({ ...base, name: "Ben", Appointment: "Fri, Dec 4 at 10:00 AM" })!;
+    expect(first.identity).toBe("web:same@example.com#tue-dec-1-at-1-00-pm");
+    expect(again.identity).toBe(first.identity);
+    expect(other.identity).toBe("web:same@example.com#fri-dec-4-at-10-00-am");
+    // No time picked: the thread of that email, as before.
+    expect(normalizeWebsiteForm({ ...base, name: "Ann" })!.identity).toBe("web:same@example.com");
+  });
 });
