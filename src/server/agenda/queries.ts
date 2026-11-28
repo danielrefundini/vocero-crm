@@ -27,6 +27,8 @@ export type BookingListItem = {
   linkPending: boolean;
   isTest: boolean;
   notes: string | null;
+  /** The Google calendar picked for it: an account id, "none", or null (default). */
+  calendarAccountId?: string | null;
   /** An event of a linked Google calendar, shown read-only (kind "block"). */
   external?: { email: string; color?: string; htmlLink: string | null; allDay: boolean } | null;
   /**
@@ -148,5 +150,6 @@ function toListItem(r: Row, timezone: string): BookingListItem {
     linkPending: r.booking.linkPending,
     isTest: r.booking.isTest,
     notes: r.booking.notes,
+    calendarAccountId: r.booking.calendarEventId ? null : r.booking.calendarAccountId,
   };
 }

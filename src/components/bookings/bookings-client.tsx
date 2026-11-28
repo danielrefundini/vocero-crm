@@ -464,6 +464,7 @@ export function BookingsClient({
             today={today}
             nowMs={now ?? Date.now()}
             onClose={closeDrawer}
+            calendars={loaded?.calendars ?? []}
             onAct={(body) => act(selected, body)}
             onRescheduled={(startUtc) => reveal(dayIsoInTz(new Date(startUtc), timezone))}
           />

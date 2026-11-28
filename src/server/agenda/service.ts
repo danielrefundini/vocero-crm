@@ -25,7 +25,7 @@ import {
 import { ConnectorError } from "@/server/agenda/connectors/types";
 import { moveLeadToStage } from "@/server/leads/stage-history";
 import { publish } from "@/server/events/bus";
-import { syncBookingCalendar } from "@/server/calendar-accounts/sync";
+import { NO_GOOGLE_COPY, syncBookingCalendar } from "@/server/calendar-accounts/sync";
 
 /**
  * 015 — Ciclo de vida de la cita y las dos reglas INNEGOCIABLES:
@@ -460,6 +460,45 @@ export async function rescheduleForConversation(input: {
   });
   await clearOffers(input.organizationId, input.conversationId).catch(() => {});
   return result;
+}
+
+/**
+ * Picks the linked Google calendar an appointment is copied to: an account id,
+ * "none" (no copy), or null (the calendars set to receive appointments). The
+ * copy moves right away: added to the new one, removed from the others.
+ */
+export async function setBookingCalendar(input: {
+  organizationId: string;
+  bookingId: string;
+  accountId: string | null;
+}): Promise<void> {
+  const db = getDb();
+  const booking = await getOwnBooking(input.organizationId, input.bookingId);
+  if (input.accountId && input.accountId !== NO_GOOGLE_COPY) {
+    const [acc] = await db
+      .select({ id: schema.calendarAccount.id })
+      .from(schema.calendarAccount)
+      .where(
+        scoped(
+          schema.calendarAccount.organizationId,
+          input.organizationId,
+          eq(schema.calendarAccount.id, input.accountId)
+        )
+      )
+      .limit(1);
+    if (!acc) throw new BookingError("invalid", "That Google calendar isn't linked");
+  }
+  // An old-style copy keeps its account in the same column: clear it out first.
+  if (booking.calendarEventId) await syncBookingCalendar(input.organizationId, booking.id);
+  await db
+    .update(schema.booking)
+    .set({ calendarAccountId: input.accountId, updatedAt: new Date() })
+    .where(eq(schema.booking.id, booking.id));
+  await syncBookingCalendar(input.organizationId, booking.id);
+  publish(input.organizationId, {
+    type: "booking.updated",
+    data: { bookingId: booking.id },
+  });
 }
 
 /** Idempotente: cancelar una cita ya cancelada no falla ni cambia nada. */

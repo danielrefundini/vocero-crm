@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { calendarColor, CALENDAR_COLORS } from "@/lib/calendar-colors";
+import { bookingTargets, NO_GOOGLE_COPY } from "@/server/calendar-accounts/sync";
 import { eventCounts, hideCalendars, withCalendars, type Booking, type LinkedCalendar } from "@/components/bookings/booking-look";
 
 const base: Booking = {
@@ -51,5 +52,36 @@ describe("Linked calendar colors", () => {
     // Only me@ picked: bk_1 (copied only to biz@) goes too; bk_test is in no calendar, so it stays.
     expect(hideCalendars(tagged, new Set(["biz@x.test"])).map((b) => b.id)).toEqual(["gcal_b_1", "bk_test"]);
     expect(eventCounts(tagged)).toEqual(new Map([["me@x.test", 1]]));
+  });
+
+  it("copies an appointment only to the calendar picked in its panel, or to none", () => {
+    const [toMe, none, gone] = withCalendars(
+      [
+        { ...base, calendarAccountId: "b" },
+        { ...base, id: "bk_2", calendarAccountId: "none" },
+        { ...base, id: "bk_3", calendarAccountId: "unlinked" },
+      ] as Booking[],
+      cals
+    );
+    // Picked me@ even though it doesn't receive appointments by default.
+    expect(toMe!.calendars).toEqual([{ email: "me@x.test", color: calendarColor(1) }]);
+    expect(none!.calendars).toBeUndefined();
+    // A pick whose account was removed falls back to the default.
+    expect(gone!.calendars).toEqual([{ email: "biz@x.test", color: calendarColor(0) }]);
+  });
+});
+
+describe("bookingTargets (server)", () => {
+  const accs = [
+    { id: "a", writeBookings: true, status: "connected" },
+    { id: "b", writeBookings: false, status: "connected" },
+    { id: "c", writeBookings: true, status: "error" },
+  ];
+  it("follows the pick, none, or the default receiving calendars", () => {
+    expect(bookingTargets(accs, null).map((a) => a.id)).toEqual(["a"]);
+    expect(bookingTargets(accs, "b").map((a) => a.id)).toEqual(["b"]);
+    expect(bookingTargets(accs, NO_GOOGLE_COPY)).toEqual([]);
+    expect(bookingTargets(accs, "c").map((a) => a.id)).toEqual(["a"]);
+    expect(bookingTargets(accs, "zzz").map((a) => a.id)).toEqual(["a"]);
   });
 });
