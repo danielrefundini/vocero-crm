@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { BookingListItem } from "@/server/agenda/queries";
 
 /** 215 — Cómo se ve y cómo se nombra una cita, igual en las cuatro vistas. */
@@ -64,4 +65,61 @@ export function canRetrySync(b: Booking): boolean {
 /** Aviso pequeño en la rejilla: la cita quedó sin enlace de la reunión. */
 export function hasDeliveryIssue(b: Booking): boolean {
   return canRetrySync(b);
+}
+
+/** A linked Google calendar as the range response lists it. */
+export type LinkedCalendar = {
+  id: string;
+  email: string;
+  color: string;
+  writeBookings: boolean;
+  showEvents: boolean;
+};
+
+/** Whether the CRM copies this appointment to the calendars that receive them. */
+export function isMirrored(b: Booking): boolean {
+  return b.kind === "session" && !b.isTest && b.status !== "cancelada" && b.connector !== "google";
+}
+
+/**
+ * Tags every booking with the Google calendars it's in: a Google event, its
+ * own; a CRM appointment, each linked calendar set to receive appointments.
+ */
+export function withCalendars(bookings: Booking[], calendars: LinkedCalendar[]): Booking[] {
+  const writers = calendars.filter((c) => c.writeBookings).map(({ email, color }) => ({ email, color }));
+  const byEmail = new Map(calendars.map((c) => [c.email, c.color]));
+  return bookings.map((b) => {
+    if (b.external) {
+      const color = b.external.color ?? byEmail.get(b.external.email);
+      return color ? { ...b, calendars: [{ email: b.external.email, color }] } : b;
+    }
+    return isMirrored(b) && writers.length ? { ...b, calendars: writers } : b;
+  });
+}
+
+/** A Google event takes its calendar's color: a tinted box with a solid edge. */
+export function bookingBoxStyle(b: Booking): CSSProperties | undefined {
+  const color = b.external ? b.calendars?.[0]?.color : undefined;
+  if (!color || b.status === "cancelada") return undefined;
+  return { backgroundColor: `${color}1f`, borderColor: `${color}66`, borderLeft: `3px solid ${color}` };
+}
+
+/** The dot of a Google event in its calendar's color (others keep their class). */
+export function bookingDotStyle(b: Booking): CSSProperties | undefined {
+  const color = b.external ? b.calendars?.[0]?.color : undefined;
+  return color ? { backgroundColor: color } : undefined;
+}
+
+/**
+ * Hides what belongs only to the Google calendars switched off on the calendar
+ * screen: their events, and CRM appointments copied to none of the ones still
+ * on. Appointments that aren't in any Google calendar always stay.
+ */
+export function hideCalendars(bookings: Booking[], hidden: ReadonlySet<string>): Booking[] {
+  if (hidden.size === 0) return bookings;
+  return bookings.filter((b) => {
+    const cals = b.calendars ?? [];
+    if (cals.length === 0) return true;
+    return cals.some((c) => !hidden.has(c.email));
+  });
 }

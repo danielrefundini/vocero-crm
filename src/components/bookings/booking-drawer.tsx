@@ -133,6 +133,17 @@ export function BookingDrawer({
                 <p className="text-xs text-text-3">
                   {b.durationMinutes} min · {timezone}
                 </p>
+                {b.calendars && b.calendars.length > 0 && (
+                  <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-2">
+                    <span className="text-text-3">In Google:</span>
+                    {b.calendars.map((c) => (
+                      <span key={c.email} className="inline-flex items-center gap-1">
+                        <span aria-hidden className="h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
+                        {c.email}
+                      </span>
+                    ))}
+                  </p>
+                )}
               </div>
             </div>
 

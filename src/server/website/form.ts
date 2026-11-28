@@ -206,7 +206,7 @@ export function normalizeWebsiteForm(body: unknown): WebsiteLead | null {
   if (lineas.length === 1) return null;
 
   const digitos = phone ? phone.replace(/\D/g, "") : "";
-  const identity = email
+  const sender = email
     ? `${WEB_PREFIX}${email}`
     : digitos.length >= 7
       ? `${WEB_PREFIX}${digitos}`
@@ -254,6 +254,12 @@ export function normalizeWebsiteForm(body: unknown): WebsiteLead | null {
       }
     : null;
 
+  // Each appointment picked on the site gets its own contact and thread, even
+  // from the same email or phone: one address can book for different people
+  // or properties, and a new day and time must never land on an old customer's
+  // card. A resubmission of the same time (or a form with no time) stays put.
+  const identity = sender && appointment ? `${sender}#${appointmentKey(appointment.text)}` : sender;
+
   return {
     name,
     email,
@@ -267,6 +273,17 @@ export function normalizeWebsiteForm(body: unknown): WebsiteLead | null {
     identity,
     formId: typeof b.form === "string" ? b.form : null,
   };
+}
+
+/** "Tue, Dec 1 at 1:00 PM" → "tue-dec-1-at-1-00-pm": the time picked, as an identity suffix. */
+export function appointmentKey(text: string): string {
+  return (
+    text
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 60) || "appointment"
+  );
 }
 
 /**

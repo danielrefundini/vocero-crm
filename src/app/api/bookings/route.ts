@@ -7,7 +7,7 @@ import { getSettings } from "@/server/agenda/settings";
 import { createBlock, createSessionBooking } from "@/server/agenda/service";
 import { bookingErrorResponse, bookingPayload } from "@/server/agenda/http";
 import { addDaysISO, partsInTz, zonedWallClockToUtc } from "@/lib/time/slots";
-import { externalEvents } from "@/server/calendar-accounts/google";
+import { externalEvents, listCalendarAccounts } from "@/server/calendar-accounts/google";
 import type { BookingListItem } from "@/server/agenda/queries";
 
 export const dynamic = "force-dynamic";
@@ -66,10 +66,20 @@ export const GET = withAuth(async (session, req: Request) => {
       linkPending: false,
       isTest: false,
       notes: ev.title,
-      external: { email: ev.email, htmlLink: ev.htmlLink, allDay: ev.allDay },
+      external: { email: ev.email, color: ev.color, htmlLink: ev.htmlLink, allDay: ev.allDay },
     };
   });
+  // The linked calendars and their colors: the legend, and the dots that say
+  // which Google calendars each CRM appointment is copied to.
+  const calendars = (await listCalendarAccounts(session.organizationId).catch(() => [])).map((a) => ({
+    id: a.id,
+    email: a.email,
+    color: a.color,
+    writeBookings: a.writeBookings && a.status === "connected",
+    showEvents: a.showEvents,
+  }));
   return Response.json({
+    calendars,
     bookings: [...bookings, ...shown].sort((a, b) => a.scheduledAtUtc.localeCompare(b.scheduledAtUtc)),
     timezone: settings.timezone,
     weeklyHours: settings.weeklyHours,
