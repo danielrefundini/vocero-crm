@@ -51,7 +51,7 @@ import { TimeGrid } from "./time-grid";
 const VIEW_KEY = "vocero:citas:vista";
 const CANCELLED_KEY = "vocero:citas:canceladas";
 const TESTS_KEY = "vocero:citas:pruebas";
-const HIDDEN_CALS_KEY = "vocero:citas:calendarios-ocultos";
+const ONLY_CAL_KEY = "vocero:citas:calendario-solo";
 
 /** Una ráfaga de eventos SSE (una cita y su enlace) se paga con UNA consulta. */
 const SSE_COALESCE_MS = 250;
@@ -101,7 +101,8 @@ export function BookingsClient({
   const [loadError, setLoadError] = useState(false);
   const [showCancelled, setShowCancelled] = useState(false);
   const [showTests, setShowTests] = useState(false);
-  const [hiddenCals, setHiddenCals] = useState<Set<string>>(() => new Set());
+  // The Google calendar picked on the legend ("only this one"); null = all.
+  const [onlyCal, setOnlyCal] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<Booking | null>(null);
   const [blockDraft, setBlockDraft] = useState<{ day: string; time: string } | null>(null);
@@ -113,12 +114,7 @@ export function BookingsClient({
   useEffect(() => {
     setShowCancelled(readPref(CANCELLED_KEY) === "1");
     setShowTests(readPref(TESTS_KEY) === "1");
-    try {
-      const saved = JSON.parse(readPref(HIDDEN_CALS_KEY) ?? "[]") as unknown;
-      if (Array.isArray(saved)) setHiddenCals(new Set(saved.filter((x): x is string => typeof x === "string")));
-    } catch {
-      // an unreadable preference just shows every calendar
-    }
+    setOnlyCal(readPref(ONLY_CAL_KEY) || null);
     const stored = readPref(VIEW_KEY);
     setView(
       initialView ??
@@ -209,6 +205,16 @@ export function BookingsClient({
   const nowMinutes = now === null ? 0 : wallClock(new Date(now), timezone).minutes;
 
   const all = useMemo(() => loaded?.bookings ?? [], [loaded]);
+  const legendCalendars = useMemo(
+    () => (loaded?.calendars ?? []).filter((c) => c.writeBookings || c.showEvents),
+    [loaded]
+  );
+  // A pick that no longer matches a linked calendar shows them all.
+  const selectedCal = onlyCal && legendCalendars.some((c) => c.email === onlyCal) ? onlyCal : null;
+  const hiddenCals = useMemo(
+    () => new Set(selectedCal ? legendCalendars.filter((c) => c.email !== selectedCal).map((c) => c.email) : []),
+    [legendCalendars, selectedCal]
+  );
   const visible = useMemo(
     () => hideCalendars(calendarVisible(all, { showCancelled, showTests }), hiddenCals),
     [all, showCancelled, showTests, hiddenCals]
@@ -379,17 +385,12 @@ export function BookingsClient({
           />
 
           <CalendarLegend
-            calendars={(loaded?.calendars ?? []).filter((c) => c.writeBookings || c.showEvents)}
-            hidden={hiddenCals}
+            calendars={legendCalendars}
+            selected={selectedCal}
             counts={eventCounts(calendarVisible(all, { showCancelled, showTests }))}
-            onToggle={(email) => {
-              setHiddenCals((prev) => {
-                const next = new Set(prev);
-                if (next.has(email)) next.delete(email);
-                else next.add(email);
-                writePref(HIDDEN_CALS_KEY, JSON.stringify([...next]));
-                return next;
-              });
+            onSelect={(email) => {
+              setOnlyCal(email);
+              writePref(ONLY_CAL_KEY, email ?? "");
             }}
           />
 

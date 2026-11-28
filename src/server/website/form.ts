@@ -7,7 +7,7 @@ import { ingestInboundMessage } from "@/server/inbox/ingest";
 import { applyStructuredFields } from "@/server/exteriors/apply";
 import { upsertFicha } from "@/server/bot/ficha";
 import { resolveInstanceOrg } from "@/server/bot/auth";
-import { todayInTz, zonedWallClockToUtc } from "@/lib/time/slots";
+import { dayIsoInTz, todayInTz, zonedWallClockToUtc } from "@/lib/time/slots";
 import { formatAddress } from "@/lib/exteriors";
 import { BookingError, createSessionBooking } from "@/server/agenda/service";
 import { getSettings } from "@/server/agenda/settings";
@@ -408,7 +408,12 @@ export async function ingestWebsiteLead(organizationId: string, lead: WebsiteLea
     if (k === "services") fields.services = v.split(/\s*(?:,|;|\/|\band\b)\s*/i).filter(Boolean);
     else fields[k] = v;
   }
-  if (lead.quoted) fields.quote_date = todayIn("America/New_York");
+  // The quote date is the day of the appointment picked on the site (when the
+  // visit or call happens is when the quote is given); with no time picked, a
+  // form that showed a price range counts as quoted today.
+  const quoteDay = lead.appointment ? await appointmentDay(organizationId, lead.appointment.text) : null;
+  if (quoteDay) fields.quote_date = quoteDay;
+  else if (lead.quoted) fields.quote_date = todayIn("America/New_York");
   await applyStructuredFields({ organizationId, contactId: c.id, fields, servicesMode: "merge" }).catch(
     (err) => console.error("[website] couldn't fill the contact card:", err)
   );
@@ -441,6 +446,13 @@ export async function ingestWebsiteLead(organizationId: string, lead: WebsiteLea
       console.error("[website] couldn't book the website appointment:", err)
     );
   }
+}
+
+/** The business day (YYYY-MM-DD) of the time picked on the site, or null if unreadable. */
+async function appointmentDay(organizationId: string, text: string): Promise<string | null> {
+  const settings = await getSettings(organizationId);
+  const startUtc = parseAppointmentTime(text, new Date(), settings.timezone);
+  return startUtc ? dayIsoInTz(new Date(startUtc), settings.timezone) : null;
 }
 
 /**

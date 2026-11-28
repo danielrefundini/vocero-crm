@@ -28,39 +28,56 @@ export function CalendarDots({ booking, className }: { booking: Booking; classNa
 }
 
 /**
- * The legend under the toolbar: which color is which linked Google calendar.
- * Each one is a toggle that shows or hides that calendar's events on this
- * screen, with how many there are in view (nothing changes in Google or the
- * CRM; CRM appointments always show).
+ * The legend under the toolbar: which color is which linked Google calendar,
+ * and a picker for whose Google events to see. "All" shows every calendar;
+ * clicking an email shows only that one's events (clicking it again, all).
+ * CRM appointments always show. Nothing changes in Google or the CRM.
  */
 export function CalendarLegend({
   calendars,
-  hidden,
+  selected,
   counts,
-  onToggle,
+  onSelect,
 }: {
   calendars: { email: string; color: string }[];
-  hidden: ReadonlySet<string>;
+  /** The calendar shown alone, or null for all of them. */
+  selected: string | null;
   /** Google events per calendar in the range on screen. */
   counts: ReadonlyMap<string, number>;
-  onToggle: (email: string) => void;
+  onSelect: (email: string | null) => void;
 }) {
   if (calendars.length === 0) return null;
+  const chip =
+    "inline-flex min-w-0 items-center gap-1.5 rounded-full border px-2 py-0.5 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-soft";
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-4 pb-2 text-xs text-text-2 sm:px-6">
       <span className="text-text-3">Google calendars:</span>
+      {calendars.length > 1 && (
+        <button
+          type="button"
+          aria-pressed={selected === null}
+          onClick={() => onSelect(null)}
+          className={cn(
+            chip,
+            selected === null ? "border-foreground bg-foreground text-background hover:bg-foreground" : "border-border text-text-2"
+          )}
+        >
+          All
+        </button>
+      )}
       {calendars.map((c) => {
-        const on = !hidden.has(c.email);
+        const on = selected === null || selected === c.email;
+        const picked = selected === c.email;
         return (
           <button
             key={c.email}
             type="button"
-            aria-pressed={on}
-            onClick={() => onToggle(c.email)}
-            title={on ? `Hide ${c.email}'s events on the calendar` : `Show ${c.email}'s events on the calendar`}
+            aria-pressed={picked}
+            onClick={() => onSelect(picked ? null : c.email)}
+            title={picked ? "Show all calendars" : `Show only ${c.email}'s events`}
             className={cn(
-              "inline-flex min-w-0 items-center gap-1.5 rounded-full border px-2 py-0.5 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-soft",
-              on ? "border-border-strong text-foreground" : "border-dashed border-border text-text-3 line-through"
+              chip,
+              picked ? "border-foreground font-semibold text-foreground" : on ? "border-border-strong text-foreground" : "border-dashed border-border text-text-3"
             )}
           >
             <span
