@@ -30,8 +30,9 @@ export function CalendarDots({ booking, className }: { booking: Booking; classNa
 /**
  * The legend under the toolbar: which color is which linked Google calendar,
  * and a picker for whose Google events to see. "All" shows every calendar;
- * clicking an email shows only that one's events (clicking it again, all).
- * CRM appointments always show. Nothing changes in Google or the CRM.
+ * clicking an email shows only what's in that one: its events and the CRM
+ * appointments copied to it (clicking it again, all). Nothing changes in
+ * Google or the CRM.
  */
 export function CalendarLegend({
   calendars,
@@ -74,7 +75,7 @@ export function CalendarLegend({
             type="button"
             aria-pressed={picked}
             onClick={() => onSelect(picked ? null : c.email)}
-            title={picked ? "Show all calendars" : `Show only ${c.email}'s events`}
+            title={picked ? "Show all calendars" : `Show only ${c.email}`}
             className={cn(
               chip,
               picked ? "border-foreground font-semibold text-foreground" : on ? "border-border-strong text-foreground" : "border-dashed border-border text-text-3"

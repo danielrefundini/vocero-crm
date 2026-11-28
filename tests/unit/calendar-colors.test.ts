@@ -42,13 +42,14 @@ describe("Linked calendar colors", () => {
     expect(event!.calendars).toEqual([{ email: "me@x.test", color: calendarColor(1) }]);
   });
 
-  it("hides only the switched-off calendar's Google events, never CRM appointments", () => {
+  it("shows only what's in the picked calendar: its events and the appointments copied to it", () => {
     const ext = { ...base, id: "gcal_b_1", kind: "block", external: { email: "me@x.test", htmlLink: null, allDay: false } } as Booking;
     const plain = { ...base, id: "bk_test", isTest: true } as Booking;
     const tagged = withCalendars([base, ext, plain], cals);
+    // Only biz@ picked: its appointment stays, me@'s event goes.
     expect(hideCalendars(tagged, new Set(["me@x.test"])).map((b) => b.id)).toEqual(["bk_1", "bk_test"]);
-    // bk_1 is copied to biz@ only: hiding biz@ still keeps it on the CRM calendar.
-    expect(hideCalendars(tagged, new Set(["biz@x.test"])).map((b) => b.id)).toEqual(["bk_1", "gcal_b_1", "bk_test"]);
+    // Only me@ picked: bk_1 (copied only to biz@) goes too; bk_test is in no calendar, so it stays.
+    expect(hideCalendars(tagged, new Set(["biz@x.test"])).map((b) => b.id)).toEqual(["gcal_b_1", "bk_test"]);
     expect(eventCounts(tagged)).toEqual(new Map([["me@x.test", 1]]));
   });
 });

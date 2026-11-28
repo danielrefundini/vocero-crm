@@ -111,13 +111,18 @@ export function bookingDotStyle(b: Booking): CSSProperties | undefined {
 }
 
 /**
- * Hides the events of the Google calendars switched off on the calendar
- * screen. CRM appointments always stay: they're the CRM's own, and hiding the
- * calendar they're copied to used to empty the whole screen.
+ * Keeps what belongs to the Google calendar picked on the calendar screen: its
+ * events, and the CRM appointments copied to it. CRM appointments copied only
+ * to the calendars not picked are hidden too; ones in no Google calendar
+ * always show.
  */
 export function hideCalendars(bookings: Booking[], hidden: ReadonlySet<string>): Booking[] {
   if (hidden.size === 0) return bookings;
-  return bookings.filter((b) => !b.external || !hidden.has(b.external.email));
+  return bookings.filter((b) => {
+    if (b.external) return !hidden.has(b.external.email);
+    const cals = b.calendars ?? [];
+    return cals.length === 0 || cals.some((c) => !hidden.has(c.email));
+  });
 }
 
 /** How many Google events each linked calendar has in the bookings given. */
