@@ -2,7 +2,7 @@ import { and, asc, eq, gte, inArray } from "drizzle-orm";
 import { getDb, schema } from "@/lib/db";
 import { newId } from "@/lib/db/ids";
 import { scoped } from "@/lib/db/tenant";
-import { labelInTz } from "@/lib/time/slots";
+import { dayIsoInTz, labelInTz } from "@/lib/time/slots";
 import { formatAddress } from "@/lib/exteriors";
 import { CONNECTOR_META, type ConnectorId } from "@/lib/agenda-connectors";
 import {
@@ -348,6 +348,9 @@ export async function rescheduleBooking(input: {
     });
   });
   await syncBookingCalendar(input.organizationId, next.id);
+  await followQuoteDate(input.organizationId, booking, next, settings.timezone).catch((err) =>
+    console.warn(`[agenda] couldn't move the quote date of booking ${next.id}: ${err}`)
+  );
 
   publish(input.organizationId, {
     type: "booking.updated",
@@ -359,6 +362,33 @@ export async function rescheduleBooking(input: {
     linkPending: next.linkPending,
     label: labelInTz(slot.startUtc, settings.timezone),
   };
+}
+
+/**
+ * The deal's quote date follows its appointment: when the appointment moves to
+ * another day, a quote date that was that appointment's day moves with it. A
+ * quote date someone set to any other day is left alone.
+ */
+async function followQuoteDate(
+  organizationId: string,
+  before: BookingRow,
+  after: BookingRow,
+  timezone: string
+): Promise<void> {
+  if (!before.contactId || before.kind !== "session") return;
+  const oldDay = dayIsoInTz(before.scheduledAt, timezone);
+  const newDay = dayIsoInTz(after.scheduledAt, timezone);
+  if (oldDay === newDay) return;
+  await getDb()
+    .update(schema.lead)
+    .set({ quoteDate: newDay, updatedAt: new Date() })
+    .where(
+      scoped(
+        schema.lead.organizationId,
+        organizationId,
+        and(eq(schema.lead.contactId, before.contactId), eq(schema.lead.quoteDate, oldDay))
+      )
+    );
 }
 
 /**
