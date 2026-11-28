@@ -29,16 +29,20 @@ export function CalendarDots({ booking, className }: { booking: Booking; classNa
 
 /**
  * The legend under the toolbar: which color is which linked Google calendar.
- * Each one is a toggle that shows or hides that calendar's appointments and
- * events on this screen (only here: nothing changes in Google or the CRM).
+ * Each one is a toggle that shows or hides that calendar's events on this
+ * screen, with how many there are in view (nothing changes in Google or the
+ * CRM; CRM appointments always show).
  */
 export function CalendarLegend({
   calendars,
   hidden,
+  counts,
   onToggle,
 }: {
   calendars: { email: string; color: string }[];
   hidden: ReadonlySet<string>;
+  /** Google events per calendar in the range on screen. */
+  counts: ReadonlyMap<string, number>;
   onToggle: (email: string) => void;
 }) {
   if (calendars.length === 0) return null;
@@ -53,7 +57,7 @@ export function CalendarLegend({
             type="button"
             aria-pressed={on}
             onClick={() => onToggle(c.email)}
-            title={on ? `Hide ${c.email} on the calendar` : `Show ${c.email} on the calendar`}
+            title={on ? `Hide ${c.email}'s events on the calendar` : `Show ${c.email}'s events on the calendar`}
             className={cn(
               "inline-flex min-w-0 items-center gap-1.5 rounded-full border px-2 py-0.5 transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-soft",
               on ? "border-border-strong text-foreground" : "border-dashed border-border text-text-3 line-through"
@@ -65,6 +69,7 @@ export function CalendarLegend({
               style={{ borderColor: c.color, backgroundColor: on ? c.color : "transparent" }}
             />
             <span className="truncate">{c.email}</span>
+            <span className="shrink-0 font-mono text-[10.5px] text-text-3">{counts.get(c.email) ?? 0}</span>
           </button>
         );
       })}
