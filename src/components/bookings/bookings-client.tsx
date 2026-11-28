@@ -31,7 +31,7 @@ import { AgendaList } from "./agenda-list";
 import { BlockDialog } from "./block-dialog";
 import { NewVisitDialog } from "./new-visit-dialog";
 import { BookingDrawer, type ActResult } from "./booking-drawer";
-import { hideCalendars, withCalendars, type Booking, type LinkedCalendar } from "./booking-look";
+import { eventCounts, hideCalendars, withCalendars, type Booking, type LinkedCalendar } from "./booking-look";
 import { CalendarLegend } from "./calendar-dots";
 import { CalendarToolbar } from "./calendar-toolbar";
 import { MonthGrid } from "./month-grid";
@@ -381,6 +381,7 @@ export function BookingsClient({
           <CalendarLegend
             calendars={(loaded?.calendars ?? []).filter((c) => c.writeBookings || c.showEvents)}
             hidden={hiddenCals}
+            counts={eventCounts(calendarVisible(all, { showCancelled, showTests }))}
             onToggle={(email) => {
               setHiddenCals((prev) => {
                 const next = new Set(prev);
