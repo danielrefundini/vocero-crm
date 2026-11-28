@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { bookingTitle, bookingTone, canRetrySync, statusLabel, type Booking } from "./booking-look";
+import { bookingTitle, bookingTone, canRetrySync, isMirrored, statusLabel, type Booking, type LinkedCalendar } from "./booking-look";
 
 /**
  * 215 — La cita, abierta, sin salir del calendario. Tiene TODO lo que tenía la
@@ -34,6 +34,7 @@ export function BookingDrawer({
   onClose,
   onAct,
   onRescheduled,
+  calendars = [],
 }: {
   booking: Booking;
   timezone: string;
@@ -44,6 +45,8 @@ export function BookingDrawer({
   onAct: (body: Record<string, unknown>) => Promise<ActResult>;
   /** La cita se movió: el calendario salta a su día nuevo. */
   onRescheduled: (startUtc: string) => void;
+  /** The linked Google calendars, to pick which one this appointment goes to. */
+  calendars?: LinkedCalendar[];
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +136,35 @@ export function BookingDrawer({
                 <p className="text-xs text-text-3">
                   {b.durationMinutes} min · {timezone}
                 </p>
-                {b.calendars && b.calendars.length > 0 && (
+                {isMirrored(b) && calendars.some((c) => c.connected !== false) ? (
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-text-2">
+                    <label htmlFor="cita-google" className="text-text-3">
+                      In Google:
+                    </label>
+                    {(b.calendars ?? []).map((c) => (
+                      <span key={c.email} aria-hidden className="h-2 w-2 rounded-full" style={{ backgroundColor: c.color }} />
+                    ))}
+                    <select
+                      id="cita-google"
+                      value={pickValue(b, calendars)}
+                      disabled={busy}
+                      onChange={(e) =>
+                        void run({ action: "calendar", accountId: e.target.value === "" ? null : e.target.value })
+                      }
+                      className="h-7 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-xs shadow-sm focus-visible:border-brand focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-soft"
+                    >
+                      <option value="">{defaultLabel(calendars)}</option>
+                      {calendars
+                        .filter((c) => c.connected !== false)
+                        .map((c) => (
+                          <option key={c.id} value={c.id}>
+                            Only {c.email}
+                          </option>
+                        ))}
+                      <option value="none">Don&apos;t copy to Google</option>
+                    </select>
+                  </div>
+                ) : b.calendars && b.calendars.length > 0 && (
                   <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-text-2">
                     <span className="text-text-3">In Google:</span>
                     {b.calendars.map((c) => (
@@ -428,4 +459,19 @@ function Reschedule({
       )}
     </section>
   );
+}
+
+/** The picker's value: a picked calendar, "none", or "" for the default. */
+function pickValue(b: Booking, calendars: LinkedCalendar[]): string {
+  const pick = b.calendarAccountId ?? null;
+  if (pick === "none") return "none";
+  if (pick && calendars.some((c) => c.id === pick && c.connected !== false)) return pick;
+  return "";
+}
+
+function defaultLabel(calendars: LinkedCalendar[]): string {
+  const writers = calendars.filter((c) => c.writeBookings);
+  if (writers.length === 0) return "Default (no calendar receives appointments)";
+  if (writers.length === 1) return `Default (${writers[0]!.email})`;
+  return `Default (all ${writers.length} receiving calendars)`;
 }

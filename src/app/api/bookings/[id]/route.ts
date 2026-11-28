@@ -6,6 +6,7 @@ import {
   markBookingStatus,
   rescheduleBooking,
   retryMeetingLink,
+  setBookingCalendar,
 } from "@/server/agenda/service";
 import { bookingErrorResponse } from "@/server/agenda/http";
 
@@ -21,6 +22,8 @@ const patchSchema = z.discriminatedUnion("action", [
     status: z.enum(["realizada", "no_show"]),
   }),
   z.object({ action: z.literal("retry_link") }),
+  // The linked Google calendar it's copied to: an account id, "none", or null (default).
+  z.object({ action: z.literal("calendar"), accountId: z.string().min(1).max(80).nullable() }),
 ]);
 
 /**
@@ -55,6 +58,14 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
           organizationId: session.organizationId,
           bookingId: id,
           status: body.data.status,
+        });
+        return Response.json({ ok: true });
+      }
+      case "calendar": {
+        await setBookingCalendar({
+          organizationId: session.organizationId,
+          bookingId: id,
+          accountId: body.data.accountId,
         });
         return Response.json({ ok: true });
       }

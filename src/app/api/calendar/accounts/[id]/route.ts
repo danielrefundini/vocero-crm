@@ -46,5 +46,8 @@ export const DELETE = withAuth(async (session, _req: Request, ctx: Params) => {
   const { id } = await ctx.params;
   const ok = await deleteCalendarAccount(session.organizationId, id);
   if (!ok) return apiError(404, "not_found", "Linked calendar not found");
+  // Appointments that were picked for it go back to the default calendars.
+  const orgId = session.organizationId;
+  after(() => resyncUpcomingBookings(orgId));
   return Response.json({ ok: true });
 });

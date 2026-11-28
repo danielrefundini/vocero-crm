@@ -77,13 +77,33 @@ async function sync(organizationId: string, bookingId: string): Promise<void> {
   const mirrored = b.kind === "session" && !b.isTest && b.status !== "cancelada" && b.connector !== "google";
   const input = mirrored ? await eventInput(organizationId, b, row.contactName, row.contactPhone) : null;
 
+  const targets = new Set(bookingTargets(accounts, b.calendarAccountId).map((a) => a.id));
   const results = await Promise.allSettled(
     accounts.map((acc) =>
-      input && acc.writeBookings ? upsertBookingEvent(acc, input) : removeBookingEvent(acc, b.id)
+      input && targets.has(acc.id) ? upsertBookingEvent(acc, input) : removeBookingEvent(acc, b.id)
     )
   );
   const failed = results.filter((r): r is PromiseRejectedResult => r.status === "rejected");
   if (failed.length) throw new Error(failed.map((f) => String(f.reason)).join("; "));
+}
+
+/** `booking.calendar_account_id` value for "don't copy this appointment to Google". */
+export const NO_GOOGLE_COPY = "none";
+
+/**
+ * The linked calendars that get a copy of an appointment: the one picked for
+ * it in its panel, none when "don't copy" was picked, or else every calendar
+ * set to receive appointments. A pick whose account was unlinked falls back
+ * to the default.
+ */
+export function bookingTargets<T extends { id: string; writeBookings: boolean; status: string }>(
+  accounts: T[],
+  pick: string | null
+): T[] {
+  if (pick === NO_GOOGLE_COPY) return [];
+  const picked = pick ? accounts.find((a) => a.id === pick && a.status === "connected") : undefined;
+  if (picked) return [picked];
+  return accounts.filter((a) => a.writeBookings && a.status === "connected");
 }
 
 async function eventInput(

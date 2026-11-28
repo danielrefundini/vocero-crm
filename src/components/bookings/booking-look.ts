@@ -74,6 +74,8 @@ export type LinkedCalendar = {
   color: string;
   writeBookings: boolean;
   showEvents: boolean;
+  /** Older payloads leave it out: treat as connected. */
+  connected?: boolean;
 };
 
 /** Whether the CRM copies this appointment to the calendars that receive them. */
@@ -85,15 +87,29 @@ export function isMirrored(b: Booking): boolean {
  * Tags every booking with the Google calendars it's in: a Google event, its
  * own; a CRM appointment, each linked calendar set to receive appointments.
  */
+/**
+ * The linked calendars a CRM appointment is copied to: the one picked in its
+ * panel, none ("none"), or by default every calendar set to receive them.
+ * Mirrors bookingTargets on the server.
+ */
+export function copiedTo(b: Booking, calendars: LinkedCalendar[]): LinkedCalendar[] {
+  const pick = b.calendarAccountId ?? null;
+  if (pick === "none") return [];
+  const picked = pick ? calendars.find((c) => c.id === pick && c.connected !== false) : undefined;
+  if (picked) return [picked];
+  return calendars.filter((c) => c.writeBookings);
+}
+
 export function withCalendars(bookings: Booking[], calendars: LinkedCalendar[]): Booking[] {
-  const writers = calendars.filter((c) => c.writeBookings).map(({ email, color }) => ({ email, color }));
   const byEmail = new Map(calendars.map((c) => [c.email, c.color]));
   return bookings.map((b) => {
     if (b.external) {
       const color = b.external.color ?? byEmail.get(b.external.email);
       return color ? { ...b, calendars: [{ email: b.external.email, color }] } : b;
     }
-    return isMirrored(b) && writers.length ? { ...b, calendars: writers } : b;
+    if (!isMirrored(b)) return b;
+    const cals = copiedTo(b, calendars).map(({ email, color }) => ({ email, color }));
+    return cals.length ? { ...b, calendars: cals } : b;
   });
 }
 
