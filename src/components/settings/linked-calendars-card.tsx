@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
+import { BRAND_LABEL, BRANDS } from "@/lib/exteriors";
 import { cn } from "@/lib/utils";
 
 /**
@@ -19,6 +20,7 @@ type Account = {
   writeBookings: boolean;
   blockBusy: boolean;
   showEvents: boolean;
+  brand?: string | null;
   status: "connected" | "error";
   lastError: string | null;
   color?: string;
@@ -70,7 +72,10 @@ export function LinkedCalendarsCard() {
     }
   }, [load]);
 
-  async function change(acc: Account, body: Partial<Pick<Account, "writeBookings" | "blockBusy" | "showEvents">>) {
+  async function change(
+    acc: Account,
+    body: Partial<Pick<Account, "writeBookings" | "blockBusy" | "showEvents" | "brand">>
+  ) {
     setBusy(acc.id);
     setError(null);
     const res = await fetch(`/api/calendar/accounts/${acc.id}`, {
@@ -149,6 +154,26 @@ export function LinkedCalendarsCard() {
                   <Badge variant={acc.status === "connected" ? "success" : "warning"}>
                     {acc.status === "connected" ? "Connected" : "Needs reconnect"}
                   </Badge>
+                </div>
+                <div className="flex items-center justify-between gap-2 text-sm">
+                  <label htmlFor={`brand-${acc.id}`} className="min-w-0">
+                    <span className="block">Brand</span>
+                    <span className="block text-xs text-text-3">Appointments for this brand&apos;s leads go here</span>
+                  </label>
+                  <select
+                    id={`brand-${acc.id}`}
+                    value={acc.brand ?? ""}
+                    disabled={!data.canManage || busy !== null}
+                    onChange={(e) => void change(acc, { brand: e.target.value === "" ? null : e.target.value })}
+                    className="h-8 shrink-0 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:border-brand focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-soft"
+                  >
+                    <option value="">No brand</option>
+                    {BRANDS.map((b) => (
+                      <option key={b} value={b}>
+                        {BRAND_LABEL[b]}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="flex items-center justify-between gap-2 text-sm">
                   <span>Copy CRM appointments here</span>

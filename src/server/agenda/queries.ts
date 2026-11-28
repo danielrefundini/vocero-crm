@@ -29,6 +29,8 @@ export type BookingListItem = {
   notes: string | null;
   /** The Google calendar picked for it: an account id, "none", or null (default). */
   calendarAccountId?: string | null;
+  /** The lead's brand: its appointments go to that brand's Google calendar. */
+  brand?: string | null;
   /** An event of a linked Google calendar, shown read-only (kind "block"). */
   external?: { email: string; color?: string; htmlLink: string | null; allDay: boolean } | null;
   /**
@@ -61,6 +63,7 @@ type Row = {
   booking: typeof schema.booking.$inferSelect;
   contactId: string | null;
   contactName: string | null;
+  brand: string | null;
 };
 
 function baseQuery() {
@@ -69,9 +72,11 @@ function baseQuery() {
       booking: schema.booking,
       contactId: schema.contact.id,
       contactName: schema.contact.name,
+      brand: schema.lead.brand,
     })
     .from(schema.booking)
-    .leftJoin(schema.contact, eq(schema.booking.contactId, schema.contact.id));
+    .leftJoin(schema.contact, eq(schema.booking.contactId, schema.contact.id))
+    .leftJoin(schema.lead, eq(schema.lead.contactId, schema.booking.contactId));
 }
 
 /** Las últimas 200 citas: el listado de siempre, para quien no pide rango. */
@@ -151,5 +156,6 @@ function toListItem(r: Row, timezone: string): BookingListItem {
     isTest: r.booking.isTest,
     notes: r.booking.notes,
     calendarAccountId: r.booking.calendarEventId ? null : r.booking.calendarAccountId,
+    brand: r.brand,
   };
 }

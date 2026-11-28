@@ -76,6 +76,8 @@ export type LinkedCalendar = {
   showEvents: boolean;
   /** Older payloads leave it out: treat as connected. */
   connected?: boolean;
+  /** The brand whose appointments it gets. */
+  brand?: string | null;
 };
 
 /** Whether the CRM copies this appointment to the calendars that receive them. */
@@ -92,12 +94,18 @@ export function isMirrored(b: Booking): boolean {
  * panel, none ("none"), or by default every calendar set to receive them.
  * Mirrors bookingTargets on the server.
  */
-export function copiedTo(b: Booking, calendars: LinkedCalendar[]): LinkedCalendar[] {
-  const pick = b.calendarAccountId ?? null;
+export function copiedTo(
+  b: Booking,
+  calendars: LinkedCalendar[],
+  pick: string | null = b.calendarAccountId ?? null
+): LinkedCalendar[] {
   if (pick === "none") return [];
-  const picked = pick ? calendars.find((c) => c.id === pick && c.connected !== false) : undefined;
+  const connected = calendars.filter((c) => c.connected !== false);
+  const picked = pick ? connected.find((c) => c.id === pick) : undefined;
   if (picked) return [picked];
-  return calendars.filter((c) => c.writeBookings);
+  const branded = b.brand ? connected.filter((c) => c.brand === b.brand) : [];
+  if (branded.length) return branded;
+  return connected.filter((c) => c.writeBookings);
 }
 
 export function withCalendars(bookings: Booking[], calendars: LinkedCalendar[]): Booking[] {

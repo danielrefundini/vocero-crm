@@ -1,6 +1,7 @@
 import { after } from "next/server";
 import { z } from "zod";
 import { apiError, withAuth } from "@/lib/api";
+import { BRANDS } from "@/lib/exteriors";
 import { agendaDisabledResponse, agendaEnabled } from "@/server/agenda/flag";
 import { deleteCalendarAccount, updateCalendarAccount } from "@/server/calendar-accounts/google";
 import { resyncUpcomingBookings } from "@/server/calendar-accounts/sync";
@@ -14,6 +15,7 @@ const patchSchema = z
     writeBookings: z.boolean().optional(),
     blockBusy: z.boolean().optional(),
     showEvents: z.boolean().optional(),
+    brand: z.enum(BRANDS).nullable().optional(),
   })
   .strict();
 
@@ -24,13 +26,13 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
     return apiError(403, "forbidden", "Only the owner can change linked calendars");
   }
   const parsed = patchSchema.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) return apiError(400, "invalid", "Send writeBookings, blockBusy or showEvents");
+  if (!parsed.success) return apiError(400, "invalid", "Send writeBookings, blockBusy, showEvents or brand");
   const { id } = await ctx.params;
   const account = await updateCalendarAccount(session.organizationId, id, parsed.data);
   if (!account) return apiError(404, "not_found", "Linked calendar not found");
   // A calendar that starts (or stops) receiving appointments gets (or loses)
   // the ones already booked, after the answer is sent.
-  if (parsed.data.writeBookings !== undefined) {
+  if (parsed.data.writeBookings !== undefined || parsed.data.brand !== undefined) {
     const orgId = session.organizationId;
     after(() => resyncUpcomingBookings(orgId));
   }

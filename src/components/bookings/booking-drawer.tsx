@@ -15,7 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { bookingTitle, bookingTone, canRetrySync, isMirrored, statusLabel, type Booking, type LinkedCalendar } from "./booking-look";
+import { bookingTitle, bookingTone, canRetrySync, copiedTo, isMirrored, statusLabel, type Booking, type LinkedCalendar } from "./booking-look";
 
 /**
  * 215 — La cita, abierta, sin salir del calendario. Tiene TODO lo que tenía la
@@ -153,7 +153,7 @@ export function BookingDrawer({
                       }
                       className="h-7 min-w-0 max-w-full rounded-md border border-input bg-background px-2 text-xs shadow-sm focus-visible:border-brand focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-brand-soft"
                     >
-                      <option value="">{defaultLabel(calendars)}</option>
+                      <option value="">{defaultLabel(b, calendars)}</option>
                       {calendars
                         .filter((c) => c.connected !== false)
                         .map((c) => (
@@ -469,9 +469,14 @@ function pickValue(b: Booking, calendars: LinkedCalendar[]): string {
   return "";
 }
 
-function defaultLabel(calendars: LinkedCalendar[]): string {
-  const writers = calendars.filter((c) => c.writeBookings);
-  if (writers.length === 0) return "Default (no calendar receives appointments)";
-  if (writers.length === 1) return `Default (${writers[0]!.email})`;
-  return `Default (all ${writers.length} receiving calendars)`;
+function defaultLabel(b: Booking, calendars: LinkedCalendar[]): string {
+  const to = copiedTo(b, calendars, null);
+  const byBrand = Boolean(b.brand) && to.some((c) => c.brand === b.brand);
+  const what =
+    to.length === 0
+      ? "no calendar receives appointments"
+      : to.length === 1
+        ? to[0]!.email
+        : `all ${to.length} receiving calendars`;
+  return byBrand ? `By brand (${what})` : `Default (${what})`;
 }

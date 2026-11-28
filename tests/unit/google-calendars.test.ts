@@ -201,6 +201,7 @@ describe("writing a copy to Google", () => {
     status: "connected" as const,
     lastError: null,
     color: "#2563eb",
+    brand: null,
     refreshToken: "rt-copy-test",
   };
   const input = {

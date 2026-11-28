@@ -11,6 +11,8 @@ import {
 import { upsertFicha } from "@/server/bot/ficha";
 import { validateAddressInput, normalizeEmail, mapServices } from "@/lib/exteriors";
 import { applyStructuredFields } from "@/server/exteriors/apply";
+import { after } from "next/server";
+import { resyncContactBookings } from "@/server/calendar-accounts/sync";
 import { pauseConversations } from "@/server/contacts-import";
 import { cuentaComoAnuncio } from "@/lib/anuncios";
 import {
@@ -151,6 +153,11 @@ export const PATCH = withAuth(async (session, req: Request, ctx: Params) => {
       fields: structured,
       servicesMode: "replace",
     });
+    // Appointments follow the brand to its Google calendar.
+    if (body.data.brand !== undefined) {
+      const orgId = session.organizationId;
+      after(() => resyncContactBookings(orgId, id));
+    }
   }
 
   const set: Record<string, unknown> = { updatedAt: new Date() };
